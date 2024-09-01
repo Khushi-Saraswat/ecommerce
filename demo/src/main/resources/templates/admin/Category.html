@@ -1,0 +1,155 @@
+
+<html lang="em" xmlns:th="http://www.thymeleaf.org"
+th:replace="~{base::Layout(~{::section})}">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Category</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+         <section>
+            <div class="container p-5 mt-5">
+        
+            <a href="/admin/" class="text-decoration:none"><i class="fa-solid fa-arrow-left"></i> Back</a>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="shadow bg-body-tertiary rounded">
+                <div class="card">
+                 <div class="card-header text-center">
+                  <p class="fs-4 text-uppercase fw-semibold">Add Category</p>
+                  
+                    <th:block th:if="${session.succMsg}">
+                    <p class="text-success fw-bold">[[${session.succMsg}]]</p>
+                    <th:block th:text="${@commonServiceImpll.removeSessionMessage()}"></th:block>
+                    </th:block>
+                    <th:block th:if="${session.errorMsg}">
+							    	<p class="text-danger fw-bold">[[${session.errorMsg}]]</p>
+							       <th:block th:text="${@commonServiceImpll.removeSessionMessage()}"></th:block>
+							      </th:block>
+                </div>
+                  <div class="card-body">
+                    <form action="/admin/saveCategory" method="post"
+                    enctype="multipart/form-data"  modelAttribute="Category">
+                    <div class="mb-3">
+                      <label>Enter Category</label> <input type="text" name="name"
+                        class="form-control">
+                    </div>
+    
+                    <div class="mb-3">
+                      <label>Status</label>
+    
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" checked
+                          value="true" name="isActive" id="flexRadioDefault1">
+                        <label class="form-check-label" for="flexRadioDefault1">
+                          Active </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="isActive"
+                          value="false" id="flexRadioDefault2"> <label
+                          class="form-check-label" for="flexRadioDefault2">
+                          Inactive </label>
+                      </div>
+    
+                    </div>
+    
+                    <div class="mb-3">
+                      <label>Upload Image</label> <input type="file" name="img"
+										class="form-control">
+                    </div>
+    
+                    <button class="btn btn-primary col-md-12 mt-2">Save</button>
+                  </form>
+
+                  </div>
+
+                </div>
+                 </div>
+                </div>
+                
+                <div class="col-md-8">
+                  <div class="shadow bg-body-tertiary rounded">
+                 <div class="card">
+                 <div class="card-header text-center fs-4 text-uppercase fw-semibold">Category details</div>
+                 <div class="card-body">
+                    <table class="table">
+                        <thead>
+                          <tr >
+                            <th scope="col">Sl No</th>
+                            <th scope="col">Category</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Image</th>
+                             <th scope="col">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+
+                          <tr th:each="cat,c:${categorys}">
+                            <th scope="row">[[${c.count}]]</th>
+                            <td>[[${cat.name}]]</td>
+                            <td>[[${cat.isActive}]]</td>
+                            <td><img
+                              th:src="@{'/img/category_img/'+${cat.imageName}}"
+                              width="50px" height="50px"></td>
+                            <td><a th:href="@{'/admin/loadEditCategory/'+${cat.id}}"
+                              class="btn btn-primary btn-sm"><i
+                                class="fa-solid fa-pen-to-square  fa-1x"></i> Edit </a> <a
+                              th:href="@{'/admin/deleteCategory/'+${cat.id}}"
+                              class="btn btn-danger btn-sm"><i
+                                class="fa-solid fa-trash  fa-1x"></i>Delete</a></td>
+                          </tr>
+        
+
+                        </tbody>
+                      </table>
+                                   <!--pagination start-->
+             <div class="row mt-3">
+              <div class="col-md-4">TotalElements:[[${totalElements}]]</div>
+              <div class="col-md-6">
+           <nav aria-label="Page navigation example">
+            <ul class="pagination">
+              <li class="page-item" th:classappend="${isFirst} ? 'disabled':''">
+                <a class="page-link" th:href="@{'/admin/Category?pageNo='+${pageNo-1}}" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                  <span class="sr-only">Previous</span>
+                </a>
+              </li>
+              <li th:each="i:${#numbers.sequence(1,totalPages)}"
+              ><a class="page-link" 
+              th:href="@{'/admin/Category?pageNo='+${i-1}}"
+              th:classappend="${pageNo+1 == i}?'active':''">[[${i}]]</a>
+              </li>
+             <li class="page-item" th:classappend="${isLast} ? 'disabled':''">
+                <a class="page-link" th:href="@{'/admin/Category?pageNo='+${pageNo+1}}"
+                aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                  <span class="sr-only">Next</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+        </div>
+        <!--pagination ends-->
+                 </div>
+                </div>
+                 </div>
+                </div>
+                </div>
+            </div>
+            </div>
+
+
+
+
+
+
+
+
+           
+         </section>
+    </body>
+</html>

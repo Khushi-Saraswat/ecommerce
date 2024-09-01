@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "DemoApplication",
+            "request": "launch",
+            "mainClass": "com.example.demo.DemoApplication",
+            "projectName": "Shopping_Cart"
+        },
+        {
+            "type": "java",
+            "request": "attach",
+            "name": "Java",
+            "port": 5005,
+            "sourceRoots": []
+        },
+        {
+            "type": "java",
+            "name": "Debug Main",
+            "request": "launch",
+            "mainClass": "com.example.DemoApplication",
+            "projectName": "Shopping_Cart"
+        }
+    ]
+}

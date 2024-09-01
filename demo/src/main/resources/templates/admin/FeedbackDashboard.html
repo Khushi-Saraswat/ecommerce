@@ -1,0 +1,133 @@
+
+<html
+lang="em" xmlns:th="http://www.thymeleaf.org"
+th:replace="~{base::Layout(~{::section})}">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+    
+        <section>
+            <div class="container mt-5 p-2">
+                <div class="row">
+
+        
+                  <a href="/admin/" class="text-decoration:none"><i class="fa-solid fa-arrow-left"></i> Back</a>
+                  <th:block th:if="${session.succMsg}">
+                  <p class="text-success fw-bold">[[${session.succMsg}]]</p>
+                  <th:block th:text="${@commonServiceImpll.removeSessionMessage()}"></th:block>
+                  </th:block>
+                  <th:block th:if="${session.errorMsg}">
+                  <p class="text-danger fw-bold">[[${session.errorMsg}]]</p>
+                   <th:block th:text="${@commonServiceImpll.removeSessionMessage()}"></th:block>
+                  </th:block>
+                    <th:block th:if="${session.errorMsg}">
+                    <p class="text-danger fw-bold text-center">[[${session.errorMsg}]]</p>
+                     <th:block th:text="${@commonServiceImpll.removeSessionMessage()}"></th:block>
+                    </th:block>
+            
+              
+                <div class="shadow bg-body-tertiary rounded">
+      
+                <div class="card-header text-center">
+                 <p class="fs-4 text-uppercase fw-semibold">feedback</p>
+                 
+              </div>
+              <div class="p-3">
+             
+                  <table class="table table-bordered p-2">
+                      <thead >
+                        <tr >
+                          <th scope="col">Sl No</th>
+                          <th scope="col">UserName</th>
+                          <th scope="col">Email</th>
+                          <th scope="col">FeedBack Category</th>
+                          <th scope="col">Comments</th>
+                          <th scope="col">DateTime</th>
+
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr th:each="feedbackList,c:${feedbackList}" >
+                           <td>[[${feedbackList.id}]]</td>
+                           <td>[[${feedbackList.fullName}]]</td>
+                           <td>[[${feedbackList.email}]]</td>
+                           <td>[[${feedbackList.category}]]</td>
+                           <td>[[${feedbackList.message}]]</td>
+                           <td>[[${feedbackList.date}]]</td>
+                       </tr>
+      
+                      </tbody>
+                    </table>
+
+               </div>
+              </div>
+
+              <div class="analysis mt-5 mb-4 p-5" style="background-color: rgb(192, 252, 192);">
+                <h4 id="text_analysis" class="text text-center p-2 text-success mb-4">Feedback Analysis</h4>
+                    <div class="row row-cols-1 row-cols-md-5 g-4">
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 style="color: black;">Total Feedbacks</h6>
+                                    <h2 th:text="${totalFeedbacks}"></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 style="color: black;">Product Feedbacks</h6>
+                                    <h2 th:text="${totalProductFeedbacks}"></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 style="color: black">Customer Feedbacks</h6>
+                                    <h2 th:text="${totalCustomerFeedbacks}"></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 style="color: black;">Review Feedbacks</h6>
+                                    <h2 th:text="${totalReviewFeedbacks}"></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 style="color: black;">Other Feedbacks</h6>
+                                    <h2 th:text="${totalOtherFeedbacks}"></h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+               </div>
+              </div>
+            
+          
+      
+      
+      
+
+
+
+
+
+
+
+        </section>
+        <script src="" async defer></script>
+    </body>
+</html>

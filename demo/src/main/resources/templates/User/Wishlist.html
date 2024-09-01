@@ -1,0 +1,85 @@
+<html lang="em" xmlns:th="http://www.thymeleaf.org"
+th:replace="~{base::Layout(~{::section})}">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Insert title here</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="">
+</head>
+<body>
+
+  <section>
+    <div class="container-fluid">
+        <div class="row">
+         
+        <div class="col-md-6 p-5 mt-4 mx-auto">
+          <th:block th:if="${session.succMsg}">
+            <p class="text-success fw-bold">[[${session.succMsg}]]</p>
+            <th:block th:text="${@commonServiceImpll.removeSessionMessage()}"></th:block>
+            </th:block>
+            <th:block th:if="${session.errorMsg}">
+            <p class="text-danger fw-bold">[[${session.errorMsg}]]</p>
+             <th:block th:text="${@commonServiceImpll.removeSessionMessage()}"></th:block>
+            </th:block>
+            <br/>
+        <img alt="" src="/img/wish.jpg" width="80%" height="210px" style=" border-radius:90%"></div>
+        </div>
+        <div class="row p-5">
+          <div class="">
+           <a th:href="@{'/user/sort'}" style="text-decoration:none;"><i class="fa-solid fa-sort"></i> sort</a>&nbsp;&nbsp;
+           <a th:href="@{'/user/filter'}" style="text-decoration:none;"><i class="fa-solid fa-filter"></i> filter</a>
+          </div>
+
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col"></th>
+                    <th scope="col">Product Name</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Stock Status</th>
+                    <th scope="col"></th>
+
+                  </tr>
+                </thead>
+                <tbody>
+                
+                 
+                  <tr th:each="wish,c:${wish}">
+
+                    <td>
+                      <a th:href="@{'/user/delete/'+${wish.product.id}}"  class="btn btn-primary btn-sm"><i
+                        class="fa-solid fa-trash  fa-1x"></i>Delete</a>
+                    </td>
+                    <td>[[${wish.product.title}]]</td>
+                    <td>[[${wish.product.discountPrice}]]</td>
+                    <td>[[${wish.product.stock}]]</td>
+                    <td>
+                      
+                      <a th:href="@{'/user/addCart?pid='+${wish.product.id}+'&uid='+${user.id}}"  class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> 
+                        Add to Cart</a></td>
+                    
+                  <tr>
+
+                </tbody>
+              </table>
+        </div>
+         
+        
+
+
+
+
+    
+    </div>
+
+
+
+
+
+
+  </section>
+
+</body>
+</html>
