@@ -25,33 +25,40 @@ import com.example.demo.util.AppConstant;
 @Service
 public class UserServiceImp implements UserService {
 
+   private final PasswordEncoder passwordEncoder;
+
    @Autowired
    private UserRepository userRepository;
 
-   @Autowired
-   private PasswordEncoder passwordEncoder;
+   UserServiceImp(PasswordEncoder passwordEncoder) {
+      this.passwordEncoder = passwordEncoder;
+   }
 
    @Override
    public UserDtls saveUser(UserDtls user) {
-      user.setRole("ROLE_USER");
+
       user.setIsEnable(true);
       user.setAccountNonLocked(true);
       user.setFailedAttempt(0);
       user.setLockTime(null);
-      String encodePassword = passwordEncoder.encode(user.getPassword());
-      user.setPassword(encodePassword);
+      user.setPassword(passwordEncoder.encode(user.getPassword()));
+      // String encodePassword = passwordEncoder.encode(user.getPassword());
+      // user.setPassword(user.getPassword());
+      // user.setUsername(user.getUsername());
+      // user.setName(user.getName());
+      // user.setMobileNumber(user.getMobileNumber());
       UserDtls saveUser = userRepository.save(user);
       return saveUser;
    }
 
    @Override
    public UserDtls getUserByEmail(String email) {
-      return userRepository.findByEmail(email);
+      return userRepository.findByusername(email);
    }
 
    @Override
    public List<UserDtls> getUsers(String role) {
-      return userRepository.findByRole(role);
+      return userRepository.findByroles(role);
    }
 
    @Override
@@ -108,7 +115,7 @@ public class UserServiceImp implements UserService {
 
    @Override
    public void updateUserResetToken(String email, String resetToken) {
-      UserDtls findByemail = userRepository.findByEmail(email);
+      UserDtls findByemail = userRepository.findByusername(email);
       findByemail.setResetToken(resetToken);
       userRepository.save(findByemail);
 
@@ -138,10 +145,6 @@ public class UserServiceImp implements UserService {
       if (!ObjectUtils.isEmpty(dbuser)) {
          dbuser.setName(user.getName());
          dbuser.setMobileNumber(user.getMobileNumber());
-         dbuser.setAddress(user.getAddress());
-         dbuser.setCity(user.getCity());
-         dbuser.setState(user.getState());
-         dbuser.setPincode(user.getPincode());
          saveUser = userRepository.save(dbuser);
 
       }
@@ -169,13 +172,18 @@ public class UserServiceImp implements UserService {
 
    @Override
    public UserDtls saveAdmin(UserDtls user) {
-      user.setRole("ROLE_ADMIN");
+      user.setRoles("ROLE_ADMIN");
       user.setIsEnable(true);
       user.setAccountNonLocked(true);
       user.setFailedAttempt(0);
       user.setLockTime(null);
-      String encodePassword = passwordEncoder.encode(user.getPassword());
-      user.setPassword(encodePassword);
+      user.setPassword(passwordEncoder.encode(user.getPassword()));
+      // String encodePassword = passwordEncoder.encode(user.getPassword());
+      // user.setPassword(user.getPassword());
+      // user.setPassword(user.getPassword());
+      // user.setUsername(user.getUsername());
+      // user.setName(user.getName());
+      // user.setMobileNumber(user.getMobileNumber());
       UserDtls saveUser = userRepository.save(user);
       return saveUser;
    }

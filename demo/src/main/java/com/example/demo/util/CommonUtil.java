@@ -1,7 +1,6 @@
 package com.example.demo.util;
 
 import java.io.UnsupportedEncodingException;
-import java.security.Principal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import com.example.demo.model.Feedback;
 import com.example.demo.model.ProductOrder;
-import com.example.demo.model.UserDtls;
 import com.example.demo.service.UserService;
 
 import jakarta.mail.MessagingException;
@@ -26,25 +24,43 @@ public class CommonUtil {
     @Autowired
     private UserService userService;
 
+    // for sending email- use javamailsender
     public Boolean sendMail(String url, String reciepentMail) throws UnsupportedEncodingException, MessagingException {
+
+        // create a new email message object to be sent.
         MimeMessage message = mailSender.createMimeMessage();
+        // helps to easily set details like sender,receiver,subject and content
         MimeMessageHelper helper = new MimeMessageHelper(message);
+        // Sets the sender’s email and the display name (here: “Shopping Cart”).
         helper.setFrom("khushisaraswat69@gmail.com", "Shooping Cart");
+        // Sets the recipient’s email address.
         helper.setTo(reciepentMail);
+        // Creates the HTML content for the email, including a reset link.
         String content = "<p>Hello,</p>" + "<p>You have requested to reset your password.</p>"
                 + "<p>Click the link below to change your password:</p>" + "<p><a href=\"" + url
                 + "\">Change my password</a></p>";
+        // Sets the email subject line.
         helper.setSubject("Password Reset");
+        // Sets the email body content and enables HTML formatting.
         helper.setText(content, true);
         mailSender.send(message);
         return true;
     }
 
     public String generateUrl(HttpServletRequest request) {
-
+        // Gets the full URL of the current HTTP request as a string.
         String siteUrl = request.getRequestURL().toString();
+        // Removes the servlet path part from the URL to get only the base domain
+        // (e.g.,https://example.com).
         return siteUrl.replace(request.getServletPath(), "");
 
+        /*
+         * The method takes the full request URL using
+         * request.getRequestURL().toString(),
+         * then removes the servlet path (request.getServletPath()) using .replace().
+         * This returns only the base website URL
+         * (e.g., https://example.com) from the full request link.
+         */
     }
 
     String msg = null;
@@ -62,7 +78,7 @@ public class CommonUtil {
 
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message);
-        helper.setFrom("khushisaraswat69@gmail.com", "Shooping Cart");
+        helper.setFrom("khushisaraswat69@gmail.com", "Trendify");
         helper.setTo(order.getOrderAddress().getEmail());
         msg = msg.replace("[[name]]", order.getOrderAddress().getFirstName());
         msg = msg.replace("[[orderStatus]]", status);
@@ -121,10 +137,12 @@ public class CommonUtil {
         return true;
     }
 
-    public UserDtls getLoggedInUserDetails(Principal p) {
-        String email = p.getName();
-        UserDtls userDtls = userService.getUserByEmail(email);
-        return userDtls;
-    }
+    /*
+     * public UserDtls getLoggedInUserDetails(Principal p) {
+     * String email = p.getName();
+     * UserDtls userDtls = userService.getUserByEmail(email);
+     * return userDtls;
+     * }
+     */
 
 }

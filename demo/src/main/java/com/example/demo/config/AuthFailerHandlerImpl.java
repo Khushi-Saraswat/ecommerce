@@ -31,8 +31,8 @@ public class AuthFailerHandlerImpl extends SimpleUrlAuthenticationFailureHandler
             AuthenticationException exception) throws IOException, ServletException {
 
         String email = request.getParameter("username");
-
-        UserDtls userDtls = userRepository.findByEmail(email);
+        System.out.println("hiii");
+        UserDtls userDtls = userRepository.findByusername(email);
 
         if (userDtls != null) {
 
@@ -62,6 +62,7 @@ public class AuthFailerHandlerImpl extends SimpleUrlAuthenticationFailureHandler
             exception = new LockedException("Email & password invalid");
         }
 
+        System.out.println(exception + "exception");
         super.setDefaultFailureUrl("/signin?error");
         super.onAuthenticationFailure(request, response, exception);
     }

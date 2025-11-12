@@ -1,47 +1,91 @@
 package com.example.demo.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.example.demo.service.UserInfoService;
+
+//marks the class as the spring configuration class.....
 @Configuration
+// enable spring security web features......
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private AuthenticationSuccessHandler authenticationSuccessHandler;
+    /*
+     * @Autowired
+     * 
+     * @Lazy
+     * private AuthFailerHandlerImpl authenticationfailureHandler;
+     * 
+     * @Autowired
+     * private JwtAuthFilter jwtAuthFilter;
+     * 
+     * DaoAuthenticationProvider daoAuthenticationProvider;
+     * 
+     * @Bean
+     * public BCryptPasswordEncoder passwordEncoder() {
+     * return new BCryptPasswordEncoder();
+     * }
+     * 
+     * @Bean
+     * public UserDetailsService getDetailsService() {
+     * return new UserInfoService();
+     * }
+     * 
+     * // check whether the email and mobile number is correct or not...
+     */
+
+    private DaoAuthenticationProvider daoAuthenticationProvider;
 
     @Autowired
-    @Lazy
-    private AuthFailerHandlerImpl authenticationfailureHandler;
+    private UserInfoService userInfoService;
 
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
+
+    // used for encoding and decoding passwords.
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // used for authenticating users. it delegate authentication request to various
+    // authenticationProvider implementations.
     @Bean
-    public UserDetailsService getDetailsService() {
-        return new UserDetailsServiceImpl();
+    public AuthenticationManager authenticationManager() {
+        return new ProviderManager(authenticationProvider());
     }
 
-    // check whether the email and mobile number is correct or not...
+    // Interfaces responsible for authenticating users based on specific credentials
+    // (e.g., DaoAuthenticationProvider for username/password,
+    // JwtAuthenticationProvider for JWT tokens).
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(getDetailsService());
+        daoAuthenticationProvider = new DaoAuthenticationProvider();
+        daoAuthenticationProvider.setUserDetailsService(userInfoService);
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
         return daoAuthenticationProvider;
+
     }
 
+    // responsible for incoming requests,handling authentication,authorization and
+    // other security features.
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -67,18 +111,39 @@ public class SecurityConfig {
          */
 
         http.csrf(csrf -> csrf.disable()).cors(cors -> cors.disable())
-                .authorizeHttpRequests(req -> req.requestMatchers("/user/**").hasRole("USER")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/**").permitAll())
-                .formLogin(form -> form.loginPage("/signin")
-                        .loginProcessingUrl("/login")
-                        // .defaultSuccessUrl("/")
-                        .failureHandler(authenticationfailureHandler)
-                        .successHandler(authenticationSuccessHandler))
-                .logout(logout -> logout.permitAll());
+
+                // define which url's and request patterns require authentication.
+                .authorizeHttpRequests(
+                        req -> req
+                                .requestMatchers("/api/auth/welcome", "/api/auth/GenerateToken", "/api/auth/register",
+                                        "/forgot-password", "/reset-password")
+                                .permitAll()
+                                .anyRequest().authenticated())
+                // Stateless session-for jwt implementation
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .authenticationProvider(authenticationProvider())
+
+                // Add JWT filter before Spring Security's default filter
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
 
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(List.of("http://localhost:8080"));
+        configuration.setAllowedMethods(List.of("GET", "POST"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 
 }
