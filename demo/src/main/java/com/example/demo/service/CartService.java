@@ -5,8 +5,10 @@ import java.util.List;
 import com.example.demo.model.Cart;
 
 public interface CartService {
-    public Cart saveCart(Integer productId, Integer userId);
+    // public Cart saveCart(Integer productId, Integer userId);
     public List<Cart> getCartByUsers(Integer userId);
+
     public Integer getCounterCart(Integer userId);
-    public void updateQuantity(String sy,Integer cid);
+
+    public void updateQuantity(String sy, Integer cid);
 }

@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.demo.model.UserDtls;
 
-public interface UserRepository extends JpaRepository<UserDtls, Integer> {
+public interface UserRepository extends JpaRepository<UserDtls, Long> {
 
     // public Optional<UserDtls> findByusername(String email);
 

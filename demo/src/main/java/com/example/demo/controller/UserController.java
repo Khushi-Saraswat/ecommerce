@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.config.JwtService;
 import com.example.demo.exception.AuthenticationIsNotValid;
 import com.example.demo.exception.UserAlreadyExist;
-import com.example.demo.model.Cart;
 import com.example.demo.model.Feedback;
 //import com.example.demo.model.Product;
 import com.example.demo.model.ProductOrder;
+import com.example.demo.model.RefreshToken;
 import com.example.demo.model.UserDtls;
 import com.example.demo.model.Wish;
+import com.example.demo.repository.RefreshTokenRepo;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.request.AuthRequest;
 import com.example.demo.request.RegRequest;
@@ -38,6 +40,7 @@ import com.example.demo.service.CartService;
 import com.example.demo.service.CategoryService;
 import com.example.demo.service.FeedbackService;
 import com.example.demo.service.OrderService;
+import com.example.demo.service.RefreshTokenService;
 import com.example.demo.service.UserInfoService;
 import com.example.demo.service.UserService;
 import com.example.demo.service.UserServiceImp;
@@ -51,6 +54,12 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/api/auth")
 public class UserController {
+
+    @Autowired
+    private final RefreshTokenRepo refreshTokenRepo;
+
+    @Autowired
+    private final RefreshTokenService refreshTokenService;
 
     @Autowired
     private UserServiceImp userServiceImp;
@@ -88,11 +97,16 @@ public class UserController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    UserController(RefreshTokenService refreshTokenService, RefreshTokenRepo refreshTokenRepo) {
+        this.refreshTokenService = refreshTokenService;
+        this.refreshTokenRepo = refreshTokenRepo;
+    }
+
     // create login endpoint- use to authenticate user if valid provide
     // authentication token.
 
     @PostMapping("/GenerateToken")
-    public ResponseEntity<AuthResponse> authenticationAndGetToken(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<Map<String, String>> authenticationAndGetToken(@RequestBody AuthRequest authRequest) {
 
         AuthResponse authResponse = new AuthResponse();
         Authentication authentication;
@@ -111,11 +125,16 @@ public class UserController {
         }
 
         UserDetails userDetails = userInfoService.loadUserByUsername(authRequest.getUsername());
+        UserDtls userDtls = userRepository.findByusername(userDetails.getUsername());
+
         if (authentication.isAuthenticated()) {
             String jwt = jwtService.generateToken(userDetails.getUsername());
             authResponse.setJwt(jwt);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDtls.getId());
             System.out.println("jwt created");
-            return ResponseEntity.ok(authResponse);
+            return ResponseEntity.ok(Map.of(
+                    "accessToken", jwt,
+                    "refreshToken", refreshToken.getToken()));
 
         }
 
@@ -157,6 +176,40 @@ public class UserController {
 
     }
 
+    @PostMapping("/refresh")
+    @ResponseBody
+    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> payload) {
+
+        String requestToken = payload.get("refreshToken");
+        return refreshTokenRepo.findByToken(requestToken)
+                .map(token -> {
+                    if (refreshTokenService.isTokenExpired(token)) {
+                        refreshTokenRepo.delete(token);
+                        return ResponseEntity.badRequest().body("Refresh token expired. Please login again.");
+                    }
+                    String newJwt = jwtService.generateToken(token.getUser().getUsername());
+                    return ResponseEntity.ok(Map.of("token", newJwt));
+                })
+                .orElse(ResponseEntity.badRequest().body("Invalid refresh token."));
+
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(@RequestBody Map<String, String> payload) {
+        String requestToken = payload.get("refreshToken");
+
+        if (requestToken == null || requestToken.isBlank()) {
+            return ResponseEntity.badRequest().body("Refresh token is required");
+        }
+
+        return refreshTokenRepo.findByToken(requestToken)
+                .map(token -> {
+                    refreshTokenRepo.delete(token);
+                    return ResponseEntity.ok("Logged out successfully");
+                })
+                .orElse(ResponseEntity.badRequest().body("Invalid refresh token"));
+    }
+
     @GetMapping("/welcome")
     @ResponseBody
     public String welcome() {
@@ -182,30 +235,36 @@ public class UserController {
      * }
      */
 
-    @GetMapping("/addCart")
-    public String addToCart(@RequestParam Integer pid, @RequestParam Integer uid, HttpSession session) {
-        System.out.println(pid + "" + uid + "in addToCart");
-        Cart saveCart = cartService.saveCart(pid, uid);
+    /*
+     * @GetMapping("/addCart")
+     * public String addToCart(@RequestParam Integer pid, @RequestParam Integer uid,
+     * HttpSession session) {
+     * System.out.println(pid + "" + uid + "in addToCart");
+     * Cart saveCart = cartService.saveCart(pid, uid);
+     * 
+     * if (ObjectUtils.isEmpty(saveCart)) {
+     * session.setAttribute("errorMsg", "Product add to cart failed");
+     * } else {
+     * session.setAttribute("succMsg", "Product added to cart");
+     * }
+     * return "redirect:/products/" + pid;
+     * }
+     */
 
-        if (ObjectUtils.isEmpty(saveCart)) {
-            session.setAttribute("errorMsg", "Product add to cart failed");
-        } else {
-            session.setAttribute("succMsg", "Product added to cart");
-        }
-        return "redirect:/products/" + pid;
-    }
-
-    @GetMapping("/addWish")
-    public String addWish(@RequestParam Integer pid, @RequestParam Integer uid, HttpSession session) {
-        System.out.println(pid + "" + uid);
-        Wish wish = wishService.saveWish(pid, uid);
-        if (ObjectUtils.isEmpty(wish)) {
-            session.setAttribute("errorMsg", "Product already added in wishlist");
-        } else {
-            session.setAttribute("succMsg", "Product added to wishlist");
-        }
-        return "redirect:/products/" + pid;
-    }
+    /*
+     * @GetMapping("/addWish")
+     * public String addWish(@RequestParam Integer pid, @RequestParam Integer uid,
+     * HttpSession session) {
+     * System.out.println(pid + "" + uid);
+     * Wish wish = wishService.saveWish(pid, uid);
+     * if (ObjectUtils.isEmpty(wish)) {
+     * session.setAttribute("errorMsg", "Product already added in wishlist");
+     * } else {
+     * session.setAttribute("succMsg", "Product added to wishlist");
+     * }
+     * return "redirect:/products/" + pid;
+     * }
+     */
 
     /*
      * @GetMapping("/cart")

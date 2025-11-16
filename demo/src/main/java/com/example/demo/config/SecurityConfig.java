@@ -116,7 +116,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         req -> req
                                 .requestMatchers("/api/auth/welcome", "/api/auth/GenerateToken", "/api/auth/register",
-                                        "/forgot-password", "/reset-password")
+                                        "/forgot-password", "/reset-password", "/api/auth/refresh", "/api/auth/logout")
                                 .permitAll()
                                 .anyRequest().authenticated())
                 // Stateless session-for jwt implementation

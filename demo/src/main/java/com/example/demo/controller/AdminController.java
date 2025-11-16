@@ -11,6 +11,9 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
@@ -66,102 +69,77 @@ public class AdminController {
     @Autowired
     private OrderService orderservice;
 
-    @GetMapping("/")
-    public String index() {
-        return "admin/index";
-    }
-
-    /*
-     * @ModelAttribute
-     * public void getUserDetails(Principal p, Model m) {
-     * 
-     * if (p != null) {
-     * String email = p.getName();
-     * UserDtls userDtls = userService.getUserByEmail(email);
-     * m.addAttribute("user", userDtls);
-     * Integer countCart = cartService.getCounterCart(userDtls.getId());
-     * m.addAttribute("countCart", countCart);
-     * 
-     * }
-     * List<Category> allActiveCategory = categoryService.getAllActiveCategory();
-     * m.addAttribute("category", allActiveCategory);
-     * 
-     * }
-     */
-
-    @GetMapping("/loadAddProduct")
-    public String loadAddProduct(Model m) {
-        List<Category> categories = categoryService.getAllCategory();
-        m.addAttribute("categories", categories);
-        return "admin/addProduct";
-    }
-
+    // this method is used to delete a particular product by it's id
     @GetMapping("/deleteProduct/{id}")
-    public String deleteProduct(@PathVariable int id, HttpSession session) {
+    public ResponseEntity<String> deleteProduct(@PathVariable int id) {
         System.out.println(id + "in deleting product from admin side");
         Boolean deleteProduct = productService.deleteProduct(id);
+        // code 200 -successful deletion
         if (deleteProduct) {
-            session.setAttribute("succMsg", "Product delete success");
-        } else {
-            session.setAttribute("errorMsg", "Something wrong on server");
+            return new ResponseEntity<>("Product is deleted successfully !!!", HttpStatusCode.valueOf(200));
         }
-        return "redirect:/admin/product";
+        // code 409 Conflict: If the resource cannot be deleted due to a conflict
+        else {
+            return new ResponseEntity<>(HttpStatusCode.valueOf(409));
+        }
 
     }
 
+    // this method is used to load all the existing category that is added by admin.
     @GetMapping("/Category")
-    public String loadCategory(Model m, @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
+    public ResponseEntity<List<Category>> loadCategory(
+            @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
             @RequestParam(name = "pageSize", defaultValue = "3") Integer pageSize) {
 
+        // get page requested for particular category
         Page<Category> page = categoryService.getAllActiveCategoryPagination(pageNo, pageSize);
         List<Category> category = page.getContent();
-        m.addAttribute("categorys", category);
-        m.addAttribute("CategorySize", category.size());
         System.out.println(category.size() + "category size");
-        m.addAttribute("pageNo", page.getNumber());
         System.out.println(page.getNumber() + "pagenumber");
-        m.addAttribute("pageSize", pageSize);
         System.out.println(pageSize + "pageSize");
-        m.addAttribute("totalElements", page.getTotalElements());
         System.out.println("totalElements" + page.getTotalElements());
-        m.addAttribute("totalPages", page.getTotalPages());
         System.out.println("totalPages" + page.getTotalElements());
-        m.addAttribute("isFirst", page.isFirst());
         System.out.println("isFirst" + page.isFirst());
-        m.addAttribute("isLast", page.isLast());
         System.out.println("isLast" + page.isLast());
-
-        // m.addAttribute("categorys", categoryService.getAllCategory());
-        return "admin/Category";
+        List<Category> categories = categoryService.getAllActiveCategory();
+        if (categories != null) {
+            return new ResponseEntity<>(categories, HttpStatus.valueOf(200));
+        }
+        return new ResponseEntity<>(HttpStatusCode.valueOf(404));
     }
 
+    // this method is used to savecategory added by admin.
     @PostMapping("/saveCategory")
-    public String saveCategory(@ModelAttribute("Category") Category category,
-            @RequestParam("img") MultipartFile file,
-            HttpSession session) throws IOException {
+    public ResponseEntity<String> AddCategory(Category category,
+            @RequestParam("img") MultipartFile file) throws IOException {
+
         System.out.println(category.getIsActive());
         System.out.println(category.getName());
-        // System.out.println(category.getImageName());
+
         if (file == null) {
             System.out.println("file is empty");
         } else {
             System.out.println("file is not empty");
         }
+        // assign the name of file in this ...
         String imageName = file != null ? file.getOriginalFilename() : "default.jpg";
         category.setImageName(imageName);
-
+        // and if category already exist show error message
         Boolean existCategory = categoryService.existCategory(category.getName());
 
         if (existCategory) {
-            session.setAttribute("errorMsg", "Category Name already exists");
+            // session.setAttribute("errorMsg", "Category Name already exists");
+            // throw error
         } else {
-
+            // saves the category
             Category saveCategory = categoryService.saveCategory(category);
 
+            // if the category is not saved show error message.
             if (ObjectUtils.isEmpty(saveCategory)) {
-                session.setAttribute("errorMsg", "Not saved ! internal server error");
+                return new ResponseEntity<>("Category is not saved", HttpStatusCode.valueOf(500));
             } else {
 
+                // category saved logic
                 try (InputStream inputStream = file.getInputStream()) {
                     Path path = Paths.get("C:\\Users\\DELL\\Desktop\\ecommerce\\demo\\src\\main\\resources\\static\\img"
                             + File.separator + "category_img" + File.separator
@@ -175,48 +153,42 @@ public class AdminController {
             }
         }
 
-        return "redirect:/admin/Category";
+        return new ResponseEntity<>("Category saved successfully !!", HttpStatus.valueOf(200));
+
     }
 
-    /*
-     * private UserDtls getLoggedInUserDetails(Principal p) {
-     * String email = p.getName();
-     * UserDtls userDtls = userService.getUserByEmail(email);
-     * return userDtls;
-     * }
-     */
-
+    // this method is used to delete the category by id.
     @GetMapping("/deleteCategory/{id}")
-    public String deleteCategory(@PathVariable int id, HttpSession httpSession) {
+    public ResponseEntity<String> deleteCategory(@PathVariable int id) {
 
+        // get category by id.
         Boolean deleteCategory = categoryService.deleteCategory(id);
         if (deleteCategory) {
-            httpSession.setAttribute("succMsg", "Category delete success");
+            return new ResponseEntity<>(HttpStatusCode.valueOf(200));
         } else {
-            httpSession.setAttribute("errorMsg", "something wrong on server");
+            return new ResponseEntity<>(HttpStatusCode.valueOf(409));
         }
 
-        return "redirect:/admin/Category";
     }
 
-    @GetMapping("/loadEditCategory/{id}")
-    public String loadEditCategory(@PathVariable int id, Model m) {
-        m.addAttribute("category", categoryService.getCategoryById(id));
-        return "admin/edit_category";
-    }
-
+    // this method is used to update category
     @PostMapping("/updateCategory")
-    public String UpdateCategory(@ModelAttribute Category category, @RequestParam("file") MultipartFile file,
-            HttpSession httpSession) {
+    public ResponseEntity<String> UpdateCategory(Category category, @RequestParam("file") MultipartFile file) {
+        // find old category by it's id.
         Category oldcategory = categoryService.getCategoryById(category.getId());
         System.out.println(category.getId());
+        // get imageName
         String imageName = file.isEmpty() ? oldcategory.getImageName() : file.getOriginalFilename();
+        // if edit category object is not null
+
         if (!ObjectUtils.isEmpty(category)) {
             oldcategory.setName(category.getName());
             oldcategory.setIsActive(category.getIsActive());
             oldcategory.setImageName(imageName);
         }
+        // save the category
         Category updateCategory = categoryService.saveCategory(oldcategory);
+        // if updatedcategory is not empty
         if (!ObjectUtils.isEmpty(updateCategory)) {
             if (!file.isEmpty()) {
 
@@ -230,28 +202,37 @@ public class AdminController {
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
-                httpSession.setAttribute("succMsg", "Category update success");
+
             }
+
+            return new ResponseEntity<>("Category is updated sucessfully !!!", HttpStatusCode.valueOf(200));
 
         } else {
 
-            httpSession.setAttribute("errorMsg", "something wrong on server");
+            return new ResponseEntity<>("Category is not updated sucessfully", HttpStatus.NOT_MODIFIED);
         }
-        return "redirect:/admin/loadEditCategory/" + category.getId();
+
     }
 
+    // this method is responsible for saving the product of a particular category
     @PostMapping("/saveProduct")
-    public String saveProduct(@ModelAttribute Product product, @RequestParam("file") MultipartFile image,
-            HttpSession session) throws IOException {
+    public ResponseEntity<String> saveProduct(Product product, @RequestParam("file") MultipartFile image)
+            throws IOException {
 
-        String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
+        String category = product.getCategory();
+        // first of all check whether category exist or not
+        Boolean isExist = categoryService.existCategory(category);
 
-        product.setImage(imageName);
-        product.setDiscount(0);
-        product.setDiscountPrice(product.getPrice());
-        Product saveProduct = productService.saveProduct(product);
+        // if category exist we will proceed and saved the product and save the image in
+        // local directory
+        if (isExist) {
 
-        if (!ObjectUtils.isEmpty(saveProduct)) {
+            String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
+
+            product.setImage(imageName);
+            product.setDiscount(0);
+            product.setDiscountPrice(product.getPrice());
+            Product saveProduct = productService.saveProduct(product);
 
             try (InputStream inputStream = image.getInputStream()) {
                 Path path = Paths.get("C:\\Users\\DELL\\Desktop\\ecommerce\\demo\\src\\main\\resources\\static\\img"
@@ -263,14 +244,21 @@ public class AdminController {
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
-            ;
 
-            session.setAttribute("succMsg", "Product Saved Success");
-        } else {
-            session.setAttribute("errorMsg", "something wrong on server");
+            // if product saved
+            if (saveProduct != null)
+                return new ResponseEntity<>("Product saved successfully !!", HttpStatus.valueOf(200));
+
+            // if product is not saved
+            else
+                return new ResponseEntity<>("Product is not saved", HttpStatusCode.valueOf(500));
+
+        }
+        // category does not exist
+        else {
+            return ResponseEntity.ok("Category does not exist");
         }
 
-        return "redirect:/admin/loadAddProduct";
     }
 
     @GetMapping("/product")
@@ -308,29 +296,21 @@ public class AdminController {
         return "admin/product";
     }
 
-    @GetMapping("/editProduct/{id}")
-    public String editProduct(@PathVariable int id, Model e) {
-        e.addAttribute("product", productService.getProductById(id));
-        e.addAttribute("category", categoryService.getAllCategory());
-        return "admin/edit_product";
-    }
-
+    // this method is responsible for updating a product.
     @PostMapping("/updateProduct")
-    public String editProduct(@ModelAttribute Product pro, @RequestParam("file") MultipartFile image,
-            HttpSession session) {
-        // Product Product = productService.updateProduct(pro,image);
-        if (pro.getDiscount() < 0 || pro.getDiscount() > 100) {
-            session.setAttribute("errorMsg", "invalid Discount");
-        } else {
-            Product updateProduct = productService.updateProduct(pro, image);
-            if (!ObjectUtils.isEmpty(updateProduct)) {
-                session.setAttribute("succMsg", "Product update success");
-            } else {
-                session.setAttribute("errorMsg", "Something wrong on server");
-            }
-        }
-        return "redirect:/admin/editProduct/" + pro.getId();
+    public ResponseEntity<String> editProduct(Product product, @RequestParam("file") MultipartFile image) {
 
+        if (product.getDiscount() < 0 || product.getDiscount() > 100) {
+            ResponseEntity.ok("invalid Discount");
+        } else {
+            Product updateProduct = productService.updateProduct(product, image);
+            if (!ObjectUtils.isEmpty(updateProduct)) {
+                return new ResponseEntity<>("Product is updated sucessfully !!!", HttpStatusCode.valueOf(200));
+            }
+
+        }
+
+        return new ResponseEntity<>("Product  is not updated successfully", HttpStatus.NOT_MODIFIED);
     }
 
     @GetMapping("/users")
@@ -346,19 +326,24 @@ public class AdminController {
         return "/admin/users";
     }
 
-    @GetMapping("/updateSts")
-    public String updateUserAccountStatus(@RequestParam Boolean status, @RequestParam Integer id,
-            @RequestParam String type, HttpSession session) {
-        System.out.println(type + "type in update status..");
-        Boolean f = userService.updateAccountStatus(id, status);
-        if (f) {
-            session.setAttribute("succMsg", "Account Status Updated");
-        } else {
-            session.setAttribute("errorMsg", "Something wrong on server");
-        }
-        return "redirect:/admin/users?type=" + type;
-    }
+    /*
+     * @GetMapping("/updateSts")
+     * public String updateUserAccountStatus(@RequestParam Boolean
+     * status, @RequestParam Integer id,
+     * 
+     * @RequestParam String type, HttpSession session) {
+     * System.out.println(type + "type in update status..");
+     * Boolean f = userService.updateAccountStatus(id, status);
+     * if (f) {
+     * session.setAttribute("succMsg", "Account Status Updated");
+     * } else {
+     * session.setAttribute("errorMsg", "Something wrong on server");
+     * }
+     * return "redirect:/admin/users?type=" + type;
+     * }
+     */
 
+    // this is for order sections.........
     @GetMapping("/orders")
     public String getAllOrders(Model m,
             @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,

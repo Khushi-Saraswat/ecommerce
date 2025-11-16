@@ -10,10 +10,13 @@ import com.example.demo.model.Category;
 
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
+      // checks whether the category exist by name or not..
       public Boolean existsByName(String name);
 
+      // Find list of category if they are active by admin.
       public List<Category> findByIsActiveTrue();
 
+      // Return Pagination of category when pageable for active category is true.
       Page<Category> findByIsActiveTrue(Pageable pageable);
 
 }

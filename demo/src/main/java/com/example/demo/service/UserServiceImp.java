@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -61,17 +60,19 @@ public class UserServiceImp implements UserService {
       return userRepository.findByroles(role);
    }
 
-   @Override
-   public Boolean updateAccountStatus(Integer id, Boolean status) {
-      Optional<UserDtls> findByUser = userRepository.findById(id);
-      if (findByUser.isPresent()) {
-         UserDtls userDtls = findByUser.get();
-         userDtls.setIsEnable(status);
-         userRepository.save(userDtls);
-         return true;
-      }
-      return false;
-   }
+   /*
+    * @Override
+    * public Boolean updateAccountStatus(Integer id, Boolean status) {
+    * Optional<UserDtls> findByUser = userRepository.findById(id);
+    * if (findByUser.isPresent()) {
+    * UserDtls userDtls = findByUser.get();
+    * userDtls.setIsEnable(status);
+    * userRepository.save(userDtls);
+    * return true;
+    * }
+    * return false;
+    * }
+    */
 
    @Override
    public void increaseFailedAttempt(UserDtls user) {
