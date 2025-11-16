@@ -2,9 +2,12 @@ package com.example.demo.controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.config.JwtService;
 import com.example.demo.exception.AuthenticationIsNotValid;
 import com.example.demo.exception.UserAlreadyExist;
+import com.example.demo.model.Cart;
 import com.example.demo.model.Feedback;
 //import com.example.demo.model.Product;
 import com.example.demo.model.ProductOrder;
@@ -235,21 +240,35 @@ public class UserController {
      * }
      */
 
-    /*
-     * @GetMapping("/addCart")
-     * public String addToCart(@RequestParam Integer pid, @RequestParam Integer uid,
-     * HttpSession session) {
-     * System.out.println(pid + "" + uid + "in addToCart");
-     * Cart saveCart = cartService.saveCart(pid, uid);
-     * 
-     * if (ObjectUtils.isEmpty(saveCart)) {
-     * session.setAttribute("errorMsg", "Product add to cart failed");
-     * } else {
-     * session.setAttribute("succMsg", "Product added to cart");
-     * }
-     * return "redirect:/products/" + pid;
-     * }
-     */
+    // this method is responsible for add product to cart
+    @GetMapping("/addCart")
+    public ResponseEntity<String> addToCart(@RequestParam Integer pid, @RequestParam Long uid) {
+        System.out.println(pid + "" + uid + "in addToCart");
+        Cart saveCart = cartService.saveCart(pid, uid);
+
+        if (!ObjectUtils.isEmpty(saveCart)) {
+            return new ResponseEntity<>("Product added to cart", HttpStatusCode.valueOf(200));
+        }
+
+        return new ResponseEntity<>("Product is not added successfully !!!", HttpStatus.NOT_MODIFIED);
+
+    }
+
+    @GetMapping("/api/cart")
+    public ResponseEntity<List<Cart>> getCart(@RequestParam Long id) {
+        List<Cart> cart = cartService.getCartByUsers(id);
+
+        if (cart.size() > 0)
+            return ResponseEntity.ok(cart);
+
+        return new ResponseEntity<>(cart, HttpStatus.NOT_MODIFIED);
+
+    }
+
+    @DeleteMapping("/api/cart")
+    public ResponseEntity<List<Cart>> getCart(@RequestParam Integer productid) {
+
+    }
 
     /*
      * @GetMapping("/addWish")

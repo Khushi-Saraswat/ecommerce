@@ -3,10 +3,13 @@ package com.example.demo.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.model.Cart;
+import com.example.demo.model.Product;
+import com.example.demo.model.UserDtls;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
@@ -23,34 +26,43 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private ProductRepository productRepository;
 
-    /*
-     * @Override
-     * public Cart saveCart(Integer productId, Integer userId) {
-     * UserDtls userdtls = userrepo.findById(userId).get();
-     * Product product = productRepository.findById(productId).get();
-     * Cart cartStatus = cartRepository.findByProductIdAndUserId(productId, userId);
-     * System.out.println(cartStatus + "cartStatuss");
-     * Cart cart = null;
-     * if (ObjectUtils.isEmpty(cartStatus)) {
-     * cart = new Cart();
-     * cart.setProduct(product);
-     * cart.setUser(userdtls);
-     * cart.setQuantity(1);
-     * cart.setTotalPrice(1 * product.getDiscountPrice());
-     * } else {
-     * cart = cartStatus;
-     * // System.out.println(cartStatus);
-     * cart.setQuantity(cart.getQuantity() + 1);
-     * cart.setTotalPrice(cart.getQuantity() *
-     * cart.getProduct().getDiscountPrice());
-     * }
-     * Cart saveCart = cartRepository.save(cart);
-     * return saveCart;
-     * }
-     */
-
+    // this method is responsible for saving cart
     @Override
-    public List<Cart> getCartByUsers(Integer userId) {
+    public Cart saveCart(Integer productId, Long userId) {
+
+        // get user by id
+        UserDtls userDtls = userrepo.findById(userId).get();
+        // get product by id
+        Product product = productRepository.findById(productId).get();
+
+        // get cart by productid and userid using springdatajpa
+        Cart cartStatus = cartRepository.findByProductIdAndUserId(productId, userId);
+
+        Cart cart = null;
+
+        // if cart is null means save the cart
+        if (ObjectUtils.isEmpty(cartStatus)) {
+            cart = new Cart();
+            cart.setProduct(product);
+            cart.setUser(userDtls);
+            cart.setQuantity(1);
+            cart.setTotalPrice(1 * product.getDiscountPrice());
+        } // else increase the quantity of item or calculate the total price
+        else {
+            cart = cartStatus;
+            cart.setQuantity(cart.getQuantity() + 1);
+            cart.setTotalPrice(cart.getQuantity() * cart.getProduct().getDiscountPrice());
+        }
+        // save the cart and return
+        Cart saveCart = cartRepository.save(cart);
+
+        return saveCart;
+    }
+
+    // this method is responsible for sending cart with totalprice added with
+    // discount
+    @Override
+    public List<Cart> getCartByUsers(Long userId) {
         List<Cart> carts = cartRepository.findByUserId(userId);
         Double totalOrderPrice = 0.0;
         List<Cart> updateCarts = new ArrayList<>();
@@ -66,7 +78,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Integer getCounterCart(Integer userId) {
+    public Integer getCounterCart(Long userId) {
         Integer countByUserId = cartRepository.countByUserId(userId);
         return countByUserId;
     }
@@ -91,6 +103,13 @@ public class CartServiceImpl implements CartService {
             cart.setQuantity(update);
             cartRepository.save(cart);
         }
+
+    }
+
+    @Override
+    public void deleteCart(Integer productId) {
+        Product product = productRepository.findById(productId).orElse(null);
+        cartRepository.deleteById(product.getId());
 
     }
 

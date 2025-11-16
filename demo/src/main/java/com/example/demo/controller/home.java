@@ -65,7 +65,11 @@ public class home {
         ProductCat productCat = new ProductCat();
         productCat.setCategorie(allActiveCategory);
         productCat.setProduct(allactiveProducts);
+
+        if(productCat != null)
         return ResponseEntity.ok(productCat);
+
+        return null;
     }
 
     // this method require category for pagination (pageno and pagesize) and then it
