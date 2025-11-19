@@ -9,9 +9,9 @@ import com.example.demo.model.Wish;
 
 public interface WishRepository extends JpaRepository<Wish, Integer> {
 
-      public Wish findByProductIdAndUserId(Integer productId, Integer userId);
+      public Wish findByProductIdAndUserId(Integer productId, Long userId);
 
-      public List<Wish> findByUserId(Integer userId);
+      public List<Wish> findByUserId(Long userId);
 
       public Wish findByProductId(Integer productId);
 

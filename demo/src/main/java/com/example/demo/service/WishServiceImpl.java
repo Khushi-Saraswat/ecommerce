@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import com.example.demo.model.Product;
+import com.example.demo.model.UserDtls;
 import com.example.demo.model.Wish;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
@@ -24,35 +25,41 @@ public class WishServiceImpl implements WishService {
     @Autowired
     private ProductRepository productRepository;
 
-    /*
-     * @Override
-     * public Wish saveWish(Integer productId, Integer userId) {
-     * 
-     * Product product = productRepository.findById(productId).get();
-     * UserDtls userdtls = userrepo.findById(userId).get();
-     * System.out.println("hi" + product + "" + userdtls);
-     * Wish savewish = null;
-     * Wish wishStatus = wishRepository.findByProductIdAndUserId(productId, userId);
-     * System.out.println(wishStatus + "wishStatus");
-     * Wish wish = new Wish();
-     * if (ObjectUtils.isEmpty(wishStatus)) {
-     * System.out.println("in wishlist");
-     * wish.setProduct(product);
-     * wish.setUser(userdtls);
-     * savewish = wishRepository.save(wish);
-     * 
-     * }
-     * 
-     * return savewish;
-     * 
-     * }
-     */
+    // this method is responsible for saving wish of a user
     @Override
-    public List<Wish> getAllWishByIdUserId(Integer UserId) {
+    public Wish saveWish(Integer productId, Long userId) {
+
+        // find product by product id.
+        Product product = productRepository.findById(productId).get();
+        // find user by user id.
+        UserDtls userdtls = userrepo.findById(userId).get();
+
+        Wish savewish = null;
+        // find the wishstatus.
+        Wish wishStatus = wishRepository.findByProductIdAndUserId(productId, userId);
+        System.out.println(wishStatus + "wishStatus");
+        Wish wish = new Wish();
+        if (ObjectUtils.isEmpty(wishStatus)) {
+            System.out.println("in wishlist");
+            wish.setProduct(product);
+            wish.setUser(userdtls);
+            savewish = wishRepository.save(wish);
+
+        }
+
+        return savewish;
+
+    }
+
+    // responsible for loading wishlist
+    @Override
+    public List<Wish> getAllWishByIdUserId(Long UserId) {
+
         List<Wish> wishlist = wishRepository.findByUserId(UserId);
         return wishlist;
     }
 
+    // delete wish list by userid
     @Override
     public Boolean deleteWishProduct(Integer Id) {
 

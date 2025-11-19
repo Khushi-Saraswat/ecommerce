@@ -37,7 +37,7 @@ public class OrderServiceImpl implements OrderService {
 
    @Override
    public void saveOrder(Integer userid, OrderRequest orderRequest) throws Exception {
-      List<Cart> carts = cartRepository.findByUserId(userid);
+      // List<Cart> carts = cartRepository.findByUserId(userid);
       for (Cart cart : carts) {
          ProductOrder order = new ProductOrder();
          // Random generate of id....

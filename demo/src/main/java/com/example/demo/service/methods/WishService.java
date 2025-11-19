@@ -7,9 +7,9 @@ import com.example.demo.model.Wish;
 
 public interface WishService {
 
-    // public Wish saveWish(Integer productId, Integer UserId);
+    public Wish saveWish(Integer productId, Long UserId);
 
-    public List<Wish> getAllWishByIdUserId(Integer UserId);
+    public List<Wish> getAllWishByIdUserId(Long UserId);
 
     public Boolean deleteWishProduct(Integer Id);
 

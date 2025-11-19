@@ -83,10 +83,14 @@ public class CartServiceImpl implements CartService {
         return countByUserId;
     }
 
+    // this is responsible for increasing and decreasing the quantity of product
+    // added to cart
     @Override
     public void updateQuantity(String sy, Integer cid) {
+        // find cart by cart id...
         Cart cart = cartRepository.findById(cid).get();
         Integer update;
+        // if the quantity is decrease
         if (sy.equalsIgnoreCase("de")) {
             update = cart.getQuantity() - 1;
             System.out.println(update + "decrease");
@@ -97,7 +101,9 @@ public class CartServiceImpl implements CartService {
                 cartRepository.save(cart);
             }
 
-        } else {
+        }
+        // if the quantity is increase...
+        else {
             update = cart.getQuantity() + 1;
             System.out.println(update + "increase");
             cart.setQuantity(update);
@@ -106,11 +112,16 @@ public class CartServiceImpl implements CartService {
 
     }
 
+    // this method is responsible for deleting a product in a cart
     @Override
-    public void deleteCart(Integer productId) {
+    public Boolean deleteCart(Integer productId) {
         Product product = productRepository.findById(productId).orElse(null);
-        cartRepository.deleteById(product.getId());
+        if (product != null) {
+            cartRepository.deleteById(product.getId());
+            return true;
+        }
 
+        return false;
     }
 
 }

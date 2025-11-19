@@ -27,10 +27,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.config.JwtService;
+import com.example.demo.dto.FeedbackDto;
 import com.example.demo.exception.AuthenticationIsNotValid;
 import com.example.demo.exception.UserAlreadyExist;
 import com.example.demo.model.Cart;
-import com.example.demo.model.Feedback;
 //import com.example.demo.model.Product;
 import com.example.demo.model.ProductOrder;
 import com.example.demo.model.RefreshToken;
@@ -254,6 +254,7 @@ public class UserController {
 
     }
 
+    // it is responsible for getting a cart by id.
     @GetMapping("/api/cart")
     public ResponseEntity<List<Cart>> getCart(@RequestParam Long id) {
         List<Cart> cart = cartService.getCartByUsers(id);
@@ -265,25 +266,30 @@ public class UserController {
 
     }
 
+    // this method is responsible for deleting a product by id in cart
     @DeleteMapping("/api/cart")
-    public ResponseEntity<List<Cart>> getCart(@RequestParam Integer productid) {
+    public ResponseEntity<String> DeleteCart(@RequestParam Integer productid) {
+        Boolean cartDelete = cartService.deleteCart(productid);
+        if (cartDelete)
+            return ResponseEntity.ok("successfully cart is deleted");
 
+        else
+            return new ResponseEntity<>(HttpStatusCode.valueOf(409));
     }
 
-    /*
-     * @GetMapping("/addWish")
-     * public String addWish(@RequestParam Integer pid, @RequestParam Integer uid,
-     * HttpSession session) {
-     * System.out.println(pid + "" + uid);
-     * Wish wish = wishService.saveWish(pid, uid);
-     * if (ObjectUtils.isEmpty(wish)) {
-     * session.setAttribute("errorMsg", "Product already added in wishlist");
-     * } else {
-     * session.setAttribute("succMsg", "Product added to wishlist");
-     * }
-     * return "redirect:/products/" + pid;
-     * }
-     */
+    // this is responsible for adding to wishlist
+    @GetMapping("/addWish")
+    public ResponseEntity<String> addWish(@RequestParam Integer pid, @RequestParam Long uid) {
+
+        Wish wish = wishService.saveWish(pid, uid);
+        if (!ObjectUtils.isEmpty(wish)) {
+            return ResponseEntity.ok("Product already added in wishlist");
+        } else {
+
+            return ResponseEntity.ok("Product is added in wishlist");
+        }
+
+    }
 
     /*
      * @GetMapping("/cart")
@@ -298,17 +304,25 @@ public class UserController {
      * }
      * return "/user/cart";
      * }
-     * 
-     * @GetMapping("/wish")
-     * public String loadWishPage(Principal p, Model m) {
-     * UserDtls user = getLoggedInUserDetails(p);
-     * List<Wish> Wish = wishService.getAllWishByIdUserId(user.getId());
-     * System.out.println(Wish);
-     * m.addAttribute("wish", Wish);
-     * 
-     * return "/user/Wishlist";
-     * }
      */
+    @GetMapping("/wish")
+    public ResponseEntity<List<Wish>> loadWishPage(@RequestParam Long userid) {
+
+        List<Wish> wishlist = wishService.getAllWishByIdUserId(userid);
+
+        return ResponseEntity.ok(wishlist);
+
+    }
+
+    @DeleteMapping("/api/wishlist")
+    public ResponseEntity<String> DeleteWishList(@RequestParam Integer productid) {
+        Boolean WishDelete = wishService.deleteWishProduct(productid);
+        if (WishDelete)
+            return ResponseEntity.ok("successfully wishlist is deleted");
+
+        else
+            return new ResponseEntity<>(HttpStatusCode.valueOf(409));
+    }
 
     /*
      * private UserDtls getLoggedInUserDetails(Principal p) {
@@ -318,18 +332,20 @@ public class UserController {
      * }
      */
 
+    // this is responsible for increasing and decreasing amount of quantity in
+    // cart......
     @GetMapping("/cartQuantityUpdate")
-    public String cartQuantityUpdate(@RequestParam String sy, @RequestParam Integer cid) {
+    public void cartQuantityUpdate(@RequestParam String sy, @RequestParam Integer cid) {
         cartService.updateQuantity(sy, cid);
-        return "redirect:/user/cart";
+
     }
 
     /*
      * @GetMapping("/orders")
-     * public String orderPage(Principal p, Model m) {
-     * UserDtls user = getLoggedInUserDetails(p);
+     * public String orderPage() {
+     * 
      * List<Cart> carts = cartService.getCartByUsers(user.getId());
-     * m.addAttribute("cart", carts);
+     * 
      * if (carts.size() > 0) {
      * 
      * Double orderPrice = carts.get(carts.size() - 1).getTotalOrderPrice();
@@ -341,6 +357,7 @@ public class UserController {
      * return "/user/orders";
      * }
      */
+
     /*
      * @PostMapping("/save")
      * public String saveOrder(@ModelAttribute OrderRequest orderRequest, Principal
@@ -430,21 +447,6 @@ public class UserController {
      * }
      */
 
-    @GetMapping("/delete/{id}")
-    public String deleteWishProduct(@PathVariable int id, HttpSession session) {
-        System.out.println("id for wishlist: " + id);
-        Boolean delete = false;
-        delete = wishService.deleteWishProduct(id);
-        System.out.println("delete variable.." + delete);
-        if (delete) {
-            session.setAttribute("succMsg", "Product delete from wishlist");
-        } else {
-            session.setAttribute("errorMsg", "Product not delete from wishlist");
-        }
-
-        return "/user/Wishlist";
-    }
-
     // @GetMapping("/add/{id}")
     // public String addToCart(@PathVariable int id, HttpSession session, Model m) {
 
@@ -471,30 +473,33 @@ public class UserController {
         return "user/Wishlist";
     }
 
-    @GetMapping("/feedback")
-    public String feedback() {
+    @PostMapping("feedback/add")
+    public ResponseEntity<String> saveFeed(@RequestBody FeedbackDto feedbackDto) {
+    FeedbackDto feedback = feedbackService.saveFeedBack(feedbackDto);
 
-        return "user/feedback";
+    if (feedback != null) {
+        return ResponseEntity.ok("Feedback is successfully saved");
+    } else {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                             .body("Feedback could not be saved");
+    }
+     
     }
 
-    @PostMapping("/saveFeedBack")
-    public String saveFeed(@ModelAttribute Feedback feedback, HttpSession httpSession) {
-        Boolean feed = false;
-        feedback.setDate(LocalDateTime.now());
-        feed = feedbackService.saveFeedBack(feedback);
-        try {
-            commonUtil.sendMailForFeedBack(feedback);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (feed) {
-            httpSession.setAttribute("SuccMsg", "feedBack successfully saved");
-        } else {
-            httpSession.setAttribute("errorMsg", "feedBack is not successfully saved");
-        }
-        return "redirect:/user/feedback";
 
+     @GetMapping("/feedback/product/{productId}")
+    public ResponseEntity<String> GetsaveFeed(@PathVariable Integer productId) {
+     feedbackService.getAllFeedBack()
+
+    if (feedback != null) {
+        return ResponseEntity.ok("Feedback is successfully saved");
+    } else {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                             .body("Feedback could not be saved");
     }
+     
+    }
+ 
 
 }
 
