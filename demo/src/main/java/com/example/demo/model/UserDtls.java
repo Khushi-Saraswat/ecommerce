@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+//Represent a user in the application...
 //UserDetails provides username, password, roles, and account status so Spring Security can authenticate and authorize the user
 @AllArgsConstructor
 @NoArgsConstructor
@@ -37,6 +39,8 @@ public class UserDtls implements UserDetails {
     private Date lockTime;
     private String resetToken;
     private String profileimage;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public UserDtls(String username, String password, String roles) {
         this.username = username;

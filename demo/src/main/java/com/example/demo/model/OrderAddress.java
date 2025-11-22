@@ -6,6 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
 
+//stores shipping address for a product order.
 @Data
 @Entity
 public class OrderAddress {

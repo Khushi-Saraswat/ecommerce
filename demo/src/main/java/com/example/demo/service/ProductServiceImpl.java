@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.model.Product;
 import com.example.demo.repository.ProductRepository;
+import com.example.demo.service.methods.ProductService;
 
 @Service
 public class ProductServiceImpl implements ProductService {

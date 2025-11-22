@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.model.UserDtls;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.methods.UserService;
 import com.example.demo.util.AppConstant;
 
 @Service

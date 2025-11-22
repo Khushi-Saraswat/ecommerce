@@ -30,12 +30,12 @@ import com.example.demo.model.Product;
 import com.example.demo.model.ProductOrder;
 import com.example.demo.model.UserDtls;
 import com.example.demo.repository.Feedbackrepo;
-import com.example.demo.service.CartService;
-import com.example.demo.service.CategoryService;
-import com.example.demo.service.FeedbackService;
-import com.example.demo.service.OrderService;
-import com.example.demo.service.ProductService;
-import com.example.demo.service.UserService;
+import com.example.demo.service.methods.CartService;
+import com.example.demo.service.methods.CategoryService;
+import com.example.demo.service.methods.FeedbackService;
+import com.example.demo.service.methods.OrderService;
+import com.example.demo.service.methods.ProductService;
+import com.example.demo.service.methods.UserService;
 import com.example.demo.util.CommonUtil;
 import com.example.demo.util.OrderStatus;
 
@@ -218,8 +218,7 @@ public class AdminController {
     @PostMapping("/saveProduct")
     public ResponseEntity<String> saveProduct(Product product, @RequestParam("file") MultipartFile image)
             throws IOException {
-
-        String category = product.getCategory();
+        Category category = product.getCategory();
         // first of all check whether category exist or not
         Boolean isExist = categoryService.existCategory(category);
 
@@ -443,17 +442,23 @@ public class AdminController {
         return "admin/add_admin";
     }
 
-    @GetMapping("/feedback-dashboard")
-    public String feedBackDash(Model m) {
-        m.addAttribute("feedbackList", feedbackService.getAllFeedBack());
-        m.addAttribute("totalFeedbacks", feedbackrepo.count());
-        m.addAttribute("totalProductFeedbacks", feedbackrepo.countByCategory("Product feedback"));
-        m.addAttribute("totalCustomerFeedbacks", feedbackrepo.countByCategory("Customer feedback"));
-        m.addAttribute("totalReviewFeedbacks", feedbackrepo.countByCategory("Review feedback"));
-        m.addAttribute("totalOtherFeedbacks", feedbackrepo.countByCategory("others"));
-
-        return "admin/FeedbackDashboard";
-    }
+    /*
+     * @GetMapping("/feedback-dashboard")
+     * public String feedBackDash(Model m) {
+     * m.addAttribute("feedbackList", feedbackService.getAllFeedBack());
+     * m.addAttribute("totalFeedbacks", feedbackrepo.count());
+     * m.addAttribute("totalProductFeedbacks",
+     * feedbackrepo.countByCategory("Product feedback"));
+     * m.addAttribute("totalCustomerFeedbacks",
+     * feedbackrepo.countByCategory("Customer feedback"));
+     * m.addAttribute("totalReviewFeedbacks",
+     * feedbackrepo.countByCategory("Review feedback"));
+     * m.addAttribute("totalOtherFeedbacks",
+     * feedbackrepo.countByCategory("others"));
+     * 
+     * return "admin/FeedbackDashboard";
+     * }
+     */
 
     @PostMapping("/save-admin")
     public String saveAdmin(@ModelAttribute UserDtls user, @RequestParam("img") MultipartFile file,

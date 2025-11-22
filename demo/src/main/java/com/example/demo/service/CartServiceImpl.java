@@ -13,6 +13,7 @@ import com.example.demo.model.UserDtls;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.methods.CartService;
 
 @Service
 public class CartServiceImpl implements CartService {

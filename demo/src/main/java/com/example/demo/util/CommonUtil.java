@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import com.example.demo.model.Feedback;
 import com.example.demo.model.ProductOrder;
-import com.example.demo.service.UserService;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -22,7 +21,7 @@ public class CommonUtil {
     private JavaMailSender mailSender;
 
     @Autowired
-    private UserService userService;
+    private com.example.demo.service.methods.UserService userService;
 
     // for sending email- use javamailsender
     public Boolean sendMail(String url, String reciepentMail) throws UnsupportedEncodingException, MessagingException {

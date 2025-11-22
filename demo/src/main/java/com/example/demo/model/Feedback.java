@@ -6,10 +6,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+//stores feedback messages from users.
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -22,5 +24,13 @@ public class Feedback {
     private String email;
     private String category;
     private String message;
+    // tracks when feedback is given.
     private LocalDateTime date;
+
+    @ManyToOne
+    private UserDtls user;
+
+    @ManyToOne
+    private Product product;
+
 }

@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
+
 import java.util.List;
 import java.util.Map;
 
@@ -41,15 +41,17 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.request.AuthRequest;
 import com.example.demo.request.RegRequest;
 import com.example.demo.response.AuthResponse;
-import com.example.demo.service.CartService;
-import com.example.demo.service.CategoryService;
-import com.example.demo.service.FeedbackService;
-import com.example.demo.service.OrderService;
+
 import com.example.demo.service.RefreshTokenService;
 import com.example.demo.service.UserInfoService;
-import com.example.demo.service.UserService;
+
 import com.example.demo.service.UserServiceImp;
-import com.example.demo.service.WishService;
+import com.example.demo.service.methods.CartService;
+import com.example.demo.service.methods.CategoryService;
+import com.example.demo.service.methods.FeedbackService;
+import com.example.demo.service.methods.OrderService;
+import com.example.demo.service.methods.UserService;
+import com.example.demo.service.methods.WishService;
 import com.example.demo.util.CommonUtil;
 import com.example.demo.util.OrderStatus;
 
@@ -475,31 +477,44 @@ public class UserController {
 
     @PostMapping("feedback/add")
     public ResponseEntity<String> saveFeed(@RequestBody FeedbackDto feedbackDto) {
-    FeedbackDto feedback = feedbackService.saveFeedBack(feedbackDto);
+        FeedbackDto feedback = feedbackService.saveFeedBack(feedbackDto);
 
-    if (feedback != null) {
-        return ResponseEntity.ok("Feedback is successfully saved");
-    } else {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                             .body("Feedback could not be saved");
-    }
-     
+        if (feedback != null) {
+            return ResponseEntity.ok("Feedback is successfully saved");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Feedback could not be saved");
+        }
+
     }
 
 
-     @GetMapping("/feedback/product/{productId}")
-    public ResponseEntity<String> GetsaveFeed(@PathVariable Integer productId) {
-     feedbackService.getAllFeedBack()
+    @GetMapping("feedback/product/{productId}")
+    public ResponseEntity<FeedbackDto> getFeedbackForProduct(@PathVariable Integer ProductId){
 
-    if (feedback != null) {
-        return ResponseEntity.ok("Feedback is successfully saved");
-    } else {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                             .body("Feedback could not be saved");
+
+         FeedbackDto feedbackDto=feedbackService.getFeedBackByProductId(ProductId);
+
+
+
+
+
     }
-     
-    }
- 
+
+    /*
+     * @GetMapping("/feedback/product/{productId}")
+     * public ResponseEntity<String> GetsaveFeed(@PathVariable Integer productId) {
+     * feedbackService.getAllFeedBack();
+     * 
+     * if (feedback != null) {
+     * return ResponseEntity.ok("Feedback is successfully saved");
+     * } else {
+     * return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+     * .body("Feedback could not be saved");
+     * }
+     * 
+     * }
+     */
 
 }
 

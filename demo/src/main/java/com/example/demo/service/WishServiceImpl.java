@@ -12,6 +12,7 @@ import com.example.demo.model.Wish;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.WishRepository;
+import com.example.demo.service.methods.WishService;
 
 @Service
 public class WishServiceImpl implements WishService {

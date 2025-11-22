@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.demo.model.UserDtls;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.UserService;
+
 import com.example.demo.util.AppConstant;
 
 import jakarta.servlet.ServletException;
@@ -24,7 +24,7 @@ public class AuthFailerHandlerImpl extends SimpleUrlAuthenticationFailureHandler
     private UserRepository userRepository;
 
     @Autowired
-    private UserService userService;
+    private com.example.demo.service.methods.UserService userService;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,

@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+//many jwt refresh tokens for secure authenttication
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -23,8 +24,10 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // each user has one refresh token
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
+    // specifies the foreign key in the db(user_id)
     private UserDtls user;
 
     @Column(nullable = false, unique = true)

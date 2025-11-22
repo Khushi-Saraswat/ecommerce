@@ -23,10 +23,10 @@ import com.example.demo.model.Category;
 import com.example.demo.model.Product;
 import com.example.demo.model.UserDtls;
 import com.example.demo.response.ProductCat;
-import com.example.demo.service.CartService;
-import com.example.demo.service.CategoryService;
-import com.example.demo.service.ProductService;
-import com.example.demo.service.UserService;
+import com.example.demo.service.methods.CartService;
+import com.example.demo.service.methods.CategoryService;
+import com.example.demo.service.methods.ProductService;
+import com.example.demo.service.methods.UserService;
 import com.example.demo.util.CommonUtil;
 import com.mysql.cj.util.StringUtils;
 
@@ -66,8 +66,8 @@ public class home {
         productCat.setCategorie(allActiveCategory);
         productCat.setProduct(allactiveProducts);
 
-        if(productCat != null)
-        return ResponseEntity.ok(productCat);
+        if (productCat != null)
+            return ResponseEntity.ok(productCat);
 
         return null;
     }

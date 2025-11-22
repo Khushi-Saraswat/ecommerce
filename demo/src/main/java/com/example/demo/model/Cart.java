@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+//keep track of items added to the cart before checkout
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -20,11 +21,16 @@ public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    // each cart item belongs to one user
     @ManyToOne
     private UserDtls user;
+    // each cart item points to 1 product
     @ManyToOne
     private Product product;
     private Integer quantity;
+
+    // totalPrice and totalOrderPrice are not stored in database.used for runtime
+    // calculations.
     @Transient
     private Double totalPrice;
     @Transient

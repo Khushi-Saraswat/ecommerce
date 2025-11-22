@@ -11,6 +11,7 @@ import org.springframework.util.ObjectUtils;
 
 import com.example.demo.model.Category;
 import com.example.demo.repository.CategoryRepository;
+import com.example.demo.service.methods.CategoryService;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -32,8 +33,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     // This method checks that whether category exist by name or not
     @Override
-    public Boolean existCategory(String name) {
-        return categoryRepository.existsByName(name);
+    public Boolean existCategory(Category category) {
+        return categoryRepository.existsByName(category.getName());
     }
 
     // This method is responsible for deleting category by id.

@@ -9,39 +9,39 @@ import org.springframework.stereotype.Service;
 import com.example.demo.dto.FeedbackDto;
 import com.example.demo.model.Feedback;
 import com.example.demo.repository.Feedbackrepo;
+import com.example.demo.service.methods.FeedbackService;
 
 @Service
 public class feedbackimpl implements FeedbackService {
 
-    @Autowired
-    private Feedbackrepo feedbackrepo;
+   @Autowired
+   private Feedbackrepo feedbackrepo;
 
-    @Autowired
-    private ModelMapper modelMapper;
+   @Autowired
+   private ModelMapper modelMapper;
 
-    @Override
-    public FeedbackDto saveFeedBack(FeedbackDto feed) {
+   @Override
+   public FeedbackDto saveFeedBack(FeedbackDto feed) {
 
-       Feedback feedback=feedbackrepo.save(convertDtoToEntity(feed));
-       return convertEntityToDto(feedback);
-    
-    }
+      Feedback feedback = feedbackrepo.save(convertDtoToEntity(feed));
+      return convertEntityToDto(feedback);
 
-  
+   }
 
-    public FeedbackDto convertEntityToDto(Feedback feedback){
-        return modelMapper.map(feedback,FeedbackDto.class);
-    }
+   @Override
+   public List<FeedbackDto> getFeedbackByProductId(Integer productId) {
+       List<Feedback> feedbackdto=feedbackrepo.findByProductId(productId);
+       return feedbackdto.stream().
+   }
 
-     public Feedback convertDtoToEntity(FeedbackDto feedbackDto){
-        return modelMapper.map(feedbackDto,Feedback.class);
-     }
+   public FeedbackDto convertEntityToDto(Feedback feedback) {
+      return modelMapper.map(feedback, FeedbackDto.class);
+   }
 
-     @Override
-     public List<FeedbackDto> getFeedbackByProductId(Integer productId) {
-                feedbackrepo.get
-        return null;
-     }
+   public Feedback convertDtoToEntity(FeedbackDto feedbackDto) {
+      return modelMapper.map(feedbackDto, Feedback.class);
+   }
 
-    
+   
+
 }
