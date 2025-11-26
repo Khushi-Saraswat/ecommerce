@@ -9,4 +9,6 @@ public interface FeedbackService {
      public FeedbackDto saveFeedBack(FeedbackDto feedback);
 
      public List<FeedbackDto> getFeedbackByProductId(Integer productId);
+
+     public List<FeedbackDto> getAllFeedBack();
 }

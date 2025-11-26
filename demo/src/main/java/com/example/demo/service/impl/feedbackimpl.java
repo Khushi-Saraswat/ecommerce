@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,20 @@ public class feedbackimpl implements FeedbackService {
    @Override
    public List<FeedbackDto> getFeedbackByProductId(Integer productId) {
        List<Feedback> feedbackdto=feedbackrepo.findByProductId(productId);
-       return feedbackdto.stream().
+       // this will convert List of feedback into list of dto
+       return feedbackdto.stream().map(feedback -> modelMapper.map(feedback,FeedbackDto.class))
+       .collect(Collectors.toList());
+   }
+
+   @Override
+   public List<FeedbackDto> getAllFeedBack(){
+
+          List<Feedback>feedbackDtos=feedbackrepo.findAll();
+            // this will convert List of feedback into list of dto
+          return feedbackDtos.stream().map(feedback -> modelMapper.map(feedback,FeedbackDto.class))
+          .collect(Collectors.toList());
+
+
    }
 
    public FeedbackDto convertEntityToDto(Feedback feedback) {

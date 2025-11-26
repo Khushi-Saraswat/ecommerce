@@ -12,17 +12,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.constants.PaymentType;
+import com.example.demo.dto.OrderDto;
 import com.example.demo.model.Cart;
 import com.example.demo.model.OrderAddress;
-import com.example.demo.model.OrderRequest;
 //import com.example.demo.model.OrderRequest;
 //import com.example.demo.model.OrderAddress;
 import com.example.demo.model.ProductOrder;
+import com.example.demo.model.UserDtls;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.ProductOrderRepository;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.service.methods.CartService;
 import com.example.demo.service.methods.OrderService;
 import com.example.demo.util.CommonUtil;
-import com.example.demo.util.OrderStatus;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -36,44 +39,66 @@ public class OrderServiceImpl implements OrderService {
    @Autowired
    private CartRepository cartRepository;
 
+   @Autowired
+   private UserRepository userRepository;
+
+   @Autowired
+   private CartService cartService;
+
    @Override
-   public void saveOrder(Integer userid, OrderRequest orderRequest) throws Exception {
-      // List<Cart> carts = cartRepository.findByUserId(userid);
-      for (Cart cart : carts) {
-         ProductOrder order = new ProductOrder();
-         // Random generate of id....
-         order.setOrderId(UUID.randomUUID().toString());
-         order.setOrderDate(LocalDate.now());
-         order.setProduct(cart.getProduct());
-         order.setPrice(cart.getProduct().getDiscountPrice());
-         order.setQuantity(cart.getQuantity());
-         order.setUser(cart.getUser());
-         order.setStatus(OrderStatus.IN_PROGRESS.name());
-         order.setPaymentType(orderRequest.getPaymentType());
-         OrderAddress orderAddress = new OrderAddress();
-         orderAddress.setFirstName(orderRequest.getFirstName());
-         System.out.println(orderAddress.getFirstName() + "firstname");
-         orderAddress.setLastName(orderRequest.getLastName());
-         // System.out.println(orderAddress.getLastName() + "lastname");
-         orderAddress.setEmail(orderRequest.getEmail());
-         // System.out.println(orderAddress.getLastName() + "lastname");
-         // orderAddress.setMobileNo(orderRequest.getMobileNo());
-         orderAddress.setMobileNumber(orderRequest.getMobileNumber());
-         System.out.println(orderRequest.getMobileNumber() + "mobile number");
-         orderAddress.setAddress(orderRequest.getAddress());
-         orderAddress.setCity(orderRequest.getCity());
-         orderAddress.setState(orderRequest.getState());
-         orderAddress.setPincode(orderRequest.getPincode());
-         order.setOrderAddress(orderAddress);
-         System.out.println(order.getOrderAddress());
-         ProductOrder saveOrder = orderRepository.save(order);
-         commonUtil.sendMailForProductOrder(saveOrder, "success");
+   public void saveOrder(UserDtls userdtls, OrderDto orderDto) throws Exception {
+      List<Cart> carts = cartRepository.findByUserId(userdtls.getId());
+
+      double totalitem = 0, finalPrice = 0;
+
+      if (carts.size() == 0) {
+         // return not found error
+
       }
+      for (Cart cart : carts) {
+
+         cart.setTotalOrderPrice(cart.getProduct().getPrice() * cart.getQuantity());
+         totalitem += cart.getTotalOrderPrice();
+
+      }
+
+      double delievery = 100;
+      double tax = totalitem * 0.18;
+
+      finalPrice = totalitem + delievery + tax;
+      // implement stock functionality also
+
+      // create 1 order for all product in cart
+      ProductOrder order = new ProductOrder();
+      order.setOrderId(UUID.randomUUID().toString());
+      order.setOrderDate(LocalDate.now());
+      order.setPrice(finalPrice);
+      order.setDelievery(delievery);
+      order.setTax(tax);
+      order.setUser(userdtls);
+
+      OrderAddress orderAddress = null;
+      for (Cart cart : carts) {
+         orderAddress = new OrderAddress();
+         orderAddress.setPaymentType(PaymentType.valueOf(orderDto.getPaymentType()));
+         orderAddress.setProduct(cart.getProduct());
+      }
+
+      orderAddress.setLastName(orderDto.getLastName());
+      orderAddress.setFirstName(orderDto.getFirstName());
+      orderAddress.setMobileNumber(orderDto.getMobileNumber());
+      orderAddress.setCity(orderAddress.getCity());
+
+      order.setOrderAddress(orderAddress);
+
+      orderRepository.save(order);
+
+      cartRepository.deleteByUserId(userdtls.getId());
 
    }
 
    @Override
-   public List<ProductOrder> getOrdersByUser(Integer userId) {
+   public List<ProductOrder> getOrdersByUser(Long userId) {
       List<ProductOrder> orders = orderRepository.findByUserId(userId);
       return orders;
 
@@ -107,4 +132,5 @@ public class OrderServiceImpl implements OrderService {
       Pageable page = PageRequest.of(pageNo, PageSize);
       return orderRepository.findAll(page);
    }
+
 }

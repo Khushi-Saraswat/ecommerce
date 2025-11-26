@@ -17,6 +17,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.demo.config.JwtService;
 import com.example.demo.model.UserDtls;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.methods.UserService;
@@ -29,6 +30,9 @@ public class UserServiceImp implements UserService {
 
    @Autowired
    private UserRepository userRepository;
+
+   @Autowired
+   private JwtService jwtService;
 
    UserServiceImp(PasswordEncoder passwordEncoder) {
       this.passwordEncoder = passwordEncoder;
@@ -189,4 +193,13 @@ public class UserServiceImp implements UserService {
       UserDtls saveUser = userRepository.save(user);
       return saveUser;
    }
+
+   @Override
+   public UserDtls UserByToken(String token) {
+
+      String email = jwtService.extractUsername(token);
+      UserDtls userDtls = userRepository.findByusername(email);
+      return userDtls;
+   }
+
 }

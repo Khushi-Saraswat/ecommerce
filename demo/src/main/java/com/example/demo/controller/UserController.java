@@ -224,23 +224,7 @@ public class UserController {
         return "Welcome this endpoint is not secure";
     }
 
-    /*
-     * @ModelAttribute
-     * public void getUserDetails(Principal p, Model m) {
-     * 
-     * if (p != null) {
-     * String email = p.getName();
-     * UserDtls userDtls = userService.getUserByEmail(email);
-     * m.addAttribute("user", userDtls);
-     * Integer countCart = cartService.getCounterCart(userDtls.getId());
-     * m.addAttribute("countCart", countCart);
-     * 
-     * }
-     * List<Category> allActiveCategory = categoryService.getAllActiveCategory();
-     * m.addAttribute("category", allActiveCategory);
-     * 
-     * }
-     */
+  
 
     // this method is responsible for add product to cart
     @GetMapping("/addCart")
@@ -490,31 +474,15 @@ public class UserController {
 
 
     @GetMapping("feedback/product/{productId}")
-    public ResponseEntity<FeedbackDto> getFeedbackForProduct(@PathVariable Integer ProductId){
+    public ResponseEntity<List<FeedbackDto>> getFeedbackForProduct(@PathVariable Integer ProductId){
 
 
-         FeedbackDto feedbackDto=feedbackService.getFeedBackByProductId(ProductId);
-
-
-
-
-
+       List<FeedbackDto> feedback=feedbackService.getFeedbackByProductId(ProductId);
+        
+       return ResponseEntity.ok(feedback);
     }
 
-    /*
-     * @GetMapping("/feedback/product/{productId}")
-     * public ResponseEntity<String> GetsaveFeed(@PathVariable Integer productId) {
-     * feedbackService.getAllFeedBack();
-     * 
-     * if (feedback != null) {
-     * return ResponseEntity.ok("Feedback is successfully saved");
-     * } else {
-     * return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-     * .body("Feedback could not be saved");
-     * }
-     * 
-     * }
-     */
+
 
 }
 

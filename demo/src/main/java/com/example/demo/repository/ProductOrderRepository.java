@@ -8,7 +8,7 @@ import com.example.demo.model.ProductOrder;
 
 public interface ProductOrderRepository extends JpaRepository<ProductOrder, Integer> {
 
-     List<ProductOrder> findByUserId(Integer userId);
+     List<ProductOrder> findByUserId(Long userId);
 
      ProductOrder findByOrderId(String orderId);
 

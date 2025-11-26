@@ -4,14 +4,15 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
-import com.example.demo.model.OrderRequest;
+import com.example.demo.dto.OrderDto;
 import com.example.demo.model.ProductOrder;
+import com.example.demo.model.UserDtls;
 
 public interface OrderService {
 
-    public void saveOrder(Integer userid, OrderRequest orderRequest) throws Exception;
+    public void saveOrder(UserDtls userDtls, OrderDto orderDto) throws Exception;
 
-    public List<ProductOrder> getOrdersByUser(Integer userId);
+    public List<ProductOrder> getOrdersByUser(Long userId);
 
     public ProductOrder updatOrderStatus(Integer id, String st);
 

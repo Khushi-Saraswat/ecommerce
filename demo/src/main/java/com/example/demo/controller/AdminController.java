@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.demo.dto.FeedbackDto;
 import com.example.demo.model.Category;
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductOrder;
@@ -442,49 +443,12 @@ public class AdminController {
         return "admin/add_admin";
     }
 
-    /*
-     * @GetMapping("/feedback-dashboard")
-     * public String feedBackDash(Model m) {
-     * m.addAttribute("feedbackList", feedbackService.getAllFeedBack());
-     * m.addAttribute("totalFeedbacks", feedbackrepo.count());
-     * m.addAttribute("totalProductFeedbacks",
-     * feedbackrepo.countByCategory("Product feedback"));
-     * m.addAttribute("totalCustomerFeedbacks",
-     * feedbackrepo.countByCategory("Customer feedback"));
-     * m.addAttribute("totalReviewFeedbacks",
-     * feedbackrepo.countByCategory("Review feedback"));
-     * m.addAttribute("totalOtherFeedbacks",
-     * feedbackrepo.countByCategory("others"));
-     * 
-     * return "admin/FeedbackDashboard";
-     * }
-     */
+    @GetMapping("/feedback-dashboard")
+    public ResponseEntity<List<FeedbackDto>> feedBackDash(Model m) {
 
-    @PostMapping("/save-admin")
-    public String saveAdmin(@ModelAttribute UserDtls user, @RequestParam("img") MultipartFile file,
-            HttpSession httpSession) {
-        String imageName = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
-        user.setProfileimage(imageName);
-        UserDtls saveUser = userService.saveAdmin(user);
-        if (!ObjectUtils.isEmpty(saveUser)) {
-            if (!file.isEmpty()) {
-                try (InputStream inputStream = file.getInputStream()) {
-                    Path path = Paths.get("C:\\Users\\DELL\\Desktop\\ecommerce\\demo\\src\\main\\resources\\static\\img"
-                            + File.separator + "profile_img" + File.separator
-                            + file.getOriginalFilename());
+        List<FeedbackDto> feedbackDtos = feedbackService.getAllFeedBack();
 
-                    System.out.println(path);
-                    Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
-                httpSession.setAttribute("succMsg", "saved successfully");
-            }
-        } else {
-            httpSession.setAttribute("errorMsg", "something wrong on server");
-        }
-        return "admin/add_admin";
-
+        return ResponseEntity.ok(feedbackDtos);
     }
 
     @GetMapping("/profile")
