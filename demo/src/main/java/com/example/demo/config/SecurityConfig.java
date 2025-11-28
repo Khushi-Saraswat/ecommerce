@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.example.demo.service.UserInfoService;
+import com.example.demo.service.impl.UserInfoService;
 
 //marks the class as the spring configuration class.....
 @Configuration
@@ -115,8 +115,8 @@ public class SecurityConfig {
                 // define which url's and request patterns require authentication.
                 .authorizeHttpRequests(
                         req -> req
-                                .requestMatchers("/api/auth/welcome", "/api/auth/GenerateToken", "/api/auth/register",
-                                        "/forgot-password", "/reset-password", "/api/auth/refresh", "/api/auth/logout")
+                                // permit both controller mappings: /api/auth/** and /auth/**
+                                .requestMatchers("/api/auth/**", "/auth/**", "/forgot-password", "/reset-password")
                                 .permitAll()
                                 .anyRequest().authenticated())
                 // Stateless session-for jwt implementation

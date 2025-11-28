@@ -1,7 +1,8 @@
-package com.example.demo.service;
+package com.example.demo.service.impl;
 
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import com.example.demo.dto.CategoryDto;
 import com.example.demo.model.Category;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.service.methods.CategoryService;
@@ -19,9 +21,13 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     // This method saves the category....
     @Override
-    public Category saveCategory(Category category) {
+    public Category saveCategory(CategoryDto categoryDto) {
+        Category category = convertDtoToEntity(categoryDto);
         return categoryRepository.save(category);
     }
 
@@ -33,7 +39,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     // This method checks that whether category exist by name or not
     @Override
-    public Boolean existCategory(Category category) {
+    public Boolean existCategory(CategoryDto categoryDto) {
+        Category category = convertDtoToEntity(categoryDto);
         return categoryRepository.existsByName(category.getName());
     }
 
@@ -70,6 +77,26 @@ public class CategoryServiceImpl implements CategoryService {
         Pageable pageable = PageRequest.of(pageNo, PageSize);
         return categoryRepository.findAll(pageable);
 
+    }
+
+    @Override
+    public List<CategoryDto> searchCategory(String ch) {
+
+        // The name has the keyword and it doesn’t
+        // matter if the text is uppercase or lowercase.
+        // use of stream map to convert entity to dto
+        return categoryRepository.findByNameContainingIgnoreCase(ch).stream()
+                .map(this::convertEntityToDto)
+                .toList();
+
+    }
+
+    public CategoryDto convertEntityToDto(Category category) {
+        return modelMapper.map(category, CategoryDto.class);
+    }
+
+    public Category convertDtoToEntity(CategoryDto categoryDto) {
+        return modelMapper.map(categoryDto, Category.class);
     }
     /*
      * Core pagination in spring boot is primarily implemented using

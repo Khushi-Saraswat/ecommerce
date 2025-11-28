@@ -1,4 +1,4 @@
-package com.example.demo.service;
+package com.example.demo.service.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +10,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.config.JwtService;
+import com.example.demo.dto.UserDtlsDto;
 import com.example.demo.model.UserDtls;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.methods.UserService;
@@ -32,6 +34,9 @@ public class UserServiceImp implements UserService {
    private UserRepository userRepository;
 
    @Autowired
+   private ModelMapper modelMapper;
+
+   @Autowired
    private JwtService jwtService;
 
    UserServiceImp(PasswordEncoder passwordEncoder) {
@@ -39,20 +44,27 @@ public class UserServiceImp implements UserService {
    }
 
    @Override
-   public UserDtls saveUser(UserDtls user) {
+   public UserDtls saveUser(UserDtlsDto userDtlsDto) {
 
+      UserDtls user = convertDtoToEntity(userDtlsDto);
+
+      if (user.getRoles().equals("ROLE_USER")) {
+         user.setRoles("ROLE_USER");
+      } else {
+         user.setRoles("ROLE_ADMIN");
+      }
       user.setIsEnable(true);
       user.setAccountNonLocked(true);
       user.setFailedAttempt(0);
       user.setLockTime(null);
+      // Encode password (important to always encode before saving)
       user.setPassword(passwordEncoder.encode(user.getPassword()));
-      // String encodePassword = passwordEncoder.encode(user.getPassword());
-      // user.setPassword(user.getPassword());
-      // user.setUsername(user.getUsername());
-      // user.setName(user.getName());
-      // user.setMobileNumber(user.getMobileNumber());
+      user.setUsername(user.getUsername());
+      user.setName(user.getName());
+      user.setMobileNumber(user.getMobileNumber());
       UserDtls saveUser = userRepository.save(user);
       return saveUser;
+
    }
 
    @Override
@@ -177,29 +189,19 @@ public class UserServiceImp implements UserService {
    }
 
    @Override
-   public UserDtls saveAdmin(UserDtls user) {
-      user.setRoles("ROLE_ADMIN");
-      user.setIsEnable(true);
-      user.setAccountNonLocked(true);
-      user.setFailedAttempt(0);
-      user.setLockTime(null);
-      user.setPassword(passwordEncoder.encode(user.getPassword()));
-      // String encodePassword = passwordEncoder.encode(user.getPassword());
-      // user.setPassword(user.getPassword());
-      // user.setPassword(user.getPassword());
-      // user.setUsername(user.getUsername());
-      // user.setName(user.getName());
-      // user.setMobileNumber(user.getMobileNumber());
-      UserDtls saveUser = userRepository.save(user);
-      return saveUser;
-   }
-
-   @Override
    public UserDtls UserByToken(String token) {
 
       String email = jwtService.extractUsername(token);
       UserDtls userDtls = userRepository.findByusername(email);
       return userDtls;
+   }
+
+   public UserDtlsDto convertEntityToDto(UserDtls user) {
+      return modelMapper.map(user, UserDtlsDto.class);
+   }
+
+   public UserDtls convertDtoToEntity(UserDtlsDto userDtlsDto) {
+      return modelMapper.map(userDtlsDto, UserDtls.class);
    }
 
 }

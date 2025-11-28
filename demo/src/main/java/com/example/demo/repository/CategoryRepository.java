@@ -19,4 +19,6 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
       // Return Pagination of category when pageable for active category is true.
       Page<Category> findByIsActiveTrue(Pageable pageable);
 
+      public List<Category> findByNameContainingIgnoreCase(String ch);
+
 }

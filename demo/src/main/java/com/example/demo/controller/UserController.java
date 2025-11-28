@@ -1,18 +1,13 @@
 package com.example.demo.controller;
 
 import java.security.Principal;
-
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,24 +23,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.config.JwtService;
 import com.example.demo.dto.FeedbackDto;
-import com.example.demo.exception.AuthenticationIsNotValid;
-import com.example.demo.exception.UserAlreadyExist;
 import com.example.demo.model.Cart;
 //import com.example.demo.model.Product;
 import com.example.demo.model.ProductOrder;
-import com.example.demo.model.RefreshToken;
 import com.example.demo.model.UserDtls;
 import com.example.demo.model.Wish;
 import com.example.demo.repository.RefreshTokenRepo;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.request.AuthRequest;
-import com.example.demo.request.RegRequest;
-import com.example.demo.response.AuthResponse;
-
-import com.example.demo.service.RefreshTokenService;
-import com.example.demo.service.UserInfoService;
-
-import com.example.demo.service.UserServiceImp;
+import com.example.demo.service.impl.RefreshTokenService;
+import com.example.demo.service.impl.UserInfoService;
+import com.example.demo.service.impl.UserServiceImp;
 import com.example.demo.service.methods.CartService;
 import com.example.demo.service.methods.CategoryService;
 import com.example.demo.service.methods.FeedbackService;
@@ -109,122 +96,12 @@ public class UserController {
         this.refreshTokenRepo = refreshTokenRepo;
     }
 
-    // create login endpoint- use to authenticate user if valid provide
-    // authentication token.
-
-    @PostMapping("/GenerateToken")
-    public ResponseEntity<Map<String, String>> authenticationAndGetToken(@RequestBody AuthRequest authRequest) {
-
-        AuthResponse authResponse = new AuthResponse();
-        Authentication authentication;
-        try {
-
-            // authenticate() sends the username/password to the AuthenticationProvider,
-            // which checks the raw password
-            // against the stored hashed one. If they don't match, it throws an error.
-            authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            authRequest.getUsername(), authRequest.getPassword()));
-            System.out.println("authentication success: " + authentication);
-        } catch (Exception e) {
-            System.out.println("authentication failed: " + e.getMessage());
-            return ResponseEntity.status(401).body(null);
-        }
-
-        UserDetails userDetails = userInfoService.loadUserByUsername(authRequest.getUsername());
-        UserDtls userDtls = userRepository.findByusername(userDetails.getUsername());
-
-        if (authentication.isAuthenticated()) {
-            String jwt = jwtService.generateToken(userDetails.getUsername());
-            authResponse.setJwt(jwt);
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDtls.getId());
-            System.out.println("jwt created");
-            return ResponseEntity.ok(Map.of(
-                    "accessToken", jwt,
-                    "refreshToken", refreshToken.getToken()));
-
-        }
-
-        throw new AuthenticationIsNotValid("authentication is failed !!");
-
-    }
-
-    @PostMapping("/register")
-    @ResponseBody
-    public String register(@RequestBody RegRequest regrequest) {
-        String name = regrequest.getName();
-        String mobileNumber = regrequest.getMobileNumber();
-        String username = regrequest.getUsername();
-        String password = regrequest.getPassword();
-        String role = regrequest.getRole();
-
-        System.out.println(name + "" + mobileNumber + "" + username + "" + password + "" + "" + role);
-
-        UserDtls userdtls = userRepository.findByusername(username);
-
-        if (userdtls != null) {
-            throw new UserAlreadyExist("UserName is already exist !!");
-        }
-
-        else {
-            UserDtls userDtls = new UserDtls(name, mobileNumber, username, password, role);
-
-            userRepository.save(userDtls);
-
-            if (role.equals("USER"))
-                userServiceImp.saveUser(userDtls);
-
-            else {
-                userServiceImp.saveUser(userDtls);
-            }
-
-            return "User added successfully!";
-        }
-
-    }
-
-    @PostMapping("/refresh")
-    @ResponseBody
-    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> payload) {
-
-        String requestToken = payload.get("refreshToken");
-        return refreshTokenRepo.findByToken(requestToken)
-                .map(token -> {
-                    if (refreshTokenService.isTokenExpired(token)) {
-                        refreshTokenRepo.delete(token);
-                        return ResponseEntity.badRequest().body("Refresh token expired. Please login again.");
-                    }
-                    String newJwt = jwtService.generateToken(token.getUser().getUsername());
-                    return ResponseEntity.ok(Map.of("token", newJwt));
-                })
-                .orElse(ResponseEntity.badRequest().body("Invalid refresh token."));
-
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser(@RequestBody Map<String, String> payload) {
-        String requestToken = payload.get("refreshToken");
-
-        if (requestToken == null || requestToken.isBlank()) {
-            return ResponseEntity.badRequest().body("Refresh token is required");
-        }
-
-        return refreshTokenRepo.findByToken(requestToken)
-                .map(token -> {
-                    refreshTokenRepo.delete(token);
-                    return ResponseEntity.ok("Logged out successfully");
-                })
-                .orElse(ResponseEntity.badRequest().body("Invalid refresh token"));
-    }
-
     @GetMapping("/welcome")
     @ResponseBody
     public String welcome() {
         System.out.println("hi welcome");
         return "Welcome this endpoint is not secure";
     }
-
-  
 
     // this method is responsible for add product to cart
     @GetMapping("/addCart")
@@ -472,17 +349,13 @@ public class UserController {
 
     }
 
-
     @GetMapping("feedback/product/{productId}")
-    public ResponseEntity<List<FeedbackDto>> getFeedbackForProduct(@PathVariable Integer ProductId){
+    public ResponseEntity<List<FeedbackDto>> getFeedbackForProduct(@PathVariable Integer ProductId) {
 
+        List<FeedbackDto> feedback = feedbackService.getFeedbackByProductId(ProductId);
 
-       List<FeedbackDto> feedback=feedbackService.getFeedbackByProductId(ProductId);
-        
-       return ResponseEntity.ok(feedback);
+        return ResponseEntity.ok(feedback);
     }
-
-
 
 }
 

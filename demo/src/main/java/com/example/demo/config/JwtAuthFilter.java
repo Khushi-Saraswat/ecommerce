@@ -10,7 +10,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.demo.service.UserInfoService;
+import com.example.demo.service.impl.UserInfoService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -42,6 +42,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 || request.getServletPath().equals("/api/auth/register")
                 || request.getServletPath().equals("/api/auth/refresh")
                 || request.getServletPath().equals("/api/auth/logout")
+                || request.getServletPath().equals("/api/auth/forgot-password")
+                || request.getServletPath().equals("/api/auth/reset-password")
 
         ) {
             filterChain.doFilter(request, response);

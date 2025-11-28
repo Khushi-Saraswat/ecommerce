@@ -7,10 +7,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CategoryDto {
-    private int id;
+public class UserResponseDto {
+    private Long id;
     private String name;
-    private String imageName;
-    private Boolean isActive;
-
+    private String mobileNumber;
+    private String username;
+    private String role;
+    private Boolean isEnable;
 }

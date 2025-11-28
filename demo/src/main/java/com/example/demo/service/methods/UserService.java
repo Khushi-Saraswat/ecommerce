@@ -4,11 +4,12 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.demo.dto.UserDtlsDto;
 import com.example.demo.model.UserDtls;
 
 public interface UserService {
 
-    public UserDtls saveUser(UserDtls user);
+    public UserDtls saveUser(UserDtlsDto user);
 
     public UserDtls getUserByEmail(String email);
 

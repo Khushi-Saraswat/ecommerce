@@ -38,7 +38,6 @@ public class UserDtls implements UserDetails {
     private Integer failedAttempt;
     private Date lockTime;
     private String resetToken;
-    private String profileimage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

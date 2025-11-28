@@ -1,27 +1,19 @@
 package com.example.demo.controller;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.example.demo.exception.EmailNotSend;
-import com.example.demo.exception.InvalidEmail;
 import com.example.demo.model.Category;
 import com.example.demo.model.Product;
-import com.example.demo.model.UserDtls;
 import com.example.demo.response.ProductCat;
 import com.example.demo.service.methods.CartService;
 import com.example.demo.service.methods.CategoryService;
@@ -29,9 +21,6 @@ import com.example.demo.service.methods.ProductService;
 import com.example.demo.service.methods.UserService;
 import com.example.demo.util.CommonUtil;
 import com.mysql.cj.util.StringUtils;
-
-import jakarta.mail.MessagingException;
-import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 public class home {
@@ -109,94 +98,6 @@ public class home {
         // find product by a particular id.
         Product productById = productService.getProductById(id);
         return ResponseEntity.ok(productById);
-    }
-
-    /*
-     * @PostMapping("/saveUser")
-     * public String saveUser(@ModelAttribute UserDtls user, @RequestParam("img")
-     * MultipartFile file,
-     * HttpSession httpSession) {
-     * String imageName = file.isEmpty() ? "default.jpg" :
-     * file.getOriginalFilename();
-     * user.setProfileimage(imageName);
-     * UserDtls saveUser = userService.saveUser(user);
-     * if (!ObjectUtils.isEmpty(saveUser)) {
-     * if (!file.isEmpty()) {
-     * try (InputStream inputStream = file.getInputStream()) {
-     * Path path = Paths.get(
-     * "C:\\Users\\DELL\\Desktop\\ecommerce\\demo\\src\\main\\resources\\static\\img"
-     * + File.separator + "profile_img" + File.separator
-     * + file.getOriginalFilename());
-     * 
-     * System.out.println(path);
-     * Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
-     * } catch (IOException ioe) {
-     * ioe.printStackTrace();
-     * }
-     * httpSession.setAttribute("succMsg", "saved successfully");
-     * }
-     * } else {
-     * httpSession.setAttribute("errorMsg", "something wrong on server");
-     * }
-     * return "redirect:/register";
-     * 
-     * }
-     */
-
-    @PostMapping("/forgot-password")
-    public ResponseEntity<String> processForgotPassword(@RequestParam String username, HttpServletRequest request)
-            throws UnsupportedEncodingException, MessagingException {
-
-        // find user using entered email
-        UserDtls userByEmail = userService.getUserByEmail(username);
-
-        // if user is not found show error invalid email..
-        if (ObjectUtils.isEmpty(userByEmail)) {
-            throw new InvalidEmail("Invalid email !!!!");
-        }
-        // if user is found create token and add it to the end of generated email and
-        // send email via passing url and email.
-        else {
-
-            String resetToken = UUID.randomUUID().toString();
-            System.out.println(resetToken + "resetToken");
-            userService.updateUserResetToken(username, resetToken);
-            // generate-url-http://localhost:8080/reset-password?tokendhegffffffff
-            String url = commonUtil.generateUrl(request) + "/reset-password?token=" +
-                    resetToken;
-            System.out.println(url + "url");
-            Boolean sendMail = commonUtil.sendMail(url, username);
-            if (sendMail) {
-
-                return ResponseEntity.status(HttpStatus.CREATED).body("please check the email password link is send");
-            } else {
-
-                throw new EmailNotSend("Something wrong on server ! Email not send");
-            }
-
-        }
-
-    }
-
-    // reset password logic..
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> ResetPassword(@RequestParam String token, @RequestParam String password) {
-
-        // using that token i find the user if token is null link is expired and if not
-        // set correct password and save the user
-        UserDtls userByToken = userService.getUserByToken(token);
-        if (userByToken == null) {
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("The password reset link is invalid or expired.");
-
-        } else {
-            userByToken.setPassword(passwordEncoder.encode(password));
-            userByToken.setResetToken(null);
-            userService.updateUser(userByToken);
-            return ResponseEntity.status(HttpStatus.CREATED).body("password is set correctly");
-        }
-
     }
 
     // search a particular product using keyword.
