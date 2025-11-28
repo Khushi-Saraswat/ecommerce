@@ -6,3 +6,4 @@ Trendify is a complete e-commerce backend system designed with clean architectur
 It mimics real-world applications like Amazon, Flipkart, Myntra.
 
 
+
