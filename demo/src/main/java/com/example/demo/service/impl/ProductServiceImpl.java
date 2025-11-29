@@ -17,18 +17,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.demo.Common.AbstractMapperService;
+import com.example.demo.dto.ProductDto;
 import com.example.demo.model.Product;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.service.methods.ProductService;
 
 @Service
 public class ProductServiceImpl implements ProductService {
+
+	@Autowired
+	private AbstractMapperService abstractMapperService;
+
 	@Autowired
 	private ProductRepository productRepository;
 
 	// this method is used to save a product in database
 	@Override
-	public Product saveProduct(Product product) {
+	public Product saveProduct(ProductDto productDto) {
+
+		Product product = (Product) abstractMapperService.convertDtoToEntity(productDto);
 		return productRepository.save(product);
 	}
 

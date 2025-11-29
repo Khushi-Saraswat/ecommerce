@@ -2,8 +2,6 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import com.example.demo.dto.UserDtlsDto;
 import com.example.demo.model.UserDtls;
 
@@ -31,9 +29,7 @@ public interface UserService {
 
     public UserDtls updateUser(UserDtls user);
 
-    public UserDtls updateUserProfile(UserDtls user, MultipartFile img);
-
-    public UserDtls saveAdmin(UserDtls user);
+    public UserDtls updateUserProfile(UserDtls user);
 
     public UserDtls UserByToken(String token);
 

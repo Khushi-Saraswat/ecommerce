@@ -1,23 +1,14 @@
 package com.example.demo.service.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
 
+import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.config.JwtService;
 import com.example.demo.dto.UserDtlsDto;
 import com.example.demo.model.UserDtls;
@@ -34,7 +25,7 @@ public class UserServiceImp implements UserService {
    private UserRepository userRepository;
 
    @Autowired
-   private ModelMapper modelMapper;
+   private AbstractMapperService abstractMapperService;
 
    @Autowired
    private JwtService jwtService;
@@ -46,7 +37,7 @@ public class UserServiceImp implements UserService {
    @Override
    public UserDtls saveUser(UserDtlsDto userDtlsDto) {
 
-      UserDtls user = convertDtoToEntity(userDtlsDto);
+      UserDtls user = (UserDtls) abstractMapperService.convertDtoToEntity(userDtlsDto);
 
       if (user.getRoles().equals("ROLE_USER")) {
          user.setRoles("ROLE_USER");
@@ -150,39 +141,15 @@ public class UserServiceImp implements UserService {
    }
 
    @Override
-   public UserDtls updateUserProfile(UserDtls user, @RequestParam("file") MultipartFile file) {
+   public UserDtls updateUserProfile(UserDtls user) {
       UserDtls saveUser = null;
       UserDtls dbuser = userRepository.findById(user.getId()).get();
-      String image = file.isEmpty() ? dbuser.getProfileimage() : file.getOriginalFilename();
-      System.out.println("image is: " + image);
-      if (!file.isEmpty()) {
-         dbuser.setProfileimage(image);
-      } else {
-         System.out.println("null");
-      }
+
       if (!ObjectUtils.isEmpty(dbuser)) {
          dbuser.setName(user.getName());
          dbuser.setMobileNumber(user.getMobileNumber());
          saveUser = userRepository.save(dbuser);
 
-      }
-      try {
-
-         if (!file.isEmpty()) {
-            try (InputStream inputStream = file.getInputStream()) {
-               Path path = Paths.get("C:\\Users\\DELL\\Desktop\\ecommerce\\demo\\src\\main\\resources\\static\\img"
-                     + File.separator + "profile_img" + File.separator
-                     + file.getOriginalFilename());
-
-               System.out.println(path + "path is");
-               Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException ioe) {
-               ioe.printStackTrace();
-            }
-
-         }
-      } catch (Exception e) {
-         e.printStackTrace();
       }
 
       return saveUser;
@@ -194,14 +161,6 @@ public class UserServiceImp implements UserService {
       String email = jwtService.extractUsername(token);
       UserDtls userDtls = userRepository.findByusername(email);
       return userDtls;
-   }
-
-   public UserDtlsDto convertEntityToDto(UserDtls user) {
-      return modelMapper.map(user, UserDtlsDto.class);
-   }
-
-   public UserDtls convertDtoToEntity(UserDtlsDto userDtlsDto) {
-      return modelMapper.map(userDtlsDto, UserDtls.class);
    }
 
 }
