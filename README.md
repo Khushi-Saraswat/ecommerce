@@ -1,4 +1,4 @@
-🌟 Trendify – Ecommerce Backend (Enterprise-Level Project)
+🌟 CraftConnect – Local Artisan Marketplace Backend
 
 Spring Boot | MySQL | Elasticsearch | JWT Security
 
