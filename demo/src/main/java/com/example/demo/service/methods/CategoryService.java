@@ -2,26 +2,29 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-
-import com.example.demo.dto.CategoryDto;
-import com.example.demo.model.Category;
+import com.example.demo.request.CategoryRequestDTO;
+import com.example.demo.response.CategoryResponseDTO;
 
 public interface CategoryService {
 
-      public Category saveCategory(CategoryDto categoryDto);
+    CategoryResponseDTO addCategory(CategoryRequestDTO dto, String jwt);
 
-      public Boolean existCategory(CategoryDto categoryDto);
+    List<CategoryResponseDTO> getAllCategories();
 
-      public List<Category> getAllCategory();
+    List<CategoryResponseDTO> getRootCategories();
 
-      public Boolean deleteCategory(int id);
+    List<CategoryResponseDTO> getSubCategories(String parentId);
 
-      public Category getCategoryById(int id);
+    CategoryResponseDTO getCategoryById(String categoryId);
 
-      public List<Category> getAllActiveCategory();
+    CategoryResponseDTO getCategoryBySlug(String slug);
 
-      public Page<Category> getAllActiveCategoryPagination(Integer pageNo, Integer PageSize);
+    CategoryResponseDTO createCategory(CategoryRequestDTO request);
 
-      public List<CategoryDto> searchCategory(String ch);
+    CategoryResponseDTO updateCategory(String categoryId, CategoryRequestDTO request);
+
+    void deleteCategory(String categoryId);
+
+    String generateSlug(String name);
+
 }

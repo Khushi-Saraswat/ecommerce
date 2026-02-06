@@ -1,117 +1,203 @@
 package com.example.demo.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-import org.modelmapper.ModelMapper;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
-import com.example.demo.dto.CategoryDto;
+import com.example.demo.Common.AbstractMapperService;
+import com.example.demo.constants.Role;
+import com.example.demo.constants.errorTypes.AuthErrorType;
+import com.example.demo.constants.errorTypes.CategoryError;
+import com.example.demo.constants.errorTypes.UserErrorType;
+import com.example.demo.exception.Auth.AuthException;
+import com.example.demo.exception.Category.CategoryException;
+import com.example.demo.exception.User.UserException;
 import com.example.demo.model.Category;
+import com.example.demo.model.User;
 import com.example.demo.repository.CategoryRepository;
+import com.example.demo.repository.ProductRepository;
+import com.example.demo.request.CategoryRequestDTO;
+import com.example.demo.response.CategoryResponseDTO;
+import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.CategoryService;
 
-@Service
 public class CategoryServiceImpl implements CategoryService {
+
+    @Autowired
+    private AuthService authService;
 
     @Autowired
     private CategoryRepository categoryRepository;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private AbstractMapperService abstractMapperService;
 
-    // This method saves the category....
-    @Override
-    public Category saveCategory(CategoryDto categoryDto) {
-        Category category = convertDtoToEntity(categoryDto);
-        return categoryRepository.save(category);
-    }
+    @Autowired
+    private ProductRepository productRepository;
 
-    // This method returns all the category ..
     @Override
-    public List<Category> getAllCategory() {
-        return categoryRepository.findAll();
-    }
-
-    // This method checks that whether category exist by name or not
-    @Override
-    public Boolean existCategory(CategoryDto categoryDto) {
-        Category category = convertDtoToEntity(categoryDto);
-        return categoryRepository.existsByName(category.getName());
-    }
-
-    // This method is responsible for deleting category by id.
-    @Override
-    public Boolean deleteCategory(int id) {
-        Category category = categoryRepository.findById(id).orElse(null);
-        if (!ObjectUtils.isEmpty(category)) {
-            categoryRepository.delete(category);
-            return true;
+    public CategoryResponseDTO addCategory(CategoryRequestDTO dto, String jwt) {
+        // 1) Auth
+        User user = authService.getCurrentUser();
+        if (user == null) {
+            throw new AuthException("jwt token is missing", AuthErrorType.TOKEN_MISSING);
         }
-        return false;
+
+        // 2) Role check
+        if (user.getRole() == null || !user.getRole().equals(Role.ARTISAN)) {
+            throw new UserException("Only artisan can add category", UserErrorType.UNAUTHORIZED);
+        }
+
+        // 3) Validate name
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new CategoryException("Category name is required", CategoryError.INVALID_CATEGORY_NAME);
+        }
+
+        String name = dto.getName().trim();
+
+        // 4) Create slug
+        String slug = name.toLowerCase().replaceAll("[^a-z0-9]+", "-");
+
+        // 5) Duplicate check (by slug)
+        Category existing = categoryRepository.findBySlug(slug).orElse(null);
+        if (existing != null) {
+            CategoryResponseDTO response = new CategoryResponseDTO();
+            response.setId(existing.getId());
+            response.setName(existing.getName());
+            response.setSlug(existing.getSlug());
+            response.setMessage("Category already exists (returned existing)");
+            return response;
+        }
+
+        // 6) Save new
+        Category category = new Category();
+        category.setName(name);
+        category.setSlug(slug);
+        category.setIsActive(true);
+        category.setCreatedAt(LocalDateTime.now());
+
+        Category saved = categoryRepository.save(category);
+
+        // 7) Response
+        CategoryResponseDTO response = new CategoryResponseDTO();
+        response.setId(saved.getId());
+        response.setName(saved.getName());
+        response.setSlug(saved.getSlug());
+        response.setMessage("Category created successfully");
+
+        return response;
     }
 
-    // This method is responsible for returning the category by id
     @Override
-    public Category getCategoryById(int id) {
-        Category category = categoryRepository.findById(id).orElse(null);
-        return category;
-    }
-
-    // This method is responsible for returning all the active category
-    @Override
-    public List<Category> getAllActiveCategory() {
-        List<Category> category = categoryRepository.findByIsActiveTrue();
-        return category;
-    }
-
-    // This method is responsible for returning all the active category with
-    // pagination.
-    @Override
-    public Page<Category> getAllActiveCategoryPagination(Integer pageNo, Integer PageSize) {
-
-        Pageable pageable = PageRequest.of(pageNo, PageSize);
-        return categoryRepository.findAll(pageable);
+    public List<CategoryResponseDTO> getAllCategories() {
+        return categoryRepository.findByActiveTrue().stream()
+        .map(CategoryResponseDTO::).collect(Collectors.toList());
 
     }
 
     @Override
-    public List<CategoryDto> searchCategory(String ch) {
+    public CategoryResponseDTO createCategory(CategoryRequestDTO request) {
+        String slug = generateSlug(request.getName());
+        if (categoryRepository.existsBySlug(slug)) {
+            throw new CategoryException("Category with this name already exists",
+                    CategoryError.CATEGORY_ALREADY_EXISTS);
+        }
 
-        // The name has the keyword and it doesn’t
-        // matter if the text is uppercase or lowercase.
-        // use of stream map to convert entity to dto
-        return categoryRepository.findByNameContainingIgnoreCase(ch).stream()
-                .map(this::convertEntityToDto)
-                .toList();
+        Category category = abstractMapperService.toEntity(request, Category.class);
+
+        if (category != null) {
+            category = categoryRepository.save(category);
+            return abstractMapperService.toDto(request, CategoryResponseDTO.class);
+        }
+
+        return null;
 
     }
 
-    public CategoryDto convertEntityToDto(Category category) {
-        return modelMapper.map(category, CategoryDto.class);
+    @Override
+    public void deleteCategory(String categoryId) {
+        Category category = categoryRepository.findById(Long.valueOf(categoryId))
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
+
+        // Check if category has products
+        if (!productRepository.findByCategoryId(categoryId).isEmpty()) {
+            throw new BadRequestException("Cannot delete category with associated products");
+        }
+
+        // Check if category has sub-categories
+        if (!categoryRepository.findByParentIdAndActiveTrue(categoryId).isEmpty()) {
+            throw new BadRequestException("Cannot delete category with sub-categories");
+        }
+
+        category.setActive(false);
+        categoryRepository.save(category);
+
     }
 
-    public Category convertDtoToEntity(CategoryDto categoryDto) {
-        return modelMapper.map(categoryDto, Category.class);
+    @Override
+    public String generateSlug(String name) {
+        return name.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .replaceAll("\\s+", "-")
+                .replaceAll("-+", "-")
+                .trim();
     }
-    /*
-     * Core pagination in spring boot is primarily implemented using
-     * the PagingAndSortingRepository interface
-     * PagingAndSortingRepository: This interface, part of Spring Data JPA,
-     * provides built-in methods like findAll(Pageable pageable) to handle
-     * pagination requests automatically.
-     * Pageable: This interface is an object that holds the necessary pagination
-     * information,
-     * such as the current page number, the size of the page, and sorting
-     * preferences. It is typically passed as a parameter to the repository methods.
-     * Page: When the repository method executes, it returns a Page object.
-     * This object is a sublist of objects that also includes metadata like the
-     * total number of pages, total elements, and whether the current page is the
-     * first or last one.
-     */
+
+    @Override
+    public CategoryResponseDTO getCategoryById(String categoryId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public CategoryResponseDTO getCategoryBySlug(String slug) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<CategoryResponseDTO> getRootCategories() {
+        
+        return categoryRepository.findByParentIdIsNullAndActiveTrue().stream()
+        .map().collect(Collect)
+    }
+
+    @Override
+    public List<CategoryResponseDTO> getSubCategories(String parentId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public CategoryResponseDTO updateCategory(String categoryId, CategoryRequestDTO request) {
+        // TODO Auto-generated method stub
+
+        Category category = categoryRepository.findById(Long.parseLong(categoryId))
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
+
+        if (request.getName() != null && !request.getName().equals(category.getName())) {
+            String newSlug = generateSlug(request.getName());
+            if (categoryRepository.existsBySlug(newSlug) && !newSlug.equals(category.getSlug())) {
+                throw new BadRequestException("Category with this name already exists");
+            }
+            category.setName(request.getName());
+            category.setSlug(newSlug);
+        }
+
+        if (request.getDescription() != null)
+            category.setDescription(request.getDescription());
+        if (request.getImage() != null)
+            category.setImage(request.getImage());
+        if (request.getParentId() != null)
+            category.setParentId(request.getParentId());
+        category.setDisplayOrder(request.getDisplayOrder());
+        category.setActive(request.isActive());
+
+        category = categoryRepository.save(category);
+        return abstractMapperService.toDto(category, CategoryResponseDTO.class);
+
+    }
 
 }

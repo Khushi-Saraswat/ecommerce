@@ -8,8 +8,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import com.example.demo.model.Feedback;
-import com.example.demo.model.ProductOrder;
-
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,34 +62,35 @@ public class CommonUtil {
 
     String msg = null;
 
-    public Boolean sendMailForProductOrder(ProductOrder order, String status)
-            throws UnsupportedEncodingException, MessagingException {
-        msg = "<p>Hello [[name]],</p>"
-                + "<p>Thank you order <b>[[orderStatus]]</b>.</p>"
-                + "<p><b>Product Details:</b></p>"
-                + "<p>Name : [[productName]]</p>"
-                + "<p>Category : [[category]]</p>"
-                + "<p>Quantity : [[quantity]]</p>"
-                + "<p>Price : [[price]]</p>"
-                + "<p>Payment Type : [[paymentType]]</p>";
-
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
-        helper.setFrom("khushisaraswat69@gmail.com", "Trendify");
-        helper.setTo(order.getOrderAddress().getEmail());
-        msg = msg.replace("[[name]]", order.getOrderAddress().getFirstName());
-        msg = msg.replace("[[orderStatus]]", status);
-    //    msg = msg.replace("[[productName]]", order.getProduct().getTitle());
-     //   msg = msg.replace("[[category]]", order.getProduct().getCategory());
-      //  msg = msg.replace("[[quantity]]", order.getQuantity().toString());
-      //  msg = msg.replace("[[price]]", order.getPrice().toString());
-        msg = msg.replace("[[paymentType]]", order.getPaymentType());
-        helper.setSubject("Password Order Status");
-        helper.setText(msg, true);
-        mailSender.send(message);
-        return true;
-    }
-
+    /*
+     * public Boolean sendMailForProductOrder(ProductOrder order, String status)
+     * throws UnsupportedEncodingException, MessagingException {
+     * msg = "<p>Hello [[name]],</p>"
+     * + "<p>Thank you order <b>[[orderStatus]]</b>.</p>"
+     * + "<p><b>Product Details:</b></p>"
+     * + "<p>Name : [[productName]]</p>"
+     * + "<p>Category : [[category]]</p>"
+     * + "<p>Quantity : [[quantity]]</p>"
+     * + "<p>Price : [[price]]</p>"
+     * + "<p>Payment Type : [[paymentType]]</p>";
+     * 
+     * MimeMessage message = mailSender.createMimeMessage();
+     * MimeMessageHelper helper = new MimeMessageHelper(message);
+     * helper.setFrom("khushisaraswat69@gmail.com", "Trendify");
+     * // helper.setTo(order.);
+     * msg = msg.replace("[[name]]", order.getOrderAddress().getFirstName());
+     * msg = msg.replace("[[orderStatus]]", status);
+     * // msg = msg.replace("[[productName]]", order.getProduct().getTitle());
+     * // msg = msg.replace("[[category]]", order.getProduct().getCategory());
+     * // msg = msg.replace("[[quantity]]", order.getQuantity().toString());
+     * // msg = msg.replace("[[price]]", order.getPrice().toString());
+     * // msg = msg.replace("[[paymentType]]", order.getPaymentType());
+     * helper.setSubject("Password Order Status");
+     * helper.setText(msg, true);
+     * mailSender.send(message);
+     * return true;
+     * }
+     */
     String feedback = null;
 
     public Boolean sendMailForFeedBack(Feedback feedback) throws UnsupportedEncodingException, MessagingException {

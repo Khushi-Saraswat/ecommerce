@@ -1,32 +1,51 @@
 package com.example.demo.service.methods;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.demo.dto.ProductDto;
+import com.example.demo.dto.CategoryDto;
+import com.example.demo.dto.Products;
 import com.example.demo.model.Product;
+import com.example.demo.response.ProductSaveResponse;
+import com.example.demo.response.StockResponse;
+import com.example.demo.response.UpdateProduct;
 
 public interface ProductService {
 
-    public Product saveProduct(ProductDto product);
+    public ProductSaveResponse saveProducts(Products product, List<MultipartFile> file) throws IOException;
 
-    public List<Product> getAllProducts();
+    public List<Products> getAllProducts();
 
     public Page<Product> getAllProducts(Integer pageNo, Integer pageSize);
 
-    public Boolean deleteProduct(int id);
+    public Boolean DeactivateProduct(int ProductId);
 
-    public Product getProductById(Integer id);
+    public Products getProductById(Integer id);
 
-    public Product updateProduct(Product product, MultipartFile image);
+    public UpdateProduct updateProduct(Products product, Integer ProductId,List<MultipartFile> file) throws IOException;
+            
 
-    public List<Product> getAllActiveProducts(String category);
+    public List<Product> getAllActiveProducts(CategoryDto category);
 
-    public List<Product> searchProduct(String ch);
+    // public List<ProductDto> searchProduct(String ch);
 
-    public Page<Product> searchProductPagination(Integer pageNo, Integer pageSize, String ch);
+    // public Page<Product> searchProductPagination(Integer pageNo, Integer
+    // pageSize, String ch);
 
     public Page<Product> getAllActiveProductPagination(Integer pageNo, Integer PageSize, String category);
+
+    public String IncreaseStock(Integer productId, Integer stockval);
+
+    public Boolean ActivateProduct(Integer productId);
+
+    public StockResponse StockDetails(Integer productId);
+
+    public List<Products> getByArtisanId(String jwt);
+
+    // Local discovery with fallback: city -> state -> all active
+    public List<Products> localDiscovery(String city, String state);
+
 }

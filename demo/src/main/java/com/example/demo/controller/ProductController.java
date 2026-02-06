@@ -1,35 +1,32 @@
 package com.example.demo.controller;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
-import org.springframework.util.ObjectUtils;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.demo.dto.CategoryDto;
-import com.example.demo.dto.ProductDto;
-import com.example.demo.model.Category;
-import com.example.demo.model.Product;
-import com.example.demo.service.methods.CategoryService;
+import com.example.demo.Common.AbstractMapperService;
+import com.example.demo.dto.Products;
+import com.example.demo.response.ProductSaveResponse;
+import com.example.demo.response.StockResponse;
+import com.example.demo.response.UpdateProduct;
 import com.example.demo.service.methods.ProductService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api/products")
@@ -39,145 +36,148 @@ public class ProductController {
     private ProductService productService;
 
     @Autowired
-    private CategoryService categoryService;
+    private AbstractMapperService abstractMapperService;
 
-    // this method is used to delete a particular product by it's id
-    @GetMapping("/deleteProduct/{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable int id) {
-        System.out.println(id + "in deleting product from admin side");
-        Boolean deleteProduct = productService.deleteProduct(id);
-        // code 200 -successful deletion
-        if (deleteProduct) {
-            return new ResponseEntity<>("Product is deleted successfully !!!", HttpStatusCode.valueOf(200));
-        }
-        // code 409 Conflict: If the resource cannot be deleted due to a conflict
-        else {
-            return new ResponseEntity<>(HttpStatusCode.valueOf(409));
-        }
+    @Autowired
+    private ObjectMapper mapper;
 
-    }
+    // this method is responsible for saving the product of a particular category-by
+    // artian
 
-    // this method is responsible for saving the product of a particular category
-    @PostMapping("/saveProduct")
-    public ResponseEntity<String> saveProduct(Product product, @RequestParam("file") MultipartFile image)
+    @PreAuthorize("hasRole('ARTISAN')")
+    @PostMapping(value = "/saveProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductSaveResponse> saveProduct(
+            @RequestPart("product") String product,
+            @RequestParam(required = true) List<MultipartFile> file
+
+    )
             throws IOException {
-        Category category = product.getCategory();
-        // first of all check whether category exist or not
-        Boolean isExist = categoryService.existCategory(modelMapper.map(category, CategoryDto.class));
 
-        // if category exist we will proceed and saved the product and save the image in
-        // local directory
-        if (isExist) {
+        System.out.println(file.getClass().getName());
+        System.out.println(product);
 
-            String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
-
-            product.setImage(imageName);
-            product.setDiscount(0);
-            product.setDiscountPrice(product.getPrice());
-            Product saveProduct = productService.saveProduct(product);
-
-            try (InputStream inputStream = image.getInputStream()) {
-                Path path = Paths.get("C:\\Users\\DELL\\Desktop\\ecommerce\\demo\\src\\main\\resources\\static\\img"
-                        + File.separator + "product_img" + File.separator
-                        + image.getOriginalFilename());
-
-                // System.out.println(path);
-                Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
-
-            // if product saved
-            if (saveProduct != null)
-                return new ResponseEntity<>("Product saved successfully !!", HttpStatus.valueOf(200));
-
-            // if product is not saved
-            else
-                return new ResponseEntity<>("Product is not saved", HttpStatusCode.valueOf(500));
-
+        if (product != null) {
+            System.out.println("product json" + product);
         }
-        // category does not exist
-        else {
-            return ResponseEntity.ok("Category does not exist");
+
+        if (file != null) {
+            System.out.println("file" + file);
         }
+        Products products = mapper.readValue(product, Products.class);
+        System.out.println(products + "product dto");
+        System.out.println(products.getName() + "product name dto");
+        return ResponseEntity.ok(productService.saveProducts(products, file));
 
     }
 
-    @GetMapping("/product")
-    public String ViewProduct(Model e, @RequestParam(defaultValue = "") String ch,
-            @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
-            @RequestParam(name = "pageSize", defaultValue = "3") Integer pageSize) {
-        /*
-         * List<Product> products = null;
-         * if (ch != null && ch.length() > 0) {
-         * products = productService.searchProduct(ch);
-         * } else {
-         * products = productService.getAllProducts();
-         * }
-         */
+    // product is updated -by artian
+    @PreAuthorize("hasRole('ARTISAN')")
+    @PostMapping(value = "/UpdateProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UpdateProduct> UpdateProduct(@RequestPart("product") String product,
+            @RequestParam Integer ProductId,
+            @RequestPart("images") List<MultipartFile> files)
+            throws IOException, Exception {
 
-        Page<Product> page = null;
-        if (ch != null && ch.length() > 0) {
-            page = productService.searchProductPagination(pageNo, pageSize, ch);
-        } else {
-            page = productService.getAllProducts(pageNo, pageSize);
-        }
-        e.addAttribute("products", page.getContent());
-        e.addAttribute("pageNo", page.getNumber());
-        System.out.println(page.getNumber() + "pagenumber");
-        e.addAttribute("pageSize", pageSize);
-        System.out.println(pageSize + "pageSize");
-        e.addAttribute("totalElements", page.getTotalElements());
-        System.out.println("totalElements" + page.getTotalElements());
-        e.addAttribute("totalPages", page.getTotalPages());
-        System.out.println("totalPages" + page.getTotalElements());
-        e.addAttribute("isFirst", page.isFirst());
-        System.out.println("isFirst" + page.isFirst());
-        e.addAttribute("isLast", page.isLast());
-        System.out.println("isLast" + page.isLast());
-        return "admin/product";
-    }
-
-    // this method is responsible for updating a product.
-    @PostMapping("/updateProduct")
-    public ResponseEntity<String> editProduct(Product product, @RequestParam("file") MultipartFile image) {
-
-        if (product.getDiscount() < 0 || product.getDiscount() > 100) {
-            ResponseEntity.ok("invalid Discount");
-        } else {
-            Product updateProduct = productService.updateProduct(product, image);
-            if (!ObjectUtils.isEmpty(updateProduct)) {
-                return new ResponseEntity<>("Product is updated sucessfully !!!", HttpStatusCode.valueOf(200));
-            }
-
-        }
-
-        return new ResponseEntity<>("Product  is not updated successfully", HttpStatus.NOT_MODIFIED);
-    }
-
-    @PutMapping("/product/{id}/activate")
-    public ResponseEntity<String> activeCategory(@PathVariable int id) {
-        Product product = productService.getProductById(id);
-        if (!ObjectUtils.isEmpty(product)) {
-            product.setIsActive(true);
-            productService.saveProduct(modelMapper.map(product, ProductDto.class));
-            return new ResponseEntity<>("Product activated successfully", HttpStatus.valueOf(200));
-        }
-        return new ResponseEntity<>("Product is not activated successfully", HttpStatus.valueOf(404));
+        Products products = mapper.readValue(product, Products.class);
+        return ResponseEntity.ok(
+                productService.updateProduct(products, ProductId, files));
 
     }
 
-    // this method is used to deactivate category by id.
-    @PutMapping("/category/{id}/deactivate")
-    public ResponseEntity<String> deactivateCategory(@PathVariable int id) {
-        Category category = categoryService.getCategoryById(id);
-        if (!ObjectUtils.isEmpty(category)) {
-            category.setIsActive(false);
-            categoryService.saveCategory(modelMapper.map(category, CategoryDto.class));
-            return new ResponseEntity<>("Category deactivated successfully", HttpStatus.valueOf(200));
-        }
-        return new ResponseEntity<>("Category not found", HttpStatus.valueOf(404));
+    @PreAuthorize("hasRole('ARTISAN')")
+    @GetMapping("/getArtisanProduct")
+    public ResponseEntity<?> GetArtisanProduct(
+            @RequestHeader("Authorization") String jwt)
+            throws IOException {
+
+        return ResponseEntity.ok(productService.getByArtisanId(jwt));
 
     }
+
+    // stock is updated-by admin
+    @PatchMapping("/StockUpdate/stock")
+    public ResponseEntity<String> UpdateStock(@RequestParam Integer ProductId, @RequestParam Integer stock) {
+        String message = productService.IncreaseStock(ProductId, stock);
+        return ResponseEntity.ok(message);
+    }
+
+    // get all products by user
+    @GetMapping("/allproduct")
+    public ResponseEntity<List<Products>> ViewProduct() {
+
+        return ResponseEntity.ok(productService.getAllProducts());
+
+    }
+
+    // get products by product id-used by both admin+user
+    @GetMapping("/getProduct")
+    public ResponseEntity<?> ProductDetails(@RequestParam Integer id) {
+
+        return ResponseEntity.ok(productService.getProductById(id));
+
+    }
+
+    // pass product-id
+    @GetMapping("/stock")
+    public ResponseEntity<StockResponse> StockDetails(@RequestParam Integer id) {
+
+        StockResponse response = productService.StockDetails(id);
+
+        return ResponseEntity.ok(response);
+
+    }
+
+    // search product by user
+
+    /*
+     * @GetMapping("/searchProduct")
+     * public ResponseEntity<?> SearchProduct(@RequestParam String ProductName) {
+     * 
+     * List<ProductDto> productDto = productService.searchProduct(ProductName);
+     * 
+     * if (productDto == null) {
+     * return ResponseEntity.status(404).body("Product not found");
+     * }
+     * 
+     * // return product
+     * return ResponseEntity.ok(productDto);
+     * }
+     */
+
+
+
+    // Local discovery endpoint: city has highest priority, then state, then all
+    @GetMapping("/local")
+    public ResponseEntity<List<Products>> localDiscovery(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String state) {
+
+        return ResponseEntity.ok(productService.localDiscovery(city, state));
+    }
+
+ 
+
+    // this method all the active product and category...
+    /*
+     * @GetMapping("/allProductsCategory")
+     * public ResponseEntity<?> index(CategoryDto category) {
+     * List<Category> allActiveCategory =
+     * categoryService.getAllActiveCategory().stream().limit(6).toList();
+     * // apply stream 8 logic..
+     * List<Product> allactiveProducts =
+     * productService.getAllActiveProducts(category).stream()
+     * .sorted((p1, p2) -> p2.getId().compareTo(p1.getId())).limit(8).toList();
+     * 
+     * ProductCat productCat = new ProductCat();
+     * productCat.setCategorie(allActiveCategory);
+     * productCat.setProduct(allactiveProducts);
+     * 
+     * if (allactiveProducts == null || allactiveProducts.isEmpty()) {
+     * return ResponseEntity.status(HttpStatus.NOT_FOUND)
+     * .body(Map.of("message", "No products present"));
+     * }
+     * return ResponseEntity.ok(productCat);
+     * }
+     */
 
 }

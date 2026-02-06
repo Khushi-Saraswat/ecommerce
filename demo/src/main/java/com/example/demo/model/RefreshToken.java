@@ -26,9 +26,9 @@ public class RefreshToken {
 
     // each user has one refresh token
     @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "userId")
     // specifies the foreign key in the db(user_id)
-    private UserDtls user;
+    private User user;
 
     @Column(nullable = false, unique = true)
     private String token;

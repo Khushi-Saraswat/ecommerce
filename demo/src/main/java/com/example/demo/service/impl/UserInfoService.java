@@ -6,8 +6,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.exception.UserNotFoundException;
-import com.example.demo.model.UserDtls;
+import com.example.demo.constants.errorTypes.UserErrorType;
+import com.example.demo.exception.User.UserException;
+import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 
 @Service
@@ -23,16 +24,16 @@ public class UserInfoService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        UserDtls userInfo = userRepo.findByusername(username);
+        User userInfo = userRepo.findByusername(username);
 
         if (userInfo == null) {
 
-            throw new UserNotFoundException("User not found");
+            throw new UserException("user not found", UserErrorType.NOT_FOUND);
 
         }
 
         System.out.println("Loaded user: " + userInfo.getUsername());
-        System.out.println("Authorities: " + userInfo.getAuthorities());
+        System.out.println("Authorities in userInfoServices: " + userInfo.getAuthorities());
 
         return userInfo;
 

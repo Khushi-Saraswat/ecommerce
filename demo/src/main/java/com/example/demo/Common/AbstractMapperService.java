@@ -2,23 +2,25 @@ package com.example.demo.Common;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-// Generic Abstract class for mapping between Entity and DTO
-@Component
-public abstract class AbstractMapperService<E, D> {
-
-    private Class<E> entityClass;
-    private Class<D> dtoClass;
+@Service
+public class AbstractMapperService {
 
     @Autowired
     protected ModelMapper modelMapper;
 
-    public E convertDtoToEntity(D dto) {
+    // Generic method to convert DTO → Entity
+    public <D, E> E toEntity(D dto, Class<E> entityClass) {
+        if (dto == null)
+            return null;
         return modelMapper.map(dto, entityClass);
     }
 
-    public D convertEntityToDto(E entity) {
+    // Generic method to convert Entity → DTO
+    public <E, D> D toDto(E entity, Class<D> dtoClass) {
+        if (entity == null)
+            return null;
         return modelMapper.map(entity, dtoClass);
     }
 }

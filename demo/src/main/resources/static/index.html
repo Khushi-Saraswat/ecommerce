@@ -1,0 +1,30 @@
+<button id="pay-button">Pay Now</button>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    document.getElementById('pay-button').onclick = function () {
+        fetch('http://localhost:8080/api/payments/create-order?amount=1000&currency=INR', {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(order => {
+                const options = {
+                    key: "rzp_test_E1VHn4r8R09Rak", // Replace with your Razorpay API Key
+                    amount: order.amount, // Amount in paise
+                    currency: order.currency,
+                    name: "Your Company",
+                    description: "Test Transaction",
+                    order_id: order.id,
+                    handler: function (response) {
+                        alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+                    },
+                    theme: {
+                        color: "#3399cc"
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            })
+            .catch(err => console.error(err));
+    };
+</script>

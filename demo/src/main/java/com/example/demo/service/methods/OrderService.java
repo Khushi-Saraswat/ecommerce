@@ -2,23 +2,34 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-
-import com.example.demo.dto.OrderDto;
-import com.example.demo.model.ProductOrder;
-import com.example.demo.model.UserDtls;
+import com.example.demo.response.OrderHistoryDTO;
 
 public interface OrderService {
 
-    public void saveOrder(UserDtls userDtls, OrderDto orderDto) throws Exception;
+    public String saveOrder(String jwt, Integer addressId, String PaymentType);
 
-    public List<ProductOrder> getOrdersByUser(Long userId);
+    // public List<OrderHistoryDTO> getOrdersByUser(String jwt);
 
-    public ProductOrder updatOrderStatus(Integer id, String st);
+    // by artisan - status-shipped.delivered
+    public String updatOrderStatus(String jwt, Integer artisanId, String status);
 
-    public List<ProductOrder> getAllOrders();
+    // public List<Order> getAllOrders();
 
-    public ProductOrder getOrdersByOrderId(String orderId);
+    // public Order getOrdersByOrderId(Long orderId);
 
-    public Page<ProductOrder> getAllActiveOrderPagination(Integer pageNo, Integer PageSize);
+    public List<OrderHistoryDTO> getOrdersByUser(String jwt);
+
+    public List<OrderHistoryDTO> getOrdersByArtisan(String jwt);
+
+    // public Page<Order> getAllActiveOrderPagination(Integer pageNo, Integer
+    // PageSize);
+
+    public String cancelOrder(String orderId);
+
+    public Long getOrderCount();
+
+    public String paymentCallback();
+
+    // public List<Order> OrderByStatus(String status);
+
 }

@@ -27,6 +27,7 @@ public class RefreshTokenService {
     }
 
     public RefreshToken createRefreshToken(Long userId) {
+        // java17
         var token = new RefreshToken();
         token.setUser(userRepository.findById(userId).get());
         token.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));

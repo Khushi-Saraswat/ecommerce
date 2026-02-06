@@ -27,6 +27,14 @@ import com.example.demo.service.impl.UserInfoService;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // private static final String[] WHITE_LIST_URL = { "/api/v1/auth/**",
+    // "/v2/api-docs", "/v3/api-docs",
+    // "/v3/api-docs/**", "/swagger-resources", "/swagger-resources/**",
+    // "/configuration/ui",
+    // "/configuration/security", "/swagger-ui/**", "/webjars/**",
+    // "/swagger-ui.html", "/api/auth/**",
+    // "/api/test/**", "/authenticate" };
+
     /*
      * @Autowired
      * 
@@ -116,7 +124,25 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         req -> req
                                 // permit both controller mappings: /api/auth/** and /auth/**
-                                .requestMatchers("/api/auth/**", "/auth/**", "/forgot-password", "/reset-password")
+                                .requestMatchers(
+                                        "/api/auth/**",
+                                        "/api/auth/forgot-password",
+                                        "/api/auth/reset-password",
+                                        "/api/categories/**",
+                                        "/api/products/**",
+                                        "/api/artisans/**",
+                                        "/api/admin/**",
+                                        "/api/cart/**",
+                                        "/api/address/**",
+
+                                        "/api/v1/auth/**", "/v2/api-docs", "/v3/api-docs",
+                                        "/v3/api-docs/**", "/swagger-resources", "/swagger-resources/**",
+                                        "/configuration/ui",
+                                        "/configuration/security", "/swagger-ui/**", "/webjars/**", "/swagger-ui.html",
+                                        "/api/auth/**",
+                                        "/api/test/**", "/authenticate"
+
+                                )
                                 .permitAll()
                                 .anyRequest().authenticated())
                 // Stateless session-for jwt implementation

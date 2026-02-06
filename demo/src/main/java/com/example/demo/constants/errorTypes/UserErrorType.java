@@ -1,0 +1,18 @@
+package com.example.demo.constants.errorTypes;
+
+public enum UserErrorType {
+    NOT_FOUND,
+    USERNAME_TAKEN,
+    EMAIL_ALREADY_EXISTS,
+    INVALID_EMAIL,
+    ACCOUNT_DISABLED,
+    INVALID_ROLE,
+    UNAUTHORIZED,
+    FORBIDDEN,
+    PROFILE_INCOMPLETE,
+    PROFILE_ALREADY_EXIST,
+    REGISTRATION_FAILED,
+    PASSWORD_LINKFAILED,
+    USER_NULL,
+    NOT_APPROVED
+}

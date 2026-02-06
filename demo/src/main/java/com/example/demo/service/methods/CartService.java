@@ -2,16 +2,18 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import com.example.demo.model.Cart;
+import com.example.demo.response.CartResponse;
 
 public interface CartService {
-    public Cart saveCart(Integer productId, Long userId);
+    public CartResponse saveCart(String jwt, Integer productId, Integer Stock);
 
-    public List<Cart> getCartByUsers(Long userId);
+    public List<CartResponse> getCartByUsers(String jwt);
 
-    public Integer getCounterCart(Long userId);
+    // public Integer getCounterCart(Long userId);
 
-    public void updateQuantity(String sy, Integer cid);
+    // public String updateCart(User userDtls, Integer productId, String
+    // updateOrDecrease);
 
     public Boolean deleteCart(Integer productId);
+
 }

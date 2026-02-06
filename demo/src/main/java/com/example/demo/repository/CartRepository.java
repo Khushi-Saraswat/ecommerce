@@ -3,19 +3,24 @@ package com.example.demo.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.example.demo.model.Cart;
 
-public interface CartRepository extends JpaRepository<Cart, Integer> {
+@Repository
+public interface CartRepository extends JpaRepository<Cart, Long> {
 
-    public Cart findByProductIdAndUserId(Integer productId, Long userId);
+    public Cart findByProductId(Integer productId);
 
-    public Integer countByUserId(Long userId);
+    // public Integer countByUserId(Long userId);
 
-    public List<Cart> findByUserId(Long userId);
+    @Query("Select c from Cart c  where c.user.userId = :userId")
+    public List<Cart> findCartsByUserId(@Param("userId") Long userId);
 
-    public void deleteByProductId(Integer productId);
+    // public void deleteByProductId(Integer productId);
 
-    public void deleteByUserId(Long userId);
+    /// public void deleteByUserId(Long userId);
 
 }

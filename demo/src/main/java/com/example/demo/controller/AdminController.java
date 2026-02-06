@@ -1,368 +1,114 @@
 package com.example.demo.controller;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.util.ObjectUtils;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.dto.FeedbackDto;
-import com.example.demo.model.Category;
-import com.example.demo.model.Product;
-import com.example.demo.model.ProductOrder;
-import com.example.demo.model.UserDtls;
-import com.example.demo.repository.Feedbackrepo;
-import com.example.demo.service.methods.CartService;
+import com.example.demo.request.CategoryRequestDTO;
+import com.example.demo.response.ApiResponse;
+import com.example.demo.response.CategoryResponseDTO;
+import com.example.demo.service.methods.AdminService;
 import com.example.demo.service.methods.CategoryService;
-import com.example.demo.service.methods.FeedbackService;
-import com.example.demo.service.methods.OrderService;
-import com.example.demo.service.methods.ProductService;
-import com.example.demo.service.methods.UserService;
-import com.example.demo.util.CommonUtil;
-import com.example.demo.util.OrderStatus;
 
-import jakarta.servlet.http.HttpSession;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
 
-@Controller
-@RequestMapping("/admin")
+@RestController
+@RequestMapping("/api/admin")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
-    @Autowired
-    private FeedbackService feedbackService;
+  @Autowired
+  private AdminService adminService;
 
-    @Autowired
-    private Feedbackrepo feedbackrepo;
+  @Autowired
+  private CategoryService categoryService;
 
-    @Autowired
-    private CommonUtil commonUtil;
+  @GetMapping("/artisans")
+  public ResponseEntity<?> GetArtisan(@RequestHeader("Authorization") String jwt) {
 
-    @Autowired
-    private CategoryService categoryService;
+    return ResponseEntity.ok(adminService.getAllArtisans(jwt));
 
-    @Autowired
-    private ProductService productService;
+  }
 
-    @Autowired
-    private UserService userService;
+  // here id is artisan id
+  @PatchMapping("/artisans/{id}/approve")
+  public ResponseEntity<String> ApproveArtisan(@PathVariable("id") Long artisanId,
+      @RequestHeader("Authorization") String jwt) {
 
-    @Autowired
-    private CartService cartService;
+    return ResponseEntity.ok(adminService.approveArtisan(artisanId, jwt));
 
-    @Autowired
-    private OrderService orderservice;
+  }
 
-    // this method is used to delete a particular product by it's id
-    @GetMapping("/deleteProduct/{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable int id) {
-        System.out.println(id + "in deleting product from admin side");
-        Boolean deleteProduct = productService.deleteProduct(id);
-        // code 200 -successful deletion
-        if (deleteProduct) {
-            return new ResponseEntity<>("Product is deleted successfully !!!", HttpStatusCode.valueOf(200));
-        }
-        // code 409 Conflict: If the resource cannot be deleted due to a conflict
-        else {
-            return new ResponseEntity<>(HttpStatusCode.valueOf(409));
-        }
+  // here id is artisan id
+  @PatchMapping("/artisans/{id}/reject")
+  public ResponseEntity<?> RejectArtisan(@PathVariable("id") Long artisanId,
+      @RequestHeader("Authorization") String jwt) {
 
-    }
+    return ResponseEntity.ok(adminService.rejectArtisan(artisanId, jwt));
 
-    // this method is responsible for saving the product of a particular category
-    @PostMapping("/saveProduct")
-    public ResponseEntity<String> saveProduct(Product product, @RequestParam("file") MultipartFile image)
-            throws IOException {
-        Category category = product.getCategory();
-        // first of all check whether category exist or not
-        Boolean isExist = categoryService.existCategory(category);
+  }
 
-        // if category exist we will proceed and saved the product and save the image in
-        // local directory
-        if (isExist) {
+  // get all user -(customer admin artisan)
+  @GetMapping("/all")
+  public ResponseEntity<?> getAllUsers(@RequestHeader("Authorization") String jwt) {
 
-            String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
+    return ResponseEntity.ok(adminService.getAllUsers(jwt));
 
-            product.setImage(imageName);
-            product.setDiscount(0);
-            product.setDiscountPrice(product.getPrice());
-            Product saveProduct = productService.saveProduct(product);
+  }
 
-            try (InputStream inputStream = image.getInputStream()) {
-                Path path = Paths.get("C:\\Users\\DELL\\Desktop\\ecommerce\\demo\\src\\main\\resources\\static\\img"
-                        + File.separator + "product_img" + File.separator
-                        + image.getOriginalFilename());
+  // block users
+  @PatchMapping("/users/{id}/block")
+  public ResponseEntity<?> blockUser(@PathVariable("id") Long userId,
+      @RequestHeader("Authorization") String jwt) {
 
-                // System.out.println(path);
-                Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
+    return ResponseEntity.ok(adminService.blockUser(userId, jwt));
 
-            // if product saved
-            if (saveProduct != null)
-                return new ResponseEntity<>("Product saved successfully !!", HttpStatus.valueOf(200));
+  }
 
-            // if product is not saved
-            else
-                return new ResponseEntity<>("Product is not saved", HttpStatusCode.valueOf(500));
+  // get all orders
+  @GetMapping("/users/orders")
+  public ResponseEntity<?> getAllOrders(@RequestHeader("Authorization") String jwt) {
 
-        }
-        // category does not exist
-        else {
-            return ResponseEntity.ok("Category does not exist");
-        }
+    return ResponseEntity.ok(adminService.getAllOrders(jwt));
 
-    }
+  }
 
-    @GetMapping("/product")
-    public String loadViewProduct(Model e, @RequestParam(defaultValue = "") String ch,
-            @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
-            @RequestParam(name = "pageSize", defaultValue = "3") Integer pageSize) {
-        /*
-         * List<Product> products = null;
-         * if (ch != null && ch.length() > 0) {
-         * products = productService.searchProduct(ch);
-         * } else {
-         * products = productService.getAllProducts();
-         * }
-         */
+  // get daily metrics
+  @GetMapping("/daily-metrics")
+  public ResponseEntity<?> getDailyMetrics(@RequestHeader("Authorization") String jwt) {
+    return ResponseEntity.ok(adminService.getDailyMetrics(jwt));
+  }
 
-        Page<Product> page = null;
-        if (ch != null && ch.length() > 0) {
-            page = productService.searchProductPagination(pageNo, pageSize, ch);
-        } else {
-            page = productService.getAllProducts(pageNo, pageSize);
-        }
-        e.addAttribute("products", page.getContent());
-        e.addAttribute("pageNo", page.getNumber());
-        System.out.println(page.getNumber() + "pagenumber");
-        e.addAttribute("pageSize", pageSize);
-        System.out.println(pageSize + "pageSize");
-        e.addAttribute("totalElements", page.getTotalElements());
-        System.out.println("totalElements" + page.getTotalElements());
-        e.addAttribute("totalPages", page.getTotalPages());
-        System.out.println("totalPages" + page.getTotalElements());
-        e.addAttribute("isFirst", page.isFirst());
-        System.out.println("isFirst" + page.isFirst());
-        e.addAttribute("isLast", page.isLast());
-        System.out.println("isLast" + page.isLast());
-        return "admin/product";
-    }
+  // -------------------------------Categories----------------------------------------------//
+  @PostMapping("/categories")
+  public ResponseEntity<ApiResponse<CategoryResponseDTO>> createCategory(
+      @Valid @RequestBody CategoryRequestDTO request) {
+    CategoryResponseDTO category = categoryService.createCategory(request);
+    return ResponseEntity.ok(ApiResponse.success("Category created successfully", category));
+  }
 
-    // this method is responsible for updating a product.
-    @PostMapping("/updateProduct")
-    public ResponseEntity<String> editProduct(Product product, @RequestParam("file") MultipartFile image) {
+  @PutMapping("/categories/{id}")
+  public ResponseEntity<ApiResponse<CategoryResponseDTO>> updateCategory(
+      @PathVariable String id,
+      @RequestBody CategoryRequestDTO request) {
+    CategoryResponseDTO category = categoryService.updateCategory(id, request);
+    return ResponseEntity.ok(ApiResponse.success("Category updated successfully", category));
+  }
 
-        if (product.getDiscount() < 0 || product.getDiscount() > 100) {
-            ResponseEntity.ok("invalid Discount");
-        } else {
-            Product updateProduct = productService.updateProduct(product, image);
-            if (!ObjectUtils.isEmpty(updateProduct)) {
-                return new ResponseEntity<>("Product is updated sucessfully !!!", HttpStatusCode.valueOf(200));
-            }
-
-        }
-
-        return new ResponseEntity<>("Product  is not updated successfully", HttpStatus.NOT_MODIFIED);
-    }
-
-    @GetMapping("/users")
-    public String getAllUsers(Model m, @RequestParam Integer type) {
-        List<UserDtls> users = null;
-        if (type == 1) {
-            users = userService.getUsers("ROLE_USER");
-        } else {
-            users = userService.getUsers("ROLE_ADMIN");
-        }
-        m.addAttribute("userType", type);
-        m.addAttribute("users", users);
-        return "/admin/users";
-    }
-
-    /*
-     * @GetMapping("/updateSts")
-     * public String updateUserAccountStatus(@RequestParam Boolean
-     * status, @RequestParam Integer id,
-     * 
-     * @RequestParam String type, HttpSession session) {
-     * System.out.println(type + "type in update status..");
-     * Boolean f = userService.updateAccountStatus(id, status);
-     * if (f) {
-     * session.setAttribute("succMsg", "Account Status Updated");
-     * } else {
-     * session.setAttribute("errorMsg", "Something wrong on server");
-     * }
-     * return "redirect:/admin/users?type=" + type;
-     * }
-     */
-
-    // this is for order sections.........
-    @GetMapping("/orders")
-    public String getAllOrders(Model m,
-            @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
-            @RequestParam(name = "pageSize", defaultValue = "2") Integer pageSize) {
-        // List<ProductOrder> allOrders = orderservice.getAllOrders();
-        // m.addAttribute("orders", allOrders);
-        // m.addAttribute("search", false);
-        Page<ProductOrder> page = orderservice.getAllActiveOrderPagination(pageNo, pageSize);
-        m.addAttribute("search", false);
-        List<ProductOrder> order = page.getContent();
-        m.addAttribute("orders", order);
-        m.addAttribute("OrderSize", order.size());
-        System.out.println(order.size() + "order size");
-        m.addAttribute("pageNo", page.getNumber());
-        System.out.println(page.getNumber() + "pagenumber");
-        m.addAttribute("pageSize", pageSize);
-        System.out.println(pageSize + "pageSize");
-        m.addAttribute("totalElements", page.getTotalElements());
-        System.out.println("totalElements" + page.getTotalElements());
-        m.addAttribute("totalPages", page.getTotalPages());
-        System.out.println("totalPages" + page.getTotalElements());
-        m.addAttribute("isFirst", page.isFirst());
-        System.out.println("isFirst" + page.isFirst());
-        m.addAttribute("isLast", page.isLast());
-        System.out.println("isLast" + page.isLast());
-        return "admin/orders";
-    }
-
-    @PostMapping("/update-order-status")
-    public String updateOrderStatus(Model m, @RequestParam Integer id, @RequestParam Integer st, HttpSession session) {
-        OrderStatus[] values = OrderStatus.values();
-        String status = null;
-        for (OrderStatus orderSt : values) {
-            if (orderSt.getId().equals(st)) {
-                System.out.println(orderSt.getId());
-                status = orderSt.getName();
-            }
-        }
-        ProductOrder updateOrder = orderservice.updatOrderStatus(id, status);
-        try {
-            commonUtil.sendMailForProductOrder(updateOrder, status);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (!ObjectUtils.isEmpty(updateOrder)) {
-            session.setAttribute("succMsg", " Status Updated !!!");
-        } else {
-            session.setAttribute("errorMsg", "Status not updated!!!");
-        }
-
-        System.out.println(values + "values");
-        return "redirect:/admin/orders";
-    }
-
-    @GetMapping("/search-order")
-    public String searchProduct(@RequestParam String OrderId, Model m, HttpSession session,
-            @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
-            @RequestParam(name = "pageSize", defaultValue = "2") Integer pageSize) {
-        if (OrderId != null) {
-            ProductOrder order = orderservice.getOrdersByOrderId(OrderId.trim());
-
-            if (ObjectUtils.isEmpty(order)) {
-                session.setAttribute("errorMsg", "Incorrect orderId!!!");
-                m.addAttribute("orderDtls", null);
-            } else {
-                m.addAttribute("orderDtls", order);
-
-            }
-            m.addAttribute("search", true);
-        } else {
-            // List<ProductOrder> allOrders = orderservice.getAllOrders();
-            // m.addAttribute("orders", allOrders);
-            // m.addAttribute("search", false);
-            Page<ProductOrder> page = orderservice.getAllActiveOrderPagination(pageNo, pageSize);
-            m.addAttribute("orders", page);
-            m.addAttribute("search", false);
-            m.addAttribute("pageNo", page.getNumber());
-            System.out.println(page.getNumber() + "pagenumber");
-            m.addAttribute("pageSize", pageSize);
-            System.out.println(pageSize + "pageSize");
-            m.addAttribute("totalElements", page.getTotalElements());
-            System.out.println("totalElements" + page.getTotalElements());
-            m.addAttribute("totalPages", page.getTotalPages());
-            System.out.println("totalPages" + page.getTotalElements());
-            m.addAttribute("isFirst", page.isFirst());
-            System.out.println("isFirst" + page.isFirst());
-            m.addAttribute("isLast", page.isLast());
-            System.out.println("isLast" + page.isLast());
-        }
-
-        return "/admin/orders";
-    }
-
-    @GetMapping("/add-admin")
-    public String loadadminAdd() {
-
-        return "admin/add_admin";
-    }
-
-    @GetMapping("/feedback-dashboard")
-    public ResponseEntity<List<FeedbackDto>> feedBackDash(Model m) {
-
-        List<FeedbackDto> feedbackDtos = feedbackService.getAllFeedBack();
-
-        return ResponseEntity.ok(feedbackDtos);
-    }
-
-    @GetMapping("/profile")
-    public String profile() {
-        return "/admin/profile";
-    }
-
-    @PostMapping("/update-profile")
-    public String updateProfile(@ModelAttribute UserDtls user, @ModelAttribute MultipartFile img, HttpSession session) {
-        UserDtls dbuser = userService.updateUserProfile(user, img);
-        if (ObjectUtils.isEmpty(dbuser)) {
-            session.setAttribute("errorMsg", "Profile not updated");
-        } else {
-            session.setAttribute("succMsg", "Profile Updated");
-        }
-        return "redirect:/admin/profile";
-    }
-
-    /*
-     * @PostMapping("/change-password")
-     * public String changePassword(@RequestParam String newPassword, @RequestParam
-     * String currentPassword, Principal p,
-     * HttpSession session) {
-     * UserDtls loggedInUserDetails = getLoggedInUserDetails(p);
-     * 
-     * boolean matches = passwordEncoder.matches(currentPassword,
-     * loggedInUserDetails.getPassword());
-     * 
-     * if (matches) {
-     * String encodePassword = passwordEncoder.encode(newPassword);
-     * loggedInUserDetails.setPassword(encodePassword);
-     * UserDtls updateUser = userService.updateUser(loggedInUserDetails);
-     * if (ObjectUtils.isEmpty(updateUser)) {
-     * session.setAttribute("errorMsg", "Password not updated !! Error in server");
-     * } else {
-     * session.setAttribute("succMsg", "Password Updated sucessfully");
-     * }
-     * } else {
-     * session.setAttribute("errorMsg", "Current Password incorrect");
-     * }
-     * 
-     * return "redirect:/admin/profile";
-     * }
-     */
+  @DeleteMapping("/categories/{id}")
+  public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable String id) {
+    categoryService.deleteCategory(id);
+    return ResponseEntity.ok(ApiResponse.success("Category deleted successfully", null));
+  }
 
 }

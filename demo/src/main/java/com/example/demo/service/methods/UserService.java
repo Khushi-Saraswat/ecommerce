@@ -2,35 +2,46 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import com.example.demo.dto.UserDtlsDto;
-import com.example.demo.model.UserDtls;
+import com.example.demo.dto.OrderDto;
+import com.example.demo.model.User;
+import com.example.demo.request.UserRequestDTO;
+import com.example.demo.response.OrderStatusResponse;
+import com.example.demo.response.UserResponseDTO;
 
 public interface UserService {
 
-    public UserDtls saveUser(UserDtlsDto user);
+    public User getUserByEmail(String email);
 
-    public UserDtls getUserByEmail(String email);
-
-    public List<UserDtls> getUsers(String role);
+    public List<User> getUsers();
 
     // public Boolean updateAccountStatus(Integer id, Boolean status);
 
-    public void increaseFailedAttempt(UserDtls user);
+    public List<OrderDto> getOrdersByUserId(Long userId);
 
-    public void userAccountLock(UserDtls user);
+    // public void increaseFailedAttempt(User user);
 
-    public boolean unlockAccountTimeExpired(UserDtls user);
+    // public void userAccountLock(User user);
+
+    // public boolean unlockAccountTimeExpired(User user);
 
     public void resetAttempt(int userId);
 
     public void updateUserResetToken(String email, String resetToken);
 
-    public UserDtls getUserByToken(String resetToken);
+    public User getUserByToken(String resetToken);
 
-    public UserDtls updateUser(UserDtls user);
+    public User getUserByJwt(String jwt);
 
-    public UserDtls updateUserProfile(UserDtls user);
+    public User updateUser(User user);
 
-    public UserDtls UserByToken(String token);
+    public UserResponseDTO updateUserProfile(Long id, UserRequestDTO user);
+
+    public UserResponseDTO UserByToken(String token);
+
+    public UserResponseDTO getProfile(String jwt);
+
+    public UserResponseDTO Profile();
+
+    public OrderStatusResponse trackOrder(String orderId);
 
 }

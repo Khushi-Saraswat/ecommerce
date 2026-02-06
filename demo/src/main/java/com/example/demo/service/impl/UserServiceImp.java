@@ -1,7 +1,7 @@
 package com.example.demo.service.impl;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,11 +10,17 @@ import org.springframework.util.ObjectUtils;
 
 import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.config.JwtService;
-import com.example.demo.dto.UserDtlsDto;
-import com.example.demo.model.UserDtls;
+import com.example.demo.constants.errorTypes.OrderErrorType;
+import com.example.demo.dto.OrderDto;
+import com.example.demo.exception.Order.OrderException;
+import com.example.demo.model.Order;
+import com.example.demo.model.User;
+import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.request.UserRequestDTO;
+import com.example.demo.response.OrderStatusResponse;
+import com.example.demo.response.UserResponseDTO;
 import com.example.demo.service.methods.UserService;
-import com.example.demo.util.AppConstant;
 
 @Service
 public class UserServiceImp implements UserService {
@@ -30,43 +36,24 @@ public class UserServiceImp implements UserService {
    @Autowired
    private JwtService jwtService;
 
+   @Autowired
+   private OrderRepository orderRepository;
+
    UserServiceImp(PasswordEncoder passwordEncoder) {
       this.passwordEncoder = passwordEncoder;
    }
 
    @Override
-   public UserDtls saveUser(UserDtlsDto userDtlsDto) {
-
-      UserDtls user = (UserDtls) abstractMapperService.convertDtoToEntity(userDtlsDto);
-
-      if (user.getRoles().equals("ROLE_USER")) {
-         user.setRoles("ROLE_USER");
-      } else {
-         user.setRoles("ROLE_ADMIN");
-      }
-      user.setIsEnable(true);
-      user.setAccountNonLocked(true);
-      user.setFailedAttempt(0);
-      user.setLockTime(null);
-      // Encode password (important to always encode before saving)
-      user.setPassword(passwordEncoder.encode(user.getPassword()));
-      user.setUsername(user.getUsername());
-      user.setName(user.getName());
-      user.setMobileNumber(user.getMobileNumber());
-      UserDtls saveUser = userRepository.save(user);
-      return saveUser;
-
-   }
-
-   @Override
-   public UserDtls getUserByEmail(String email) {
+   public User getUserByEmail(String email) {
       return userRepository.findByusername(email);
    }
 
-   @Override
-   public List<UserDtls> getUsers(String role) {
-      return userRepository.findByroles(role);
-   }
+   /*
+    * @Override
+    * public List<User> getUsers(String role) {
+    * return userRepository.findByrole(role);
+    * }
+    */
 
    /*
     * @Override
@@ -82,40 +69,42 @@ public class UserServiceImp implements UserService {
     * }
     */
 
-   @Override
-   public void increaseFailedAttempt(UserDtls user) {
-      int attempt = user.getFailedAttempt() + 1;
-      user.setFailedAttempt(attempt);
-      userRepository.save(user);
-   }
+   // @Override
+   // public void increaseFailedAttempt(User user) {
+   // int attempt = user.getFailedAttempt() + 1;
+   // user.setFailedAttempt(attempt);
+   // userRepository.save(user);
+   // }
 
-   @Override
-   public void userAccountLock(UserDtls user) {
-      user.setAccountNonLocked(false);
-      user.setLockTime(new Date());
-      userRepository.save(user);
+   // @Override
+   // public void userAccountLock(User user) {
+   // user.setAccountNonLocked(false);
+   // user.setLockTime(new Date());
+   // userRepository.save(user);
 
-   }
+   // }
 
-   @Override
-   public boolean unlockAccountTimeExpired(UserDtls user) {
-      // locked time
-      long lockTime = user.getLockTime().getTime();
-      // unlock time
-      long unlockTime = lockTime + AppConstant.UNLOCK_DURATION_TIME;
-      // current time..
-      long currentTime = System.currentTimeMillis();
-      // when unlock time is less than currentTime
-      if (unlockTime < currentTime) {
-         user.setAccountNonLocked(true);
-         user.setFailedAttempt(0);
-         user.setLockTime(null);
-         userRepository.save(user);
-         return true;
-      }
-      return false;
-
-   }
+   /*
+    * @Override
+    * public boolean unlockAccountTimeExpired(User user) {
+    * // locked time
+    * long lockTime = user.getLockTime().getTime();
+    * // unlock time
+    * long unlockTime = lockTime + AppConstant.UNLOCK_DURATION_TIME;
+    * // current time..
+    * long currentTime = System.currentTimeMillis();
+    * // when unlock time is less than currentTime
+    * if (unlockTime < currentTime) {
+    * user.setAccountNonLocked(true);
+    * user.setFailedAttempt(0);
+    * user.setLockTime(null);
+    * userRepository.save(user);
+    * return true;
+    * }
+    * return false;
+    * 
+    * }
+    */
 
    @Override
    public void resetAttempt(int userId) {
@@ -124,27 +113,30 @@ public class UserServiceImp implements UserService {
 
    @Override
    public void updateUserResetToken(String email, String resetToken) {
-      UserDtls findByemail = userRepository.findByusername(email);
+      User findByemail = userRepository.findByusername(email);
       findByemail.setResetToken(resetToken);
       userRepository.save(findByemail);
 
    }
 
    @Override
-   public UserDtls getUserByToken(String token) {
+   public User getUserByToken(String token) {
       return userRepository.findByResetToken(token);
    }
 
    @Override
-   public UserDtls updateUser(UserDtls user) {
+   public User updateUser(User user) {
       return userRepository.save(user);
    }
 
    @Override
-   public UserDtls updateUserProfile(UserDtls user) {
-      UserDtls saveUser = null;
-      UserDtls dbuser = userRepository.findById(user.getId()).get();
+   public UserResponseDTO updateUserProfile(Long id, UserRequestDTO userDtlsDto) {
+      User saveUser = null;
+      User user = (User) abstractMapperService
+            .toEntity(userDtlsDto, User.class);
+      User dbuser = userRepository.findById(id).get();
 
+      // allow only username and mobile number to update
       if (!ObjectUtils.isEmpty(dbuser)) {
          dbuser.setName(user.getName());
          dbuser.setMobileNumber(user.getMobileNumber());
@@ -152,15 +144,70 @@ public class UserServiceImp implements UserService {
 
       }
 
-      return saveUser;
+      return abstractMapperService
+            .toDto(saveUser, UserResponseDTO.class);
    }
 
    @Override
-   public UserDtls UserByToken(String token) {
-
+   public UserResponseDTO UserByToken(String token) {
+      // Remove "Bearer " prefix if present
+      if (token != null && token.startsWith("Bearer ")) {
+         token = token.substring(7);
+      }
+      System.out.println(token + "token given");
       String email = jwtService.extractUsername(token);
-      UserDtls userDtls = userRepository.findByusername(email);
+      User userDtls = userRepository.findByusername(email);
+      return abstractMapperService
+            .toDto(userDtls, UserResponseDTO.class);
+   }
+
+   @Override
+   public List<OrderDto> getOrdersByUserId(Long userId) {
+      List<OrderDto> orders = userRepository.findOrdersByUserId(userId);
+      return orders;
+   }
+
+   @Override
+   public User getUserByJwt(String jwt) {
+
+      if (jwt != null && jwt.startsWith("Bearer ")) {
+         jwt = jwt.substring(7);
+      }
+      System.out.println(jwt + "token given");
+      String email = jwtService.extractUsername(jwt);
+      User userDtls = userRepository.findByusername(email);
       return userDtls;
+   }
+
+   @Override
+   public UserResponseDTO getProfile(String jwt) {
+
+      return UserByToken(jwt);
+
+   }
+
+   @Override
+   public List<User> getUsers() {
+      return userRepository.findAll();
+   }
+
+   @Override
+   public OrderStatusResponse trackOrder(String orderId) {
+      Optional<Order> order = orderRepository.findById(Long.valueOf(orderId));
+
+      if (order.isPresent()) {
+         OrderStatusResponse response = new OrderStatusResponse();
+         response.setStatus(order.get().getOrderStatus());
+         return response;
+      }
+
+      throw new OrderException("Order not found", OrderErrorType.ORDER_NOT_FOUND);
+   }
+
+   @Override
+   public UserResponseDTO Profile() {
+      // TODO Auto-generated method stub
+      return null;
    }
 
 }
