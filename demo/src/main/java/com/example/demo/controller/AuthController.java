@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.request.AuthRequest;
-import com.example.demo.request.UserRequestDTO;
+import com.example.demo.request.Auth.AuthRequest;
+import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.service.methods.AuthService;
 
 import jakarta.mail.MessagingException;

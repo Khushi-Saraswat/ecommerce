@@ -1,7 +1,7 @@
 package com.example.demo.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +18,8 @@ import com.example.demo.model.Category;
 import com.example.demo.model.User;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ProductRepository;
-import com.example.demo.request.CategoryRequestDTO;
-import com.example.demo.response.CategoryResponseDTO;
+import com.example.demo.request.category.CategoryRequestDTO;
+import com.example.demo.response.category.CategoryResponseDTO;
 import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.CategoryService;
 
@@ -72,11 +72,8 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         // 6) Save new
-        Category category = new Category();
-        category.setName(name);
+        Category category = abstractMapperService.toEntity(dto, Category.class);
         category.setSlug(slug);
-        category.setIsActive(true);
-        category.setCreatedAt(LocalDateTime.now());
 
         Category saved = categoryRepository.save(category);
 
@@ -93,7 +90,12 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryResponseDTO> getAllCategories() {
         return categoryRepository.findByActiveTrue().stream()
-        .map(CategoryResponseDTO::).collect(Collectors.toList());
+                .map(
+                        cat -> {
+                            return abstractMapperService.toDto(cat, CategoryResponseDTO.class);
+                        }
+
+                ).collect(Collectors.toList());
 
     }
 
@@ -112,17 +114,17 @@ public class CategoryServiceImpl implements CategoryService {
             return abstractMapperService.toDto(request, CategoryResponseDTO.class);
         }
 
-        return null;
+        throw new CategoryException("category is not created", CategoryError.CATEGORY_IS_NOT_SAVED);
 
     }
 
     @Override
-    public void deleteCategory(String categoryId) {
-        Category category = categoryRepository.findById(Long.valueOf(categoryId))
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
+    public void deleteCategory(String categoryId) throws BadRequestException {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
 
         // Check if category has products
-        if (!productRepository.findByCategoryId(categoryId).isEmpty()) {
+        if (!productRepository.findProductsByCategory_Id(Long.valueOf(categoryId)).isEmpty()) {
             throw new BadRequestException("Cannot delete category with associated products");
         }
 
@@ -147,40 +149,58 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponseDTO getCategoryById(String categoryId) {
-        // TODO Auto-generated method stub
-        return null;
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
+
+        return abstractMapperService.toDto(category, CategoryResponseDTO.class);
     }
 
     @Override
     public CategoryResponseDTO getCategoryBySlug(String slug) {
-        // TODO Auto-generated method stub
-        return null;
+        Category category = categoryRepository.findBySlug(slug)
+                .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
+
+        return abstractMapperService.toDto(category, CategoryResponseDTO.class);
     }
 
     @Override
     public List<CategoryResponseDTO> getRootCategories() {
-        
+
         return categoryRepository.findByParentIdIsNullAndActiveTrue().stream()
-        .map().collect(Collect)
+                .map(
+                        cat -> {
+                            return abstractMapperService.toDto(cat, CategoryResponseDTO.class);
+                        }
+
+                ).collect(Collectors.toList());
     }
 
     @Override
     public List<CategoryResponseDTO> getSubCategories(String parentId) {
-        // TODO Auto-generated method stub
-        return null;
+
+        return categoryRepository.findByParentIdIsNullAndActiveTrue().stream()
+                .map(
+                        cat -> {
+                            return abstractMapperService.toDto(cat, CategoryResponseDTO.class);
+                        }
+
+                ).collect(Collectors.toList());
     }
 
     @Override
     public CategoryResponseDTO updateCategory(String categoryId, CategoryRequestDTO request) {
-        // TODO Auto-generated method stub
 
-        Category category = categoryRepository.findById(Long.parseLong(categoryId))
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
 
         if (request.getName() != null && !request.getName().equals(category.getName())) {
             String newSlug = generateSlug(request.getName());
+
             if (categoryRepository.existsBySlug(newSlug) && !newSlug.equals(category.getSlug())) {
-                throw new BadRequestException("Category with this name already exists");
+
+                throw new CategoryException("Category with this name already exists",
+                        CategoryError.CATEGORY_ALREADY_EXISTS);
+
             }
             category.setName(request.getName());
             category.setSlug(newSlug);
@@ -188,10 +208,13 @@ public class CategoryServiceImpl implements CategoryService {
 
         if (request.getDescription() != null)
             category.setDescription(request.getDescription());
+
         if (request.getImage() != null)
             category.setImage(request.getImage());
+
         if (request.getParentId() != null)
             category.setParentId(request.getParentId());
+
         category.setDisplayOrder(request.getDisplayOrder());
         category.setActive(request.isActive());
 

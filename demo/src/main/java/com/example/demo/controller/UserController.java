@@ -15,12 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.Common.AbstractMapperService;
-import com.example.demo.config.JwtService;
 import com.example.demo.dto.FeedbackDto;
-import com.example.demo.repository.UserRepository;
-import com.example.demo.request.UserRequestDTO;
+import com.example.demo.dto.Products;
+import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.service.methods.FeedbackService;
+import com.example.demo.service.methods.ProductService;
 import com.example.demo.service.methods.UserService;
 
 @RestController
@@ -34,13 +33,7 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private AbstractMapperService abstractMapperService;
-
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private UserRepository userRepository;
+    private ProductService productService;
 
     // endpoint to get user profile details
 
@@ -91,6 +84,26 @@ public class UserController {
         List<FeedbackDto> feedback = feedbackService.getFeedbackByProductId(ProductId);
 
         return ResponseEntity.ok(feedback);
+    }
+
+    // access products
+
+    // GET /api/products/all
+    @GetMapping("/all")
+    public ResponseEntity<List<Products>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    // GET /api/products/{productId}
+    @GetMapping("/{productId}")
+    public ResponseEntity<Products> getProductById(@PathVariable Integer productId) {
+        return ResponseEntity.ok(productService.getProductById(productId));
+    }
+
+    // GET /api/products/category/{categoryId}
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<Products>> getProductsByCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(userService.getProductsByCategory(categoryId));
     }
 
 }

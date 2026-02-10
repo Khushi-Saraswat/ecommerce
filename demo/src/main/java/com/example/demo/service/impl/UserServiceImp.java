@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -12,20 +11,21 @@ import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.config.JwtService;
 import com.example.demo.constants.errorTypes.OrderErrorType;
 import com.example.demo.dto.OrderDto;
+import com.example.demo.dto.Products;
 import com.example.demo.exception.Order.OrderException;
 import com.example.demo.model.Order;
+import com.example.demo.model.Product;
 import com.example.demo.model.User;
 import com.example.demo.repository.OrderRepository;
+import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.request.UserRequestDTO;
-import com.example.demo.response.OrderStatusResponse;
-import com.example.demo.response.UserResponseDTO;
+import com.example.demo.request.User.UserRequestDTO;
+import com.example.demo.response.Order.OrderStatusResponse;
+import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.service.methods.UserService;
 
 @Service
 public class UserServiceImp implements UserService {
-
-   private final PasswordEncoder passwordEncoder;
 
    @Autowired
    private UserRepository userRepository;
@@ -39,9 +39,8 @@ public class UserServiceImp implements UserService {
    @Autowired
    private OrderRepository orderRepository;
 
-   UserServiceImp(PasswordEncoder passwordEncoder) {
-      this.passwordEncoder = passwordEncoder;
-   }
+   @Autowired
+   private ProductRepository productRepository;
 
    @Override
    public User getUserByEmail(String email) {
@@ -208,6 +207,16 @@ public class UserServiceImp implements UserService {
    public UserResponseDTO Profile() {
       // TODO Auto-generated method stub
       return null;
+   }
+
+   @Override
+   public List<Products> getProductsByCategory(Long categoryId) {
+
+      List<Product> products = productRepository.findProductsByCategory_Id(categoryId);
+
+      return products.stream()
+            .map(p -> abstractMapperService.toDto(p, Products.class))
+            .toList();
    }
 
 }

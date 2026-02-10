@@ -3,24 +3,16 @@ package com.example.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.request.CategoryRequestDTO;
-import com.example.demo.response.ApiResponse;
-import com.example.demo.response.CategoryResponseDTO;
+//import com.example.demo.response.Others.ApiResponse;
 import com.example.demo.service.methods.AdminService;
 import com.example.demo.service.methods.CategoryService;
-
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -84,31 +76,44 @@ public class AdminController {
   }
 
   // get daily metrics
-  @GetMapping("/daily-metrics")
-  public ResponseEntity<?> getDailyMetrics(@RequestHeader("Authorization") String jwt) {
-    return ResponseEntity.ok(adminService.getDailyMetrics(jwt));
-  }
-
-  // -------------------------------Categories----------------------------------------------//
-  @PostMapping("/categories")
-  public ResponseEntity<ApiResponse<CategoryResponseDTO>> createCategory(
-      @Valid @RequestBody CategoryRequestDTO request) {
-    CategoryResponseDTO category = categoryService.createCategory(request);
-    return ResponseEntity.ok(ApiResponse.success("Category created successfully", category));
-  }
-
-  @PutMapping("/categories/{id}")
-  public ResponseEntity<ApiResponse<CategoryResponseDTO>> updateCategory(
-      @PathVariable String id,
-      @RequestBody CategoryRequestDTO request) {
-    CategoryResponseDTO category = categoryService.updateCategory(id, request);
-    return ResponseEntity.ok(ApiResponse.success("Category updated successfully", category));
-  }
-
-  @DeleteMapping("/categories/{id}")
-  public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable String id) {
-    categoryService.deleteCategory(id);
-    return ResponseEntity.ok(ApiResponse.success("Category deleted successfully", null));
-  }
+  /*
+   * @GetMapping("/daily-metrics")
+   * public ResponseEntity<?> getDailyMetrics(@RequestHeader("Authorization")
+   * String jwt) {
+   * return ResponseEntity.ok(adminService.getDailyMetrics(jwt));
+   * }
+   * 
+   * //
+   * -------------------------------Categories------------------------------------
+   * ----------//
+   * 
+   * @PostMapping("/categories")
+   * public ResponseEntity<ApiResponse<CategoryResponseDTO>> createCategory(
+   * 
+   * @Valid @RequestBody CategoryRequestDTO request) {
+   * CategoryResponseDTO category = categoryService.createCategory(request);
+   * return ResponseEntity.ok(ApiResponse.success("Category created successfully",
+   * category));
+   * }
+   * 
+   * @PutMapping("/categories/{id}")
+   * public ResponseEntity<<CategoryResponseDTO>> updateCategory(
+   * 
+   * @PathVariable String id,
+   * 
+   * @RequestBody CategoryRequestDTO request) {
+   * CategoryResponseDTO category = categoryService.updateCategory(id, request);
+   * return ResponseEntity.ok(ApiResponse.success("Category updated successfully",
+   * category));
+   * }
+   * 
+   * @DeleteMapping("/categories/{id}")
+   * public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable String
+   * id) {
+   * categoryService.deleteCategory(id);
+   * return ResponseEntity.ok(ApiResponse.success("Category deleted successfully",
+   * null));
+   * }
+   */
 
 }

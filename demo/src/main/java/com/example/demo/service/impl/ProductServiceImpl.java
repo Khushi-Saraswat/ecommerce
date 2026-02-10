@@ -18,7 +18,6 @@ import com.example.demo.constants.KycStatus;
 import com.example.demo.constants.errorTypes.AuthErrorType;
 import com.example.demo.constants.errorTypes.ProductErrorType;
 import com.example.demo.constants.errorTypes.UserErrorType;
-import com.example.demo.dto.CategoryDto;
 import com.example.demo.dto.Products;
 import com.example.demo.exception.Auth.AuthException;
 import com.example.demo.exception.Product.ProductException;
@@ -29,12 +28,13 @@ import com.example.demo.model.Product;
 import com.example.demo.model.ProductImage;
 import com.example.demo.model.User;
 import com.example.demo.repository.ArtisanRepository;
+import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.PriceHistoryRepo;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.response.ProductSaveResponse;
-import com.example.demo.response.StockResponse;
-import com.example.demo.response.UpdateProduct;
+import com.example.demo.response.Product.ProductSaveResponse;
+import com.example.demo.response.Others.StockResponse;
+import com.example.demo.response.Others.UpdateProduct;
 import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.ProductService;
 import com.example.demo.service.methods.UserService;
@@ -67,6 +67,10 @@ public class ProductServiceImpl implements ProductService {
 	@Autowired
 	private AuthService authService;
 
+
+	@Autowired
+	private CategoryRepository categoryRepository;
+
 	ProductServiceImpl(UserRepository userRepository) {
 		this.userRepository = userRepository;
 	}
@@ -84,17 +88,8 @@ public class ProductServiceImpl implements ProductService {
 			throw new AuthException("jwt token is missing", AuthErrorType.TOKEN_MISSING);
 		}
 
-		// Ensure role
-		/*
-		 * if (user.getRole() == null ||
-		 * !user.getRole().equals(com.example.demo.constants.Role.ARTISAN)) {
-		 * throw new UserException("Only artisan is responsible for saving the product",
-		 * UserErrorType.UNAUTHORIZED);
-		 * }
-		 */
-
 		Product productEntity = abstractMapperService.toEntity(product, Product.class);
-		// System.out.println(productEntity.getCategory() + "product entity");
+		
 		productEntity.setCreatedAt(LocalDateTime.now());
 
 		// productEntity.setArtisan();
@@ -107,6 +102,10 @@ public class ProductServiceImpl implements ProductService {
 
 		productEntity.setArtisan(artisan);
 		productEntity.setArtId(artisan.getId().intValue());
+
+		//find category by name......
+
+	
 
 		// productEntity.setArtisan(productEntity.getArtisan().get);
 		// productEntity.setCategory(product.getCa)
@@ -193,7 +192,7 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	// this method is responsible for getting all the active products.
-	@Override
+	/*@Override
 	public List<Product> getAllActiveProducts(CategoryDto category) {
 		List<Product> products = null;
 		if (ObjectUtils.isEmpty(category)) {
@@ -204,7 +203,7 @@ public class ProductServiceImpl implements ProductService {
 		}
 
 		return products;
-	}
+	}*/
 
 	/*
 	 * @Override

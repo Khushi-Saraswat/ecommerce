@@ -52,4 +52,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
      // Find products by artisan state (case-insensitive) and active flag
      List<Product> findByArtisanStateIgnoreCaseAndIsActiveTrue(String state);
+
+     List<Product> findProductsByCategory_Id(Long id);
 }

@@ -61,9 +61,6 @@ public class Product {
     @NotNull(message = "Active status cannot be null")
     private Boolean isActive = true;
 
-    @NotNull(message = "Category cannot be null")
-    private Category category;
-
     @NotNull(message = "Stock cannot be null")
     @Min(value = 0, message = "Stock cannot be negative")
     private Integer stock;
@@ -81,4 +78,8 @@ public class Product {
 
     @OneToMany(mappedBy = "product")
     private List<Cart> cartItems;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 }

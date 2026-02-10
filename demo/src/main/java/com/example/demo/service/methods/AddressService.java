@@ -3,7 +3,7 @@ package com.example.demo.service.methods;
 import java.util.List;
 
 import com.example.demo.dto.AddressDto;
-import com.example.demo.response.AddressResponse;
+import com.example.demo.response.Address.AddressResponse;
 
 public interface AddressService {
 

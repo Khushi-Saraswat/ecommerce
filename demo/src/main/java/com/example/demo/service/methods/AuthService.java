@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.example.demo.constants.TokenPair;
 import com.example.demo.model.User;
-import com.example.demo.request.AuthRequest;
-import com.example.demo.request.UserRequestDTO;
+import com.example.demo.request.Auth.AuthRequest;
+import com.example.demo.request.User.UserRequestDTO;
 
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;

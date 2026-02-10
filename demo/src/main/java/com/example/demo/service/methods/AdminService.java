@@ -2,10 +2,10 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import com.example.demo.response.ArtisanResponseDTO;
-import com.example.demo.response.DailyMetrics;
-import com.example.demo.response.OrderResponseDTO;
-import com.example.demo.response.UserResponseDTO;
+import com.example.demo.response.Artisan.ArtisanResponseDTO;
+import com.example.demo.response.Others.DailyMetrics;
+import com.example.demo.response.Order.OrderResponseDTO;
+import com.example.demo.response.User.UserResponseDTO;
 
 public interface AdminService {
 

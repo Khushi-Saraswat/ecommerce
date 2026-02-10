@@ -15,8 +15,8 @@ import com.example.demo.model.Product;
 import com.example.demo.model.User;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.ProductRepository;
-import com.example.demo.response.CartResponse;
-import com.example.demo.response.UserResponseDTO;
+import com.example.demo.response.Cart.CartResponse;
+import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.service.methods.CartService;
 import com.example.demo.service.methods.UserService;
 

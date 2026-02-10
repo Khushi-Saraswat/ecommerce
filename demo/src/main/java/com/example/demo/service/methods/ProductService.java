@@ -6,12 +6,12 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.demo.dto.CategoryDto;
+import com.example.demo.dto.category.CategoryDto;
 import com.example.demo.dto.Products;
 import com.example.demo.model.Product;
-import com.example.demo.response.ProductSaveResponse;
-import com.example.demo.response.StockResponse;
-import com.example.demo.response.UpdateProduct;
+import com.example.demo.response.Product.ProductSaveResponse;
+import com.example.demo.response.Others.StockResponse;
+import com.example.demo.response.Others.UpdateProduct;
 
 public interface ProductService {
 
@@ -28,7 +28,7 @@ public interface ProductService {
     public UpdateProduct updateProduct(Products product, Integer ProductId,List<MultipartFile> file) throws IOException;
             
 
-    public List<Product> getAllActiveProducts(CategoryDto category);
+    //public List<Product> getAllActiveProducts( category);
 
     // public List<ProductDto> searchProduct(String ch);
 

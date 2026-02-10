@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.AddressDto;
-import com.example.demo.response.AddressResponse;
+import com.example.demo.response.Address.AddressResponse;
 import com.example.demo.service.methods.AddressService;
 
 @RestController

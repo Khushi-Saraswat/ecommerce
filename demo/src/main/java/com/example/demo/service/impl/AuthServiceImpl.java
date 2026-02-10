@@ -28,15 +28,19 @@ import com.example.demo.model.RefreshToken;
 import com.example.demo.model.User;
 import com.example.demo.repository.RefreshTokenRepo;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.request.AuthRequest;
-import com.example.demo.request.UserRequestDTO;
+import com.example.demo.request.Auth.AuthRequest;
+import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.UserService;
 import com.example.demo.util.CommonUtil;
 
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
+
+
+@Slf4j
 @Service
 public class AuthServiceImpl implements AuthService {
 

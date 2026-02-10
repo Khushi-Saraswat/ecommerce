@@ -13,8 +13,8 @@ import com.example.demo.exception.Address.AddressException;
 import com.example.demo.model.Address;
 import com.example.demo.model.User;
 import com.example.demo.repository.AddressRepository;
-import com.example.demo.response.AddressResponse;
-import com.example.demo.response.UserResponseDTO;
+import com.example.demo.response.Address.AddressResponse;
+import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.service.methods.AddressService;
 import com.example.demo.service.methods.UserService;
 

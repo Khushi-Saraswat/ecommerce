@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.request.ArtisanRequestDTO;
+import com.example.demo.request.Artisan.ArtisanRequestDTO;
 import com.example.demo.service.methods.AartisanService;
 
 @RestController

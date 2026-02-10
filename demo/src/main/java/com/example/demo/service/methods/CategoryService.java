@@ -2,8 +2,10 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import com.example.demo.request.CategoryRequestDTO;
-import com.example.demo.response.CategoryResponseDTO;
+import org.apache.coyote.BadRequestException;
+
+import com.example.demo.request.category.CategoryRequestDTO;
+import com.example.demo.response.category.CategoryResponseDTO;
 
 public interface CategoryService {
 
@@ -23,7 +25,7 @@ public interface CategoryService {
 
     CategoryResponseDTO updateCategory(String categoryId, CategoryRequestDTO request);
 
-    void deleteCategory(String categoryId);
+    void deleteCategory(String categoryId) throws BadRequestException;
 
     String generateSlug(String name);
 

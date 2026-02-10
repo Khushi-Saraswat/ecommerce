@@ -16,9 +16,9 @@ import com.example.demo.model.Artisan;
 import com.example.demo.model.User;
 import com.example.demo.repository.ArtisanRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.request.ArtisanRequestDTO;
-import com.example.demo.response.ArtisanResponseDTO;
-import com.example.demo.response.ArtisanSaveResponse;
+import com.example.demo.request.Artisan.ArtisanRequestDTO;
+import com.example.demo.response.Artisan.ArtisanResponseDTO;
+import com.example.demo.response.Artisan.ArtisanSaveResponse;
 import com.example.demo.service.methods.AartisanService;
 import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.UserService;
@@ -39,9 +39,6 @@ public class ArtisanServiceImpl implements AartisanService {
 
     @Autowired
     private AuthService authService;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Override
     public ArtisanSaveResponse SaveArtisanDetails(ArtisanRequestDTO artisanrequestDTO) {

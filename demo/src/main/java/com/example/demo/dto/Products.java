@@ -1,6 +1,6 @@
 package com.example.demo.dto;
 
-import com.example.demo.request.CategoryRequestDTO;
+import com.example.demo.request.category.CategoryRequestDTO;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Data;

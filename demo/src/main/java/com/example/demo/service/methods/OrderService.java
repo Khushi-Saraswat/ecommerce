@@ -2,7 +2,7 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import com.example.demo.response.OrderHistoryDTO;
+import com.example.demo.response.Order.OrderHistoryDTO;
 
 public interface OrderService {
 

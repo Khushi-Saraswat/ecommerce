@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.model.Review;
 import com.example.demo.repository.ReviewRepository;
-import com.example.demo.request.ReviewRequestDTO;
-import com.example.demo.response.ReviewResponseDTO;
+import com.example.demo.request.Review.ReviewRequestDTO;
+import com.example.demo.response.Review.ReviewResponseDTO;
 import com.example.demo.service.methods.ReviewService;
 
 @Service

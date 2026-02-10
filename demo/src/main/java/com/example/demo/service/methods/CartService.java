@@ -2,7 +2,7 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import com.example.demo.response.CartResponse;
+import com.example.demo.response.Cart.CartResponse;
 
 public interface CartService {
     public CartResponse saveCart(String jwt, Integer productId, Integer Stock);
