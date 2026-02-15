@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,12 +27,6 @@ import com.example.demo.service.methods.CategoryRequestService;
 import com.example.demo.service.methods.CategoryService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.http.MediaType;
-
-
-
-
-
 
 @RestController
 @RequestMapping("/api/admin")
@@ -111,38 +105,35 @@ public class AdminController {
   }
 
   // category management
-  
-  
-    // ✅ Create Category (Multipart)
-    @PostMapping(value = "/categories", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> createCategory(
-            @RequestPart("category") String categoryJson,
-            @RequestPart(value = "file", required = false) MultipartFile file
-    ) throws JsonProcessingException {
 
-        CategoryRequestDTO request = mapper.readValue(categoryJson, CategoryRequestDTO.class);
+  // ✅ Create Category (Multipart)
+  @PostMapping(value = "/categories", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> createCategory(
+      @RequestPart("category") String categoryJson,
+      @RequestPart(value = "file", required = false) MultipartFile file) throws JsonProcessingException {
 
-        return ResponseEntity.ok(categoryService.createCategory(request, file));
-    }
+    CategoryRequestDTO request = mapper.readValue(categoryJson, CategoryRequestDTO.class);
 
-    // ✅ Update Category (Multipart)
-    @PutMapping(value = "/categories/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> updateCategory(
-            @PathVariable Long id,
-            @RequestPart("category") String categoryJson,
-            @RequestPart(value = "file", required = false) MultipartFile file
-    ) throws JsonProcessingException {
+    return ResponseEntity.ok(categoryService.createCategory(request, file));
+  }
 
-        CategoryRequestDTO request = mapper.readValue(categoryJson, CategoryRequestDTO.class);
+  // ✅ Update Category (Multipart)
+  @PutMapping(value = "/categories/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> updateCategory(
+      @PathVariable Long id,
+      @RequestPart("category") String categoryJson,
+      @RequestPart(value = "file", required = false) MultipartFile file) throws JsonProcessingException, Exception {
 
-        return ResponseEntity.ok(categoryService.updateCategory(id, request, file));
-    }
+    CategoryRequestDTO request = mapper.readValue(categoryJson, CategoryRequestDTO.class);
 
-    // ✅ Delete Category
-    @DeleteMapping("/categories/{id}")
-    public ResponseEntity<String> deleteCategory(@PathVariable Long id) throws BadRequestException {
-        return ResponseEntity.ok(categoryService.deleteCategory(id));
-    }
+    return ResponseEntity.ok(categoryService.updateCategory(id, request, file));
+  }
+
+  // ✅ Delete Category
+  @DeleteMapping("/categories/{id}")
+  public ResponseEntity<String> deleteCategory(@PathVariable Long id) throws BadRequestException, Exception {
+    return ResponseEntity.ok(categoryService.deleteCategory(id));
+  }
 
   // category request management
   @GetMapping("/pending")

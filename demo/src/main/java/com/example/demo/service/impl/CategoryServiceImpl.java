@@ -12,7 +12,6 @@ import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.constants.errorTypes.CategoryError;
 import com.example.demo.exception.Category.CategoryException;
 import com.example.demo.model.Category;
-import com.example.demo.model.CategoryImage;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.request.category.CategoryRequestDTO;
@@ -67,12 +66,10 @@ public class CategoryServiceImpl implements CategoryService {
         category.setName(request.getName().trim());
         category.setSlug(slug);
 
-        CategoryImage image = new CategoryImage();
         // ✅ Upload Image to Cloudinary
         if (file != null && !file.isEmpty()) {
             String imageUrl = cloudinaryService.uploadImage(file);
-            image.setImageUrl(imageUrl);
-            category.setImages(image);
+            category.setImageUrl(imageUrl);
         }
 
         Category saved = categoryRepository.save(category);
@@ -87,7 +84,7 @@ public class CategoryServiceImpl implements CategoryService {
     // ✅ Update Category (with Cloudinary Image Replace)
     @Override
     public String updateCategory(Long categoryId, CategoryRequestDTO request, MultipartFile file)
-            throws NumberFormatException {
+            throws NumberFormatException, Exception {
 
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
@@ -120,7 +117,7 @@ public class CategoryServiceImpl implements CategoryService {
 
             // delete old image
             if (category.getImage() != null && !category.getImage().isEmpty()) {
-                cloudinaryService.deleteImage(String.valueOf(category.getImages().getId()));
+                cloudinaryService.deleteImage(category.getImageUrl());
             }
 
             // upload new image
@@ -135,7 +132,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     // ✅ Soft Delete Category + Cloudinary Delete
     @Override
-    public String deleteCategory(Long categoryId) throws BadRequestException {
+    public String deleteCategory(Long categoryId) throws BadRequestException, Exception {
 
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
@@ -150,7 +147,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         // delete cloudinary image
         if (category.getImage() != null && !category.getImage().isEmpty()) {
-            cloudinaryService.deleteImage(String.valueOf(category.getImages().getId()));
+            cloudinaryService.deleteImage(category.getImageUrl());
             category.setImage(null);
         }
 

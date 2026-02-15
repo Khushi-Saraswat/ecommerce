@@ -14,11 +14,11 @@ public interface CategoryService {
 
     CategoryResponseDTO getCategoryBySlug(String slug);
 
-    String createCategory(CategoryRequestDTO request,MultipartFile file);
+    String createCategory(CategoryRequestDTO request, MultipartFile file);
 
-    String updateCategory(Long categoryId, CategoryRequestDTO request,MultipartFile file);
+    String updateCategory(Long categoryId, CategoryRequestDTO request, MultipartFile file) throws Exception;
 
-    String deleteCategory(Long categoryId) throws BadRequestException;
+    String deleteCategory(Long categoryId) throws BadRequestException, Exception;
 
     String generateSlug(String name);
 

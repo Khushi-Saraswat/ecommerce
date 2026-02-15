@@ -1,17 +1,14 @@
 package com.example.demo.model;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,6 +24,7 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String imageUrl;
     private String name;
     private String description;
     private String image;
@@ -39,9 +37,5 @@ public class Category {
 
     @LastModifiedDate
     private LocalDateTime updatedAt = LocalDateTime.now();;
-
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private CategoryImage images;
-
 
 }
