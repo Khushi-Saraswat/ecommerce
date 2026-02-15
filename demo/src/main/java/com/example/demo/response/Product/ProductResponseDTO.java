@@ -1,5 +1,6 @@
 package com.example.demo.response.Product;
 
+import com.example.demo.request.Product.ProductImageDTO;
 import com.example.demo.response.Artisan.ArtisanResponseDTO;
 
 import lombok.Data;
@@ -14,5 +15,6 @@ public class ProductResponseDTO {
     private String category;
     private Boolean isActive;
     private ArtisanResponseDTO artisan;
+    private ProductImageDTO productImageDTO;
 
 }

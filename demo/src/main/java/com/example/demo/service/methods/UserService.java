@@ -3,7 +3,6 @@ package com.example.demo.service.methods;
 import java.util.List;
 
 import com.example.demo.dto.OrderDto;
-import com.example.demo.dto.Products;
 import com.example.demo.model.User;
 import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.response.Order.OrderStatusResponse;
@@ -45,6 +44,6 @@ public interface UserService {
 
     public OrderStatusResponse trackOrder(String orderId);
 
-    public List<Products> getProductsByCategory(Long categoryId);
+    // public List<> getProductsByCategory(Long categoryId);
 
 }

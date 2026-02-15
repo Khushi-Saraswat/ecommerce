@@ -2,8 +2,6 @@ package com.example.demo.response.Others;
 
 import java.util.List;
 
-import com.example.demo.constants.Category;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +16,7 @@ public class UpdateProduct {
     private Double price;
     private Double mrp;
     private Boolean isActive;
-    private Category category;
+    // private Category category;
 
     private Integer stock;
 

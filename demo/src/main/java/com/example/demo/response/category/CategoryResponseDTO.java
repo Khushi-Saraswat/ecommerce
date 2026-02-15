@@ -12,9 +12,7 @@ public class CategoryResponseDTO {
     private String description;
     private String image;
     private String slug;
-    private String parentId;
-    private boolean active;
-    private int displayOrder;
+    private boolean isActive;
     private LocalDateTime createdAt;
     private String message;
 

@@ -54,4 +54,5 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
      List<Product> findByArtisanStateIgnoreCaseAndIsActiveTrue(String state);
 
      List<Product> findProductsByCategory_Id(Long id);
+
 }

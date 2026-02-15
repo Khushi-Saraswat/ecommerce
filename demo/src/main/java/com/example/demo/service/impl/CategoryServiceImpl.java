@@ -5,17 +5,14 @@ import java.util.stream.Collectors;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.Common.AbstractMapperService;
-import com.example.demo.constants.Role;
-import com.example.demo.constants.errorTypes.AuthErrorType;
 import com.example.demo.constants.errorTypes.CategoryError;
-import com.example.demo.constants.errorTypes.UserErrorType;
-import com.example.demo.exception.Auth.AuthException;
 import com.example.demo.exception.Category.CategoryException;
-import com.example.demo.exception.User.UserException;
 import com.example.demo.model.Category;
-import com.example.demo.model.User;
+import com.example.demo.model.CategoryImage;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.request.category.CategoryRequestDTO;
@@ -23,6 +20,7 @@ import com.example.demo.response.category.CategoryResponseDTO;
 import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.CategoryService;
 
+@Service
 public class CategoryServiceImpl implements CategoryService {
 
     @Autowired
@@ -37,71 +35,28 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private ProductRepository productRepository;
 
-    @Override
-    public CategoryResponseDTO addCategory(CategoryRequestDTO dto, String jwt) {
-        // 1) Auth
-        User user = authService.getCurrentUser();
-        if (user == null) {
-            throw new AuthException("jwt token is missing", AuthErrorType.TOKEN_MISSING);
-        }
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
-        // 2) Role check
-        if (user.getRole() == null || !user.getRole().equals(Role.ARTISAN)) {
-            throw new UserException("Only artisan can add category", UserErrorType.UNAUTHORIZED);
-        }
-
-        // 3) Validate name
-        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
-            throw new CategoryException("Category name is required", CategoryError.INVALID_CATEGORY_NAME);
-        }
-
-        String name = dto.getName().trim();
-
-        // 4) Create slug
-        String slug = name.toLowerCase().replaceAll("[^a-z0-9]+", "-");
-
-        // 5) Duplicate check (by slug)
-        Category existing = categoryRepository.findBySlug(slug).orElse(null);
-        if (existing != null) {
-            CategoryResponseDTO response = new CategoryResponseDTO();
-            response.setId(existing.getId());
-            response.setName(existing.getName());
-            response.setSlug(existing.getSlug());
-            response.setMessage("Category already exists (returned existing)");
-            return response;
-        }
-
-        // 6) Save new
-        Category category = abstractMapperService.toEntity(dto, Category.class);
-        category.setSlug(slug);
-
-        Category saved = categoryRepository.save(category);
-
-        // 7) Response
-        CategoryResponseDTO response = new CategoryResponseDTO();
-        response.setId(saved.getId());
-        response.setName(saved.getName());
-        response.setSlug(saved.getSlug());
-        response.setMessage("Category created successfully");
-
-        return response;
-    }
-
+    // ✅ Get All Active Categories
     @Override
     public List<CategoryResponseDTO> getAllCategories() {
-        return categoryRepository.findByActiveTrue().stream()
-                .map(
-                        cat -> {
-                            return abstractMapperService.toDto(cat, CategoryResponseDTO.class);
-                        }
-
-                ).collect(Collectors.toList());
-
+        return categoryRepository.findByIsActiveTrue()
+                .stream()
+                .map(cat -> abstractMapperService.toDto(cat, CategoryResponseDTO.class))
+                .collect(Collectors.toList());
     }
 
+    // ✅ Create Category (with Cloudinary Image)
     @Override
-    public CategoryResponseDTO createCategory(CategoryRequestDTO request) {
-        String slug = generateSlug(request.getName());
+    public String createCategory(CategoryRequestDTO request, MultipartFile file) {
+
+        if (request == null || request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new CategoryException("Category name is required", CategoryError.CATEGORY_NOT_FOUND);
+        }
+
+        String slug = generateSlug(request.getName().trim());
+
         if (categoryRepository.existsBySlug(slug)) {
             throw new CategoryException("Category with this name already exists",
                     CategoryError.CATEGORY_ALREADY_EXISTS);
@@ -109,35 +64,102 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category category = abstractMapperService.toEntity(request, Category.class);
 
-        if (category != null) {
-            category = categoryRepository.save(category);
-            return abstractMapperService.toDto(request, CategoryResponseDTO.class);
+        category.setName(request.getName().trim());
+        category.setSlug(slug);
+
+        CategoryImage image = new CategoryImage();
+        // ✅ Upload Image to Cloudinary
+        if (file != null && !file.isEmpty()) {
+            String imageUrl = cloudinaryService.uploadImage(file);
+            image.setImageUrl(imageUrl);
+            category.setImages(image);
         }
 
-        throw new CategoryException("category is not created", CategoryError.CATEGORY_IS_NOT_SAVED);
+        Category saved = categoryRepository.save(category);
 
+        if (saved == null) {
+            throw new CategoryException("category is not created", CategoryError.CATEGORY_IS_NOT_SAVED);
+        }
+
+        return "create category successfully !!";
     }
 
+    // ✅ Update Category (with Cloudinary Image Replace)
     @Override
-    public void deleteCategory(String categoryId) throws BadRequestException {
+    public String updateCategory(Long categoryId, CategoryRequestDTO request, MultipartFile file)
+            throws NumberFormatException {
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
+
+        // ✅ Update Name + Slug
+        if (request.getName() != null && !request.getName().trim().isEmpty()
+                && !request.getName().equals(category.getName())) {
+
+            String newSlug = generateSlug(request.getName().trim());
+
+            if (categoryRepository.existsBySlug(newSlug) && !newSlug.equals(category.getSlug())) {
+                throw new CategoryException("Category with this name already exists",
+                        CategoryError.CATEGORY_ALREADY_EXISTS);
+            }
+
+            category.setName(request.getName().trim());
+            category.setSlug(newSlug);
+        }
+
+        // ✅ Update Description
+        if (request.getDescription() != null) {
+            category.setDescription(request.getDescription());
+        }
+
+        // ✅ Update Active
+        category.setIsActive(request.isActive());
+
+        // ✅ IMAGE UPDATE
+        if (file != null && !file.isEmpty()) {
+
+            // delete old image
+            if (category.getImage() != null && !category.getImage().isEmpty()) {
+                cloudinaryService.deleteImage(String.valueOf(category.getImages().getId()));
+            }
+
+            // upload new image
+            String newImageUrl = cloudinaryService.uploadImage(file);
+            category.setImage(newImageUrl);
+        }
+
+        categoryRepository.save(category);
+
+        return "category is updated successfully";
+    }
+
+    // ✅ Soft Delete Category + Cloudinary Delete
+    @Override
+    public String deleteCategory(Long categoryId) throws BadRequestException {
+
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
 
         // Check if category has products
-        if (!productRepository.findProductsByCategory_Id(Long.valueOf(categoryId)).isEmpty()) {
+        if (!productRepository.findProductsByCategory_Id(categoryId).isEmpty()) {
             throw new BadRequestException("Cannot delete category with associated products");
         }
 
-        // Check if category has sub-categories
-        if (!categoryRepository.findByParentIdAndActiveTrue(categoryId).isEmpty()) {
-            throw new BadRequestException("Cannot delete category with sub-categories");
+        // soft delete
+        category.setIsActive(false);
+
+        // delete cloudinary image
+        if (category.getImage() != null && !category.getImage().isEmpty()) {
+            cloudinaryService.deleteImage(String.valueOf(category.getImages().getId()));
+            category.setImage(null);
         }
 
-        category.setActive(false);
         categoryRepository.save(category);
 
+        return "category is successfully deleted";
     }
 
+    // ✅ Generate Slug
     @Override
     public String generateSlug(String name) {
         return name.toLowerCase()
@@ -147,14 +169,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .trim();
     }
 
-    @Override
-    public CategoryResponseDTO getCategoryById(String categoryId) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
-
-        return abstractMapperService.toDto(category, CategoryResponseDTO.class);
-    }
-
+    // ✅ Get Category by Slug
     @Override
     public CategoryResponseDTO getCategoryBySlug(String slug) {
         Category category = categoryRepository.findBySlug(slug)
@@ -163,64 +178,35 @@ public class CategoryServiceImpl implements CategoryService {
         return abstractMapperService.toDto(category, CategoryResponseDTO.class);
     }
 
+    // ✅ Get Active Categories
     @Override
-    public List<CategoryResponseDTO> getRootCategories() {
-
-        return categoryRepository.findByParentIdIsNullAndActiveTrue().stream()
-                .map(
-                        cat -> {
-                            return abstractMapperService.toDto(cat, CategoryResponseDTO.class);
-                        }
-
-                ).collect(Collectors.toList());
+    public List<CategoryResponseDTO> getActiveCategories() {
+        return categoryRepository.findByIsActiveTrue()
+                .stream()
+                .map(c -> abstractMapperService.toDto(c, CategoryResponseDTO.class))
+                .collect(Collectors.toList());
     }
 
+    // ✅ Get Category by Id
     @Override
-    public List<CategoryResponseDTO> getSubCategories(String parentId) {
-
-        return categoryRepository.findByParentIdIsNullAndActiveTrue().stream()
-                .map(
-                        cat -> {
-                            return abstractMapperService.toDto(cat, CategoryResponseDTO.class);
-                        }
-
-                ).collect(Collectors.toList());
-    }
-
-    @Override
-    public CategoryResponseDTO updateCategory(String categoryId, CategoryRequestDTO request) {
-
+    public CategoryResponseDTO getCategoryById(Long categoryId) throws NumberFormatException {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
+        return abstractMapperService.toDto(category, CategoryResponseDTO.class);
+    }
 
-        if (request.getName() != null && !request.getName().equals(category.getName())) {
-            String newSlug = generateSlug(request.getName());
+    // ✅ Search Categories
+    @Override
+    public List<CategoryResponseDTO> searchCategories(String keyword) {
 
-            if (categoryRepository.existsBySlug(newSlug) && !newSlug.equals(category.getSlug())) {
-
-                throw new CategoryException("Category with this name already exists",
-                        CategoryError.CATEGORY_ALREADY_EXISTS);
-
-            }
-            category.setName(request.getName());
-            category.setSlug(newSlug);
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
         }
 
-        if (request.getDescription() != null)
-            category.setDescription(request.getDescription());
-
-        if (request.getImage() != null)
-            category.setImage(request.getImage());
-
-        if (request.getParentId() != null)
-            category.setParentId(request.getParentId());
-
-        category.setDisplayOrder(request.getDisplayOrder());
-        category.setActive(request.isActive());
-
-        category = categoryRepository.save(category);
-        return abstractMapperService.toDto(category, CategoryResponseDTO.class);
-
+        return categoryRepository.findByNameIgnoreCase(keyword.trim())
+                .stream()
+                .map(c -> abstractMapperService.toDto(c, CategoryResponseDTO.class))
+                .toList();
     }
 
 }

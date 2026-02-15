@@ -11,10 +11,8 @@ import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.config.JwtService;
 import com.example.demo.constants.errorTypes.OrderErrorType;
 import com.example.demo.dto.OrderDto;
-import com.example.demo.dto.Products;
 import com.example.demo.exception.Order.OrderException;
 import com.example.demo.model.Order;
-import com.example.demo.model.Product;
 import com.example.demo.model.User;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.ProductRepository;
@@ -207,16 +205,6 @@ public class UserServiceImp implements UserService {
    public UserResponseDTO Profile() {
       // TODO Auto-generated method stub
       return null;
-   }
-
-   @Override
-   public List<Products> getProductsByCategory(Long categoryId) {
-
-      List<Product> products = productRepository.findProductsByCategory_Id(categoryId);
-
-      return products.stream()
-            .map(p -> abstractMapperService.toDto(p, Products.class))
-            .toList();
    }
 
 }

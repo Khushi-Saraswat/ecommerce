@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.FeedbackDto;
-import com.example.demo.dto.Products;
 import com.example.demo.request.User.UserRequestDTO;
+import com.example.demo.response.category.CategoryResponseDTO;
+import com.example.demo.service.methods.CategoryService;
 import com.example.demo.service.methods.FeedbackService;
 import com.example.demo.service.methods.ProductService;
 import com.example.demo.service.methods.UserService;
@@ -34,6 +35,9 @@ public class UserController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     // endpoint to get user profile details
 
@@ -89,21 +93,63 @@ public class UserController {
     // access products
 
     // GET /api/products/all
-    @GetMapping("/all")
-    public ResponseEntity<List<Products>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    /*
+     * @GetMapping("/all")
+     * public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
+     * 
+     * return ResponseEntity.ok(productService.getAllProducts());
+     * }
+     * 
+     * // GET /api/products/{productId}
+     * 
+     * @GetMapping("/{productId}")
+     * public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable
+     * Integer productId) {
+     * return ResponseEntity.ok(productService.getProductById(productId));
+     * }
+     * 
+     * // GET /api/products/category/{categoryId}
+     * 
+     * @GetMapping("/category/{categoryId}")
+     * public ResponseEntity<List<ProductResponseDTO>>
+     * getProductsByCategory(@PathVariable Long categoryId) {
+     * return ResponseEntity.ok(userService.getProductsByCategory(categoryId));
+     * }
+     */
+
+    // <-------- category mgmt------------>
+
+    @GetMapping
+    public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
+
+        return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
-    // GET /api/products/{productId}
-    @GetMapping("/{productId}")
-    public ResponseEntity<Products> getProductById(@PathVariable Integer productId) {
-        return ResponseEntity.ok(productService.getProductById(productId));
+    // GET /api/categories/{categoryId}
+
+    @GetMapping("/{categoryId}")
+    public ResponseEntity<CategoryResponseDTO> getCategoryById(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(categoryService.getCategoryById(categoryId));
     }
 
-    // GET /api/products/category/{categoryId}
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<Products>> getProductsByCategory(@PathVariable Long categoryId) {
-        return ResponseEntity.ok(userService.getProductsByCategory(categoryId));
+    // GET /api/categories/slug/{slug}
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<CategoryResponseDTO> getCategoryBySlug(@PathVariable String slug) {
+        return ResponseEntity.ok(categoryService.getCategoryBySlug(slug));
+    }
+
+    // GET /api/categories/active
+
+    @GetMapping("/active")
+    public ResponseEntity<List<CategoryResponseDTO>> getActiveCategories() {
+        return ResponseEntity.ok(categoryService.getActiveCategories());
+    }
+
+    // GET /api/categories/search?keyword=...
+    @GetMapping("/search")
+    public ResponseEntity<List<CategoryResponseDTO>> searchCategories(@RequestParam String keyword) {
+        return ResponseEntity.ok(categoryService.searchCategories(keyword));
     }
 
 }

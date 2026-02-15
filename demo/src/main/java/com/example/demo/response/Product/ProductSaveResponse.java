@@ -12,5 +12,5 @@ public class ProductSaveResponse {
     private int artisanId;
     private int productId;
     private String configurationMessage;
-
+    private boolean success;
 }

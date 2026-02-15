@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,14 +13,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.request.Artisan.ArtisanRequestDTO;
+import com.example.demo.request.category.CategoryNameRequest;
+import com.example.demo.response.category.CategoryRequestResponseDTO;
 import com.example.demo.service.methods.AartisanService;
+import com.example.demo.service.methods.CategoryRequestService;
 
 @RestController
+@PreAuthorize("hasRole('ARTISAN')")
 @RequestMapping("/api/artisans")
 public class ArtisanController {
 
     @Autowired
     private AartisanService aartisanService;
+
+    @Autowired
+    private CategoryRequestService categoryRequestService;
 
     @PreAuthorize("hasRole('ARTISAN')")
     @PostMapping("/apply")
@@ -40,6 +49,20 @@ public class ArtisanController {
 
         return ResponseEntity.ok(aartisanService.UpdateArtisanDetails(artisanRequestDTO, jwt));
 
+    }
+
+    // request an category
+
+    // POST /api/category-requests/create
+    @PostMapping("/create")
+    public ResponseEntity<CategoryRequestResponseDTO> createRequest(@RequestBody CategoryNameRequest dto) {
+        return ResponseEntity.ok(categoryRequestService.createRequest(dto));
+    }
+
+    // GET /api/category-requests/my
+    @GetMapping("/my")
+    public ResponseEntity<List<CategoryRequestResponseDTO>> myRequests() {
+        return ResponseEntity.ok(categoryRequestService.myRequests());
     }
 
 }

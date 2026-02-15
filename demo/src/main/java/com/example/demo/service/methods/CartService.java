@@ -2,6 +2,8 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
+import org.apache.coyote.BadRequestException;
+
 import com.example.demo.response.Cart.CartResponse;
 
 public interface CartService {
@@ -14,6 +16,6 @@ public interface CartService {
     // public String updateCart(User userDtls, Integer productId, String
     // updateOrDecrease);
 
-    public Boolean deleteCart(Integer productId);
+    public Boolean deleteCart(Integer productId) throws BadRequestException;
 
 }

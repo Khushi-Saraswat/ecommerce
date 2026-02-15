@@ -43,7 +43,7 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
         }
 
         boolean categoryExists = categoryRequestRepository
-                .existsByNameIgnoreCase(categoryRequest.getRequestedCategoryName());
+                .existsByNameIgnoreCase(categoryRequest.getName());
         if (categoryExists) {
             categoryRequest.setStatus(RequestStatus.REJECTED);
             categoryRequest.setUpdatedAt(LocalDateTime.now());
@@ -52,7 +52,7 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
         }
 
         CategoryRequest category = new CategoryRequest();
-        category.setRequestedCategoryName(categoryRequest.getRequestedCategoryName());
+        category.setName(categoryRequest.getName());
         category.setStatus(RequestStatus.APPROVED);
         category.setUpdatedAt(LocalDateTime.now());
         categoryRequestRepository.save(category);
@@ -67,7 +67,7 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
 
         // prevent duplicates (pending)
         boolean alreadyPending = categoryRequestRepository
-                .existsByRequestedCategoryNameIgnoreCaseAndStatus(
+                .existsByNameIgnoreCaseAndStatus(
                         dto.getRequestedCategoryName(),
                         RequestStatus.PENDING);
 
@@ -95,20 +95,6 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
     }
 
     @Override
-    public List<CategoryRequestResponseDTO> myRequests() {
-
-        User user = authservice.getCurrentUser();
-
-        categoryRequestRepository.findAll().stream()
-                .map(
-                        cat -> {
-                            return abstractMapperService.toDto(cat, CategoryRequestResponseDTO.class);
-                        })
-                .collect(Collectors.toList());
-
-    }
-
-    @Override
     public String rejectRequest(Long requestId, String reason) {
         CategoryRequest categoryRequest = categoryRequestRepository.findById(requestId)
                 .orElseThrow(
@@ -129,6 +115,16 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
         categoryRequestRepository.save(categoryRequest);
 
         return "Request rejected successfully";
+    }
+
+    @Override
+    public List<CategoryRequestResponseDTO> myRequests() {
+        User user = authservice.getCurrentUser();
+
+        return categoryRequestRepository.findAll().stream()
+                .filter(cat -> cat.getUser().getUserId().equals(user.getUserId())) // only current user's requests
+                .map(cat -> abstractMapperService.toDto(cat, CategoryRequestResponseDTO.class))
+                .collect(Collectors.toList());
     }
 
 }

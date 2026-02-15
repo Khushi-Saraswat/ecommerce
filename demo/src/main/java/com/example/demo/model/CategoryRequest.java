@@ -32,7 +32,7 @@ public class CategoryRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String requestedCategoryName;
+    private String name;
 
     private String note; // optional
 

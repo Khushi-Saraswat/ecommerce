@@ -3,30 +3,29 @@ package com.example.demo.service.methods;
 import java.util.List;
 
 import org.apache.coyote.BadRequestException;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.request.category.CategoryRequestDTO;
 import com.example.demo.response.category.CategoryResponseDTO;
 
 public interface CategoryService {
 
-    CategoryResponseDTO addCategory(CategoryRequestDTO dto, String jwt);
-
     List<CategoryResponseDTO> getAllCategories();
-
-    List<CategoryResponseDTO> getRootCategories();
-
-    List<CategoryResponseDTO> getSubCategories(String parentId);
-
-    CategoryResponseDTO getCategoryById(String categoryId);
 
     CategoryResponseDTO getCategoryBySlug(String slug);
 
-    CategoryResponseDTO createCategory(CategoryRequestDTO request);
+    String createCategory(CategoryRequestDTO request,MultipartFile file);
 
-    CategoryResponseDTO updateCategory(String categoryId, CategoryRequestDTO request);
+    String updateCategory(Long categoryId, CategoryRequestDTO request,MultipartFile file);
 
-    void deleteCategory(String categoryId) throws BadRequestException;
+    String deleteCategory(Long categoryId) throws BadRequestException;
 
     String generateSlug(String name);
+
+    CategoryResponseDTO getCategoryById(Long categoryId);
+
+    List<CategoryResponseDTO> getActiveCategories();
+
+    List<CategoryResponseDTO> searchCategories(String keyword);
 
 }

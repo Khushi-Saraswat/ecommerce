@@ -1,44 +1,47 @@
 package com.example.demo.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-
-@Builder
-@Entity
-@Data
 @AllArgsConstructor
+@NoArgsConstructor
+@Data
+@Entity
 @Table(name = "categories")
 public class Category {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String name;
     private String description;
     private String image;
     private String slug;
 
-    private String parentId;
-
-    @Builder.Default
-    private boolean active = true;
-
-    @Builder.Default
-    private int displayOrder = 0;
+    private Boolean isActive = true;
 
     @CreatedDate
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();;
 
     @LastModifiedDate
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt = LocalDateTime.now();;
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    private CategoryImage images;
+
 
 }
