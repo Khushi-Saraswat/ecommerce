@@ -15,7 +15,6 @@ import com.example.demo.exception.User.UserException;
 import com.example.demo.model.Artisan;
 import com.example.demo.model.User;
 import com.example.demo.repository.ArtisanRepository;
-import com.example.demo.repository.UserRepository;
 import com.example.demo.request.Artisan.ArtisanRequestDTO;
 import com.example.demo.response.Artisan.ArtisanResponseDTO;
 import com.example.demo.response.Artisan.ArtisanSaveResponse;
@@ -76,7 +75,7 @@ public class ArtisanServiceImpl implements AartisanService {
         System.out.println(user + "******************");
 
         // Prevent duplicate artisan for same user
-        if (artisanRepository.findByUserUserId(user.getUserId()).isPresent()) {
+        if (artisanRepository.findByUser_UserId(user.getUserId()).isPresent()) {
             throw new UserException(
                     "Artisan profile already exists for this user", UserErrorType.PROFILE_ALREADY_EXIST);
 

@@ -38,8 +38,6 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
-
-
 @Slf4j
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -77,7 +75,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenPair login(AuthRequest authRequest) {
 
-        // Validate input
         if (authRequest == null || authRequest.getUsername() == null || authRequest.getPassword() == null) {
             throw new AuthException("Empty details", AuthErrorType.EMPTY_CREDENTIALS);
         }
@@ -85,54 +82,39 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication;
 
         try {
-            // Use AuthenticationManager-authenticate raw password with respect to hased
-            // password
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             authRequest.getUsername(),
                             authRequest.getPassword()));
-
         } catch (BadCredentialsException e) {
             throw new AuthException("Invalid credentials", AuthErrorType.INVALID_CREDENTIALS);
-            // } catch (DisabledException e) {
-            // throw new AuthenticationIsNotValid("Account is disabled");
-            // } catch (LockedException e) {
-            // throw new AuthenticationIsNotValid("Account is locked");
         } catch (AuthenticationException e) {
             throw new AuthException("authentication failed", AuthErrorType.AUTHENTICATION_FAILED);
         }
 
-        // Load user details
-        UserDetails userDetails = userInfoService.loadUserByUsername(authRequest.getUsername());
+        if (!authentication.isAuthenticated()) {
+            throw new AuthException("Authentication Failed", AuthErrorType.AUTHENTICATION_FAILED);
+        }
 
-        // Get user from database
+        // ✅ IMPORTANT: principal from authentication
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
         User user = userRepository.findByusername(userDetails.getUsername());
         if (user == null) {
             throw new UserException("User not found", UserErrorType.NOT_FOUND);
         }
 
-        // Check if authenticated
-        if (authentication.isAuthenticated()) {
+        // Generate JWT token
+        String jwt = jwtService.generateToken(userDetails.getUsername());
 
-            // Set authentication in security context
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        // Generate refresh token
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
 
-            // Generate JWT token
-            String jwt = jwtService.generateToken(userDetails.getUsername());
+        TokenPair tokenPair = new TokenPair();
+        tokenPair.setJwt(jwt);
+        tokenPair.setRefreshToken(refreshToken);
 
-            // Generate refresh token
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
-
-            // Create and return token pair
-            TokenPair tokenPair = new TokenPair();
-            tokenPair.setJwt(jwt);
-            tokenPair.setRefreshToken(refreshToken);
-
-            return tokenPair;
-        } else {
-            throw new AuthException("Authentication Failed", AuthErrorType.AUTHENTICATION_FAILED);
-        }
-
+        return tokenPair;
     }
 
     @Override
@@ -280,6 +262,7 @@ public class AuthServiceImpl implements AuthService {
     public User getCurrentUser() {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(authentication + "authentication");
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         // getUsername() - Returns the username used to authenticate the user.
@@ -289,6 +272,7 @@ public class AuthServiceImpl implements AuthService {
         System.out.println("User has authorities: " + userDetails.getAuthorities());
 
         User user = userRepository.findByusername(userDetails.getUsername());
+        System.out.println(user + "user");
         return user;
 
     }

@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +16,7 @@ import com.example.demo.model.ProductImage;
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
      // returns list of active product ..
-     List<Product> findByIsActiveTrue();
+     Page<Product> findByIsActiveTrue();
 
      // return product for pagination if they are set to true..
      Page<Product> findByIsActiveTrue(Pageable pageable);
@@ -29,21 +30,26 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
      // searchTerm);
 
      // Search with pagination
-     // @Query("SELECT p FROM Product p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%',
-     // :searchTerm, '%')) OR LOWER(p.category.name) LIKE LOWER(CONCAT('%',
-     // :searchTerm, '%'))")
-     // Page<Product>
-     // findByTitleOrCategoryNameContainingIgnoreCase(@Param("searchTerm") String
-     // searchTerm,
-     // Pageable pageable);
+     @Query("SELECT p FROM Product p WHERE" +
+               "LOWER(p.title) LIKE LOWER(CONCAT('%',:searchTerm, '%')) OR" +
+               "LOWER(p.category.name) LIKE LOWER(CONCAT('%',:searchTerm, '%'))"
+
+     )
+
+     Page<Product> findProductsBySearchText(@Param("searchTerm") String searchTerm,
+               Pageable pageable);
 
      // return Pageable product when pagination is given along with category
      Page<Product> findByCategory(Pageable pageable, String category);
 
-     List<Product> findByartId(int id);
+     Page<Product> findByartId(int id);
 
      @Query("Select p.artisan from Product p where p.id = :productId")
      Artisan findArtisanByProductId(@Param("productId") Integer productId);
+
+     Optional<Product> findByIdAndIsActiveTrue(Integer id);
+
+     Optional<Product> findBySlugAndIsActiveTrue(String slug);
 
      List<ProductImage> findProductImagesById(Integer productId);
 

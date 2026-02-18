@@ -18,10 +18,11 @@ import com.example.demo.repository.ArtisanRepository;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.response.Artisan.ArtisanResponseDTO;
-import com.example.demo.response.Others.DailyMetrics;
 import com.example.demo.response.Order.OrderResponseDTO;
+import com.example.demo.response.Others.DailyMetrics;
 import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.service.methods.AdminService;
+import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.OrderService;
 import com.example.demo.service.methods.UserService;
 
@@ -43,10 +44,13 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private OrderService orderService;
 
-    @Override
-    public String approveArtisan(Long artisanId, String jwt) {
+    @Autowired
+    private AuthService authService;
 
-        User user = userService.getUserByJwt(jwt);
+    @Override
+    public String approveArtisan(Long artisanId) {
+
+        User user = authService.getCurrentUser();
         if (user == null) {
             throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
         }
@@ -98,9 +102,9 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public String rejectArtisan(Long artisanId, String jwt) {
+    public String rejectArtisan(Long artisanId) {
 
-        User user = userService.getUserByJwt(jwt);
+        User user = authService.getCurrentUser();
         if (user == null) {
             throw new AuthException("invalid or missing authorization token", AuthErrorType.TOKEN_INVALID);
         }

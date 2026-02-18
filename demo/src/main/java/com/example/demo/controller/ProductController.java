@@ -9,7 +9,7 @@ import com.example.demo.service.methods.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ARTISAN')")
 @RequestMapping("/api/products")
 public class ProductController {
 

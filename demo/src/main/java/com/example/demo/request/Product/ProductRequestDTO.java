@@ -13,7 +13,7 @@ public class ProductRequestDTO {
     private Boolean isActive;
     private CategoryRequestDTO categoryRequestDTO;
 
-    private String categoryId;
+    private Long categoryId;
     private Integer stock;
 
 }

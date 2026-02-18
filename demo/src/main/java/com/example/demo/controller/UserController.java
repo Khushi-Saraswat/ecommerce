@@ -3,6 +3,9 @@ package com.example.demo.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.FeedbackDto;
 import com.example.demo.request.User.UserRequestDTO;
+import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.category.CategoryResponseDTO;
 import com.example.demo.service.methods.CategoryService;
 import com.example.demo.service.methods.FeedbackService;
@@ -90,33 +94,6 @@ public class UserController {
         return ResponseEntity.ok(feedback);
     }
 
-    // access products
-
-    // GET /api/products/all
-    /*
-     * @GetMapping("/all")
-     * public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
-     * 
-     * return ResponseEntity.ok(productService.getAllProducts());
-     * }
-     * 
-     * // GET /api/products/{productId}
-     * 
-     * @GetMapping("/{productId}")
-     * public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable
-     * Integer productId) {
-     * return ResponseEntity.ok(productService.getProductById(productId));
-     * }
-     * 
-     * // GET /api/products/category/{categoryId}
-     * 
-     * @GetMapping("/category/{categoryId}")
-     * public ResponseEntity<List<ProductResponseDTO>>
-     * getProductsByCategory(@PathVariable Long categoryId) {
-     * return ResponseEntity.ok(userService.getProductsByCategory(categoryId));
-     * }
-     */
-
     // <-------- category mgmt------------>
 
     @GetMapping
@@ -150,6 +127,46 @@ public class UserController {
     @GetMapping("/search")
     public ResponseEntity<List<CategoryResponseDTO>> searchCategories(@RequestParam String keyword) {
         return ResponseEntity.ok(categoryService.searchCategories(keyword));
+    }
+
+    // product management .....
+
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Integer productId) {
+
+        return ResponseEntity.ok(productService.getActiveProductById(productId));
+
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProductResponseDTO>> searchProducts(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return ResponseEntity.ok(productService.searchProducts(q, pageable));
+
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<Page<ProductResponseDTO>> getProductsByCategory(@PathVariable String categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
+    }
+
+    @GetMapping("/{productId}")
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProduct(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam String category
+
+    ) {
+        return ResponseEntity.ok(productService.getAllActiveProductPagination(page, size, category));
     }
 
 }

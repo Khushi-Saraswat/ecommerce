@@ -8,7 +8,7 @@ import com.example.demo.model.Artisan;
 
 public interface ArtisanRepository extends JpaRepository<Artisan, Long> {
 
-    Optional<Artisan> findByUserUserId(Long userId);
+    Optional<Artisan> findByUser_UserId(Long userId);
 
     Artisan findArtisanById(Long id);
 

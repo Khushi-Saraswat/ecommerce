@@ -4,6 +4,10 @@ import java.util.List;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,10 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.request.category.CategoryRequestDTO;
+import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.category.CategoryRequestResponseDTO;
 import com.example.demo.service.methods.AdminService;
 import com.example.demo.service.methods.CategoryRequestService;
 import com.example.demo.service.methods.CategoryService;
+import com.example.demo.service.methods.ProductService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -45,6 +51,9 @@ public class AdminController {
   @Autowired
   private ObjectMapper mapper;
 
+  @Autowired
+  private ProductService productService;
+
   // <----- artisan management-------->
   @GetMapping("/artisans")
   public ResponseEntity<?> GetArtisan(@RequestHeader("Authorization") String jwt) {
@@ -55,19 +64,17 @@ public class AdminController {
 
   // here id is artisan id
   @PatchMapping("/artisans/{id}/approve")
-  public ResponseEntity<String> ApproveArtisan(@PathVariable("id") Long artisanId,
-      @RequestHeader("Authorization") String jwt) {
+  public ResponseEntity<String> ApproveArtisan(@PathVariable("id") Long artisanId) {
 
-    return ResponseEntity.ok(adminService.approveArtisan(artisanId, jwt));
+    return ResponseEntity.ok(adminService.approveArtisan(artisanId));
 
   }
 
   // here id is artisan id
   @PatchMapping("/artisans/{id}/reject")
-  public ResponseEntity<?> RejectArtisan(@PathVariable("id") Long artisanId,
-      @RequestHeader("Authorization") String jwt) {
+  public ResponseEntity<?> RejectArtisan(@PathVariable("id") Long artisanId) {
 
-    return ResponseEntity.ok(adminService.rejectArtisan(artisanId, jwt));
+    return ResponseEntity.ok(adminService.rejectArtisan(artisanId));
 
   }
 
@@ -153,6 +160,46 @@ public class AdminController {
       @PathVariable Long requestId,
       @RequestParam(required = false) String reason) {
     return ResponseEntity.ok(categoryRequestService.rejectRequest(requestId, reason));
+  }
+
+  // product management........
+
+  // this method is responsible for saving the product of a particular category-by
+  // artian
+
+  /*
+   * @GetMapping("/getArtisanProduct")
+   * public ResponseEntity<?> GetArtisanProduct(
+   * 
+   * @RequestHeader("Authorization") String jwt)
+   * throws IOException {
+   * 
+   * return ResponseEntity.ok(productService.getByArtisanId(jwt));
+   * 
+   * }
+   * 
+   * // stock is updated-by admin
+   * 
+   * @PatchMapping("/StockUpdate/stock")
+   * public ResponseEntity<String> UpdateStock(@RequestParam Integer
+   * ProductId, @RequestParam Integer stock) {
+   * String message = productService.IncreaseStock(ProductId, stock);
+   * return ResponseEntity.ok(message);
+   * }
+   */
+
+  public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "12") int size,
+      @RequestParam(defaultValue = "createdAt") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDir
+
+  ) {
+    Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+        : Sort.by(sortBy).descending();
+    Pageable pageable = PageRequest.of(page, size, sort);
+    Page<ProductResponseDTO> products = productService.getAllProducts(pageable);
+    return ResponseEntity.ok(products);
   }
 
 }
