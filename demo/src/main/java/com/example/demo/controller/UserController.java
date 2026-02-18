@@ -125,8 +125,11 @@ public class UserController {
 
     // GET /api/categories/search?keyword=...
     @GetMapping("/search")
-    public ResponseEntity<List<CategoryResponseDTO>> searchCategories(@RequestParam String keyword) {
-        return ResponseEntity.ok(categoryService.searchCategories(keyword));
+    public ResponseEntity<List<CategoryResponseDTO>> searchCategories(@RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(categoryService.searchCategories(keyword, pageable));
     }
 
     // product management .....

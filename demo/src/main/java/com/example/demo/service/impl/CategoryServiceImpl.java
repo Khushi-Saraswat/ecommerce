@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -194,16 +196,23 @@ public class CategoryServiceImpl implements CategoryService {
 
     // ✅ Search Categories
     @Override
-    public List<CategoryResponseDTO> searchCategories(String keyword) {
+    public List<CategoryResponseDTO> searchCategories(String keyword, Pageable pageable) {
 
         if (keyword == null || keyword.trim().isEmpty()) {
             return List.of();
         }
 
-        return categoryRepository.findByNameIgnoreCase(keyword.trim())
+        return categoryRepository.findCategoriesBySearchText(keyword.trim(), pageable)
                 .stream()
                 .map(c -> abstractMapperService.toDto(c, CategoryResponseDTO.class))
                 .toList();
+    }
+
+    @Override
+    public Page<CategoryResponseDTO> getAllCategory(Pageable pageable) {
+
+        return categoryRepository.findAll(pageable).map(
+                p -> abstractMapperService.toDto(p, CategoryResponseDTO.class));
     }
 
 }

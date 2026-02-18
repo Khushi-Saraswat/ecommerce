@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.request.category.CategoryRequestDTO;
 import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.category.CategoryRequestResponseDTO;
+import com.example.demo.response.category.CategoryResponseDTO;
 import com.example.demo.service.methods.AdminService;
 import com.example.demo.service.methods.CategoryRequestService;
 import com.example.demo.service.methods.CategoryService;
@@ -140,6 +141,14 @@ public class AdminController {
   @DeleteMapping("/categories/{id}")
   public ResponseEntity<String> deleteCategory(@PathVariable Long id) throws BadRequestException, Exception {
     return ResponseEntity.ok(categoryService.deleteCategory(id));
+  }
+
+  @GetMapping("/all")
+  public ResponseEntity<Page<CategoryResponseDTO>> getAllCategory(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "12") int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return ResponseEntity.ok(categoryService.getAllCategory(pageable));
   }
 
   // category request management
