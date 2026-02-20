@@ -74,6 +74,7 @@ public class ArtisanServiceImpl implements AartisanService {
 
         System.out.println(user + "******************");
 
+        System.out.println(artisanRepository.findByUser_UserId(user.getUserId()).isPresent() + "id");
         // Prevent duplicate artisan for same user
         if (artisanRepository.findByUser_UserId(user.getUserId()).isPresent()) {
             throw new UserException(

@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.ArtisanRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.PriceHistoryRepo;
+import com.example.demo.repository.ProductImageRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.request.Product.ProductRequestDTO;
@@ -55,6 +58,9 @@ public class ProductServiceImpl implements ProductService {
     private PriceHistoryRepo priceHistoryRepo;
 
     @Autowired
+    private ModelMapper objectMapper;
+
+    @Autowired
     private ProductRepository productRepository;
 
     @Autowired
@@ -68,6 +74,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ProductImageRepository productImageRepository;
 
     @Autowired
     public ProductServiceImpl(UserRepository userRepository) {
@@ -108,8 +117,12 @@ public class ProductServiceImpl implements ProductService {
         }
 
         // Convert DTO -> Entity
-        Product productEntity = abstractMapperService.toEntity(productDto, Product.class);
+        // Product productEntity = abstractMapperService.toEntity(productDto,
+        // Product.class);
+        Product productEntity = objectMapper.map(productDto, Product.class);
+        System.out.println("Product id before save: " + productEntity.getId());
 
+        productEntity.setId(null);
         productEntity.setCategoryId(productDto.getCategoryId());
         productEntity.setCreatedAt(LocalDateTime.now());
 
@@ -242,26 +255,20 @@ public class ProductServiceImpl implements ProductService {
         // Update images
         if (files != null && !files.isEmpty()) {
 
-            List<ProductImage> existingImages = productRepository.findProductImagesById(existingProduct.getId());
+            // 1) old images remove from DB collection
+            existingProduct.getImages().clear();
 
-            for (ProductImage img : existingImages) {
-                // NOTE: best is to delete using publicId if you store it
-                cloudinaryService.deleteImage(img.getId().toString());
-            }
-
-            List<ProductImage> newImages = new ArrayList<>();
-
+            // 2) add new images
             for (MultipartFile file : files) {
+
                 String imageUrl = cloudinaryService.uploadImage(file);
 
                 ProductImage productImage = new ProductImage();
                 productImage.setImageUrl(imageUrl);
                 productImage.setProduct(existingProduct);
 
-                newImages.add(productImage);
+                existingProduct.getImages().add(productImage);
             }
-
-            existingProduct.setImages(newImages);
         }
 
         Product saved = productRepository.save(existingProduct);
@@ -355,14 +362,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductResponseDTO> getAllActiveProductPagination(Integer pageNo, Integer PageSize, String category) {
 
-        return productRepository.findByIsActiveTrue().map(
+        Pageable pageable = PageRequest.of(pageNo, PageSize);
+
+        return productRepository.findByIsActiveTrue(pageable).map(
                 p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
     }
 
     @Override
-    public Page<ProductResponseDTO> getByArtisanId(Integer id) {
+    public Page<ProductResponseDTO> getByArtisanId(Integer id, Pageable pageable) {
 
-        return productRepository.findByartId(id).map(
+        return productRepository.findByartId(id, pageable).map(
                 p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
     }
 

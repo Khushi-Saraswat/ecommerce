@@ -13,21 +13,22 @@ import com.example.demo.model.Category;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-    // Search with pagination
-    @Query("SELECT c FROM Category c WHERE" +
-            "LOWER(c.name) LIKE LOWER(CONCAT('%',:searchTerm, '%')) OR" +
-            "LOWER(c.description) LIKE LOWER(CONCAT('%',:searchTerm, '%'))"
+        // Search with pagination
+        @Query("""
+                        SELECT c FROM Category c
+                        WHERE
+                             LOWER(c.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+                             OR LOWER(c.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+                        """)
+        Page<Category> findCategoriesBySearchText(@Param("searchTerm") String searchTerm,
+                        Pageable pageable);
 
-    )
-    Page<Category> findCategoriesBySearchText(@Param("searchTerm") String searchTerm,
-            Pageable pageable);
+        // Optional<Category> findByNameIgnoreCase(String name);
 
-    // Optional<Category> findByNameIgnoreCase(String name);
+        List<Category> findByIsActiveTrue();
 
-    List<Category> findByIsActiveTrue();
+        Optional<Category> findBySlug(String slug);
 
-    Optional<Category> findBySlug(String slug);
-
-    boolean existsBySlug(String slug);
+        boolean existsBySlug(String slug);
 
 }

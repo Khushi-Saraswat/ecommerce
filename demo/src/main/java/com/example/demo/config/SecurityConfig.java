@@ -127,6 +127,7 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         "/api/auth/**",
                                         "/api/auth/forgot-password",
+                                        "/api/auth/refresh",
                                         "/api/auth/reset-password",
                                         "/api/categories/**",
                                         "/api/products/**",

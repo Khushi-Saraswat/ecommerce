@@ -8,17 +8,20 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.constants.errorTypes.CartErrorType;
+import com.example.demo.constants.errorTypes.ProductErrorType;
 import com.example.demo.exception.Cart.CartException;
+import com.example.demo.exception.Product.ProductException;
 import com.example.demo.model.Artisan;
 import com.example.demo.model.Cart;
 import com.example.demo.model.Product;
 import com.example.demo.model.User;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.ProductRepository;
+import com.example.demo.request.Cart.CartItemRequestDTO;
+import com.example.demo.request.Cart.UpdateCartRequest;
 import com.example.demo.response.Cart.CartResponse;
-import com.example.demo.response.User.UserResponseDTO;
+import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.CartService;
-import com.example.demo.service.methods.UserService;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -27,7 +30,7 @@ public class CartServiceImpl implements CartService {
     private CartRepository cartRepository;
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
 
     @Autowired
     private ProductRepository productRepository;
@@ -35,35 +38,37 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private AbstractMapperService abstractMapperService;
 
-    public CartResponse saveCart(String jwt, Integer productId, Integer quantity) {
+    public CartResponse saveCart(CartItemRequestDTO cartItemRequestDTO) {
 
         try {
             // Validate input
-            if (productId == null || productId <= 0) {
+            if (cartItemRequestDTO.getProductId() == null || cartItemRequestDTO.getProductId() <= 0) {
                 throw new CartException("Invalid product ID provided", CartErrorType.INVALID_PRODUCT_ID);
             }
 
-            if (quantity == null || quantity <= 0) {
+            if (cartItemRequestDTO.getQuantity() == null || cartItemRequestDTO.getQuantity() <= 0) {
                 throw new CartException("Invalid quantity. Quantity must be greater than 0",
                         CartErrorType.INVALID_QUANTITY);
             }
 
             // Get user
-            UserResponseDTO userDtlsDto = userService.UserByToken(jwt);
+            User user = authService.getCurrentUser();
 
-            if (userDtlsDto == null) {
+            if (user == null) {
                 throw new CartException("User not found or invalid token", CartErrorType.INVALID_CART_OPERATION);
             }
 
             // Get product by id
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new CartException("Product not found with ID: " + productId,
-                            CartErrorType.PRODUCT_NOT_FOUND));
+            Product product = productRepository.findById(cartItemRequestDTO.getProductId())
+                    .orElseThrow(
+                            () -> new CartException("Product not found with ID: " + cartItemRequestDTO.getProductId(),
+                                    CartErrorType.PRODUCT_NOT_FOUND));
 
             // Check stock availability
-            if (product.getStock() < quantity) {
+            if (product.getStock() < cartItemRequestDTO.getQuantity()) {
                 throw new CartException(
-                        "Insufficient stock. Available: " + product.getStock() + ", Requested: " + quantity,
+                        "Insufficient stock. Available: " + product.getStock() + ", Requested: "
+                                + cartItemRequestDTO.getQuantity(),
                         CartErrorType.PRODUCT_OUT_OF_STOCK);
             }
 
@@ -80,10 +85,10 @@ public class CartServiceImpl implements CartService {
             }
 
             // Check if cart item already exists
-            Cart cartStatus = cartRepository.findByProductId(productId);
+            Cart cartStatus = cartRepository.findByProductId(cartItemRequestDTO.getProductId());
 
             if (cartStatus != null) {
-                int cartQuantity = cartStatus.getQuantity() + quantity;
+                int cartQuantity = cartStatus.getQuantity() + cartItemRequestDTO.getQuantity();
 
                 // Validate total quantity doesn't exceed stock
                 if (cartQuantity > product.getStock()) {
@@ -95,8 +100,8 @@ public class CartServiceImpl implements CartService {
             } else {
                 Cart cart = new Cart();
                 cart.setProduct(product);
-                cart.setUser(abstractMapperService.toEntity(userDtlsDto, User.class));
-                cart.setQuantity(quantity);
+                cart.setUser(abstractMapperService.toEntity(user, User.class));
+                cart.setQuantity(cartItemRequestDTO.getQuantity());
                 cart.setArtisan(artisan);
 
                 Cart c = cartRepository.save(cart);
@@ -133,18 +138,18 @@ public class CartServiceImpl implements CartService {
     // discount
 
     @Override
-    public List<CartResponse> getCartByUsers(String jwt) {
+    public List<CartResponse> getCartByUsers() {
 
         try {
             // Get user
-            UserResponseDTO userDtlsDto = userService.UserByToken(jwt);
+            User user = authService.getCurrentUser();
 
-            if (userDtlsDto == null) {
+            if (user == null) {
                 throw new CartException("User not found or invalid token", CartErrorType.INVALID_CART_OPERATION);
             }
 
             List<Cart> carts = cartRepository.findCartsByUserId(
-                    abstractMapperService.toEntity(userDtlsDto, User.class).getUserId());
+                    abstractMapperService.toEntity(user, User.class).getUserId());
 
             if (carts == null || carts.isEmpty()) {
                 throw new CartException("Cart is empty for user", CartErrorType.CART_EMPTY);
@@ -154,7 +159,8 @@ public class CartServiceImpl implements CartService {
             List<CartResponse> cartResponses = new ArrayList<>();
 
             for (Cart c : carts) {
-                Double totalPrice = (c.getProduct().getPrice() * c.getQuantity());
+                Double totalPrice = (c.getProduct()
+                        .getPrice() * c.getQuantity());
                 c.setTotalPrice(totalPrice);
                 totalOrderPrice = totalOrderPrice + totalPrice;
                 c.setTotalOrderPrice(totalOrderPrice);
@@ -173,52 +179,16 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-    // this is responsible for increasing and decreasing the quantity of product
-    // added to cart
-
-    /*
-     * @Override
-     * public String updateCart(User userDtls, Integer productId, String sy) {
-     * 
-     * // find particular cart(product) from list of carts by productid and userid
-     * Cart cart = cartRepository.findByProductIdAndUserId(productId,
-     * userDtls.getUserId());
-     * 
-     * if (cart == null) {
-     * // throw exception
-     * // return new IllegalArgumentException("Item not in cart");
-     * }
-     * 
-     * Integer update;
-     * // if the quantity is decrease
-     * if (sy.equalsIgnoreCase("-")) {
-     * // update = cart.getQuantity() - 1;
-     * 
-     * // if (update <= 0) {
-     * // cartRepository.delete(cart);
-     * // } else {
-     * // cart.setQuantity(update);
-     * // cartRepository.save(cart);
-     * 
-     * // }
-     * return "Quantity decreased successfully";
-     * }
-     * // if the quantity is increase...
-     * else {
-     * // update = cart.getQuantity() + 1;
-     * // cart.setQuantity(update);
-     * cartRepository.save(cart);
-     * return "Quantity increased successfully";
-     * }
-     * 
-     * }
-     */
-
     // this method is responsible for deleting a product in a cart
 
     @Override
-    public Boolean deleteCart(Integer productId) {
+    public String deleteCart(Integer productId) {
 
+        User user = authService.getCurrentUser();
+
+        if (user == null) {
+            throw new CartException("User not found or invalid token", CartErrorType.INVALID_CART_OPERATION);
+        }
         try {
             if (productId == null || productId <= 0) {
                 throw new CartException("Invalid product ID provided", CartErrorType.INVALID_PRODUCT_ID);
@@ -231,13 +201,56 @@ public class CartServiceImpl implements CartService {
                         CartErrorType.CART_ITEM_NOT_FOUND);
             }
 
-            cartRepository.deleteById(cartStatus.getId());
-            return true;
+            cartRepository.delete(cartStatus);
+            return "cart is deleted";
         } catch (CartException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new CartException("Error deleting cart item: " + ex.getMessage(), CartErrorType.CART_DELETE_FAILED);
         }
+    }
+
+    @Override
+    public String updateQuantity(UpdateCartRequest request) {
+
+        User user = authService.getCurrentUser();
+
+        if (user == null) {
+            throw new CartException("User not found or invalid token", CartErrorType.INVALID_CART_OPERATION);
+        }
+
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            throw new ProductException("Product not found", ProductErrorType.QUANTITY_NOT_GREATER_THAN_ZERO);
+        }
+
+        Cart cartItem = cartRepository.findByUser_UserIdAndProduct_Id(user.getUserId(), request.getProductId())
+                .orElseThrow(() -> new CartException("Cart item not found", CartErrorType.CART_ITEM_NOT_FOUND));
+
+        Product product = cartItem.getProduct();
+
+        if (product.getStock() != null && request.getQuantity() > product.getStock()) {
+
+            throw new ProductException("Error deleting cart item: ", ProductErrorType.OUT_OF_STOCK);
+        }
+
+        cartItem.setQuantity(request.getQuantity());
+        cartRepository.save(cartItem);
+        return "Cart updated successfully";
+
+    }
+
+    @Override
+    public String Clearcart() {
+
+        User user = authService.getCurrentUser();
+
+        if (user == null) {
+            throw new CartException("User not found or invalid token", CartErrorType.INVALID_CART_OPERATION);
+        }
+
+        cartRepository.deleteByUser_UserId(user.getUserId());
+
+        return "Cart cleared successfully";
     }
 
 }

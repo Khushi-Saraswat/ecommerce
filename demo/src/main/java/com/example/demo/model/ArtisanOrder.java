@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+//1 artisan ka part of order.
 @Data
 @Entity
 @Table(name = "artisanOrder")

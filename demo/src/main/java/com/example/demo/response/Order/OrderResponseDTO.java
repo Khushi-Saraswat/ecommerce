@@ -14,10 +14,13 @@ import lombok.Data;
 public class OrderResponseDTO {
     private Long id;
     private Long userId;
+    private Long orderId;
     private BigDecimal totalAmount;
     private OrderStatus status;
     private LocalDateTime createdAt;
     private List<ArtisanResponseDTO> artisanOrders;
     private AddressResponse address;
+    private String paymentType;
+    private String paymentStatus;
 
 }

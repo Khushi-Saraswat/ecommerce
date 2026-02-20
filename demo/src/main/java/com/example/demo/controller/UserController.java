@@ -124,7 +124,7 @@ public class UserController {
     }
 
     // GET /api/categories/search?keyword=...
-    @GetMapping("/search")
+    @GetMapping("/searchCategories")
     public ResponseEntity<List<CategoryResponseDTO>> searchCategories(@RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
@@ -141,7 +141,7 @@ public class UserController {
 
     }
 
-    @GetMapping("/search")
+    @GetMapping("/searchProsuct")
     public ResponseEntity<Page<ProductResponseDTO>> searchProducts(
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
@@ -162,7 +162,7 @@ public class UserController {
         return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
     }
 
-    @GetMapping("/{productId}")
+    @GetMapping("/all/{productId}")
     public ResponseEntity<Page<ProductResponseDTO>> getAllProduct(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,

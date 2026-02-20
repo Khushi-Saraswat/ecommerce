@@ -1,22 +1,27 @@
 package com.example.demo.controller;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.response.Cart.CartResponse;
+import com.example.demo.request.Cart.CartItemRequestDTO;
+import com.example.demo.request.Cart.UpdateCartRequest;
 import com.example.demo.service.methods.CartService;
+
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/cart")
+@PreAuthorize("hasAuthority('USER')")
 public class CartController {
 
   @Autowired
@@ -25,73 +30,33 @@ public class CartController {
   // Add product to cart - pass productId and quantity
   @PostMapping("/addCart")
   public ResponseEntity<?> addToCart(
-      @RequestHeader("Authorization") String token,
-      @RequestParam Integer pid,
-      @RequestParam int quantity) {
+      @Valid @RequestBody CartItemRequestDTO cartItemRequestDTO) {
 
-    try {
-      CartResponse response = cartService.saveCart(token, pid, quantity);
-      return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    } catch (Exception ex) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(new ErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST.value()));
-    }
+    return ResponseEntity.ok(cartService.saveCart(cartItemRequestDTO));
+
   }
 
   // Get all cart items for user
   @GetMapping("/getCart")
-  public ResponseEntity<?> getCart(@RequestHeader("Authorization") String token) {
+  public ResponseEntity<?> getCart() {
 
-    try {
-      return ResponseEntity.ok(cartService.getCartByUsers(token));
-    } catch (Exception ex) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(new ErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST.value()));
-    }
+    return ResponseEntity.ok(cartService.getCartByUsers());
+
   }
 
   // Delete specific product from cart
   @DeleteMapping("/deleteCart/{productId}")
-  public ResponseEntity<?> DeleteCart(@PathVariable Integer productId) {
+  public ResponseEntity<?> DeleteCart(@PathVariable Integer productId) throws BadRequestException {
 
-    try {
-      Boolean result = cartService.deleteCart(productId);
-      if (result) {
-        return ResponseEntity.ok("Product removed from cart successfully");
-      } else {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body("Product not found in cart");
-      }
-    } catch (Exception ex) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(new ErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST.value()));
-    }
+    return ResponseEntity.ok(cartService.deleteCart(productId));
   }
 
-  // Inner class for error response
-  public static class ErrorResponse {
-    private String message;
-    private int status;
+  // Delete specific product from cart
+  @PutMapping("/update/{productId}")
+  public ResponseEntity<String> UpdateCart(@RequestBody UpdateCartRequest updateCartRequest)
+      throws BadRequestException {
 
-    public ErrorResponse(String message, int status) {
-      this.message = message;
-      this.status = status;
-    }
+    return ResponseEntity.ok(cartService.updateQuantity(updateCartRequest));
 
-    public String getMessage() {
-      return message;
-    }
-
-    public void setMessage(String message) {
-      this.message = message;
-    }
-
-    public int getStatus() {
-      return status;
-    }
-
-    public void setStatus(int status) {
-      this.status = status;
-    }
   }
 }

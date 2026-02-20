@@ -9,6 +9,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+// Products inside artisan order
 @Data
 @Entity
 @Table(name = "orderItem")
@@ -27,6 +28,6 @@ public class OrderItem {
     private Product product;
 
     private Integer quantity;
-    private Double price;
-    private Double itemTotal;
+    private Double price;// price at time of order.
+    private Double itemTotal;// price * quantity.
 }

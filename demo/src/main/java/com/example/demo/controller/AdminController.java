@@ -105,7 +105,7 @@ public class AdminController {
 
   }
 
-  // get daily metrics-dashboard
+  // dashboard management
 
   @GetMapping("/daily-metrics")
   public ResponseEntity<?> getDailyMetrics(@RequestHeader("Authorization") String jwt) {
@@ -143,10 +143,11 @@ public class AdminController {
     return ResponseEntity.ok(categoryService.deleteCategory(id));
   }
 
-  @GetMapping("/all")
+  @GetMapping("/allCategory")
   public ResponseEntity<Page<CategoryResponseDTO>> getAllCategory(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "12") int size) {
+
     Pageable pageable = PageRequest.of(page, size);
     return ResponseEntity.ok(categoryService.getAllCategory(pageable));
   }

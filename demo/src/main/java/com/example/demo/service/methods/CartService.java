@@ -4,18 +4,18 @@ import java.util.List;
 
 import org.apache.coyote.BadRequestException;
 
+import com.example.demo.request.Cart.CartItemRequestDTO;
+import com.example.demo.request.Cart.UpdateCartRequest;
 import com.example.demo.response.Cart.CartResponse;
 
 public interface CartService {
-    public CartResponse saveCart(String jwt, Integer productId, Integer Stock);
+    public CartResponse saveCart(CartItemRequestDTO cartItemRequestDTO);
 
-    public List<CartResponse> getCartByUsers(String jwt);
+    public List<CartResponse> getCartByUsers();
 
-    // public Integer getCounterCart(Long userId);
+    public String updateQuantity(UpdateCartRequest request);
 
-    // public String updateCart(User userDtls, Integer productId, String
-    // updateOrDecrease);
+    public String deleteCart(Integer productId) throws BadRequestException;
 
-    public Boolean deleteCart(Integer productId) throws BadRequestException;
-
+    public String Clearcart();
 }

@@ -50,7 +50,7 @@ public interface ProductService {
 
      // public StockResponse StockDetails(Integer productId);
 
-     Page<ProductResponseDTO> getByArtisanId(Integer id);
+     Page<ProductResponseDTO> getByArtisanId(Integer id, Pageable pageable);
 
      Page<ProductResponseDTO> getProductsByCategory(String categoryId, Pageable pageable);
 

@@ -1,7 +1,5 @@
 package com.example.demo.request.Product;
 
-import com.example.demo.request.category.CategoryRequestDTO;
-
 import lombok.Data;
 
 @Data
@@ -11,7 +9,7 @@ public class ProductRequestDTO {
     private Double price;
     private Double mrp;
     private Boolean isActive;
-    private CategoryRequestDTO categoryRequestDTO;
+    // private CategoryRequestDTO categoryRequestDTO;
 
     private Long categoryId;
     private Integer stock;

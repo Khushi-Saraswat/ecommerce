@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,6 +19,10 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     @Query("Select c from Cart c  where c.user.userId = :userId")
     public List<Cart> findCartsByUserId(@Param("userId") Long userId);
+
+    Optional<Cart> findByUser_UserIdAndProduct_Id(Long userId, Integer productId);
+
+    void deleteByUser_UserId(Long userId);
 
     // public void deleteByProductId(Integer productId);
 
