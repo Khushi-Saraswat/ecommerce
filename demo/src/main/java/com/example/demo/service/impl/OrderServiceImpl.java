@@ -2,36 +2,47 @@ package com.example.demo.service.impl;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.constants.ArtisanOrderStatus;
 import com.example.demo.constants.OrderStatus;
+import com.example.demo.constants.errorTypes.AuthErrorType;
 import com.example.demo.constants.errorTypes.CartErrorType;
 import com.example.demo.constants.errorTypes.OrderErrorType;
+import com.example.demo.constants.errorTypes.ProductErrorType;
+import com.example.demo.exception.Auth.AuthException;
 import com.example.demo.exception.Cart.CartException;
 import com.example.demo.exception.Order.OrderException;
+import com.example.demo.exception.Product.ProductException;
 import com.example.demo.model.Address;
 import com.example.demo.model.Artisan;
 import com.example.demo.model.ArtisanOrder;
 import com.example.demo.model.Cart;
 import com.example.demo.model.Order;
+import com.example.demo.model.OrderItem;
+import com.example.demo.model.Product;
 import com.example.demo.model.User;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.ArtisanOrderRepository;
 import com.example.demo.repository.ArtisanRepository;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.OrderRepository;
+import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.request.Order.OrderRequestDTO;
 import com.example.demo.response.Order.OrderHistoryDTO;
-import com.example.demo.response.User.UserResponseDTO;
+import com.example.demo.response.Order.OrderResponseDTO;
+import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.OrderService;
 import com.example.demo.service.methods.UserService;
 import com.razorpay.RazorpayClient;
@@ -55,6 +66,9 @@ public class OrderServiceImpl implements OrderService {
      private AbstractMapperService abstractMapperService;
 
      @Autowired
+     private ProductRepository productRepository;
+
+     @Autowired
      private UserRepository userRepository;
 
      @Autowired
@@ -72,13 +86,19 @@ public class OrderServiceImpl implements OrderService {
      @Value("${razorpay.key_secret}")
      private String razorpayKeySecret;
 
+     @Autowired
+     private AuthService authService;
+
      // place orders
 
      @Override
-     public String saveOrder(String jwt, Integer addressId, String paymentType) {
+     public String saveOrder(OrderRequestDTO orderRequestDTO) {
           try {
-               UserResponseDTO userDtlsDto = userService.UserByToken(jwt);
-               User user = abstractMapperService.toEntity(userDtlsDto, User.class);
+
+               User user = authService.getCurrentUser();
+               if (user == null) {
+                    throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
+               }
 
                List<Cart> cart = userRepository.findCartsByUserId(user.getUserId());
                if (cart == null || cart.isEmpty()) {
@@ -96,29 +116,42 @@ public class OrderServiceImpl implements OrderService {
                     sum += c.getProduct().getPrice() * c.getQuantity();
                }
 
-               Address address = addressRepository.findById(addressId)
+               Address address = addressRepository.findById(Integer.valueOf(orderRequestDTO.getAddressId()))
                          .orElseThrow(() -> new OrderException("Address not found", OrderErrorType.ADDRESS_NOT_FOUND));
 
                // Step 2: Create Parent Order
                Order order = new Order();
                order.setUser(user);
                order.setAddress(address);
-               order.setPaymentType(paymentType);
+               order.setPaymentType(orderRequestDTO.getPaymentType());
                order.setOrderStatus(OrderStatus.PLACED);
                order.setTotalAmount(BigDecimal.valueOf(sum));
 
                // Step 3: Group cart by Artisan
-               Map<Long, List<Cart>> map = new HashMap<>();
-
-               for (Cart c : cart) {
-                    Long artisanId = Long.valueOf(c.getArtisan().getId());
-                    map.computeIfAbsent(artisanId, k -> new ArrayList<>()).add(c);
-               }
+               // Ye stream har cart item ko uthata hai aur uske product ke artisan
+               // ke according map me group kar deta hai.
+               /*
+                * 
+                * Cart me items:
+                * 
+                * Item Artisan
+                * Ring A1
+                * Necklace A2
+                * Bracelet A1
+                * 
+                * After grouping:
+                * 
+                * A1 → [Ring, Bracelet]
+                * A2 → [Necklace]
+                * 
+                */
+               Map<Artisan, List<Cart>> map = cart.stream().collect(Collectors.groupingBy(
+                         c -> c.getProduct().getArtisan()));
 
                // simulate payment here for full order
                // add fake razorpay payment...
 
-               if (paymentType.equalsIgnoreCase("online")) {
+               if (orderRequestDTO.getPaymentType().equalsIgnoreCase("online")) {
                     // create order request
                     com.razorpay.Order razorpayOrder = null;
                     try {
@@ -136,15 +169,15 @@ public class OrderServiceImpl implements OrderService {
                                    OrderErrorType.PAYMENT_PROCESSING_FAILED);
                     }
                }
-               // Step 4: Create Artisan Orders
+               // Step 4: Create Artisan Orders for each artisan
                List<ArtisanOrder> artisanOrders = new ArrayList<>();
 
-               for (Map.Entry<Long, List<Cart>> entry : map.entrySet()) {
-                    Long artisanId = entry.getKey();
+               for (Map.Entry<Artisan, List<Cart>> entry : map.entrySet()) {
+                    Artisan artisan = entry.getKey();
                     List<Cart> artisanCarts = entry.getValue();
 
-                    Artisan artisan = artisanRepository.findById(artisanId)
-                              .orElseThrow(() -> new OrderException("Artisan not found: " + artisanId,
+                    Artisan artisans = artisanRepository.findById(artisan.getId())
+                              .orElseThrow(() -> new OrderException("Artisan not found: " + artisan.getId(),
                                         OrderErrorType.ORDER_CREATION_FAILED));
 
                     ArtisanOrder artisanOrder = new ArtisanOrder();
@@ -154,17 +187,40 @@ public class OrderServiceImpl implements OrderService {
                     artisanOrder.setPaymentStatus(order.getPaymentStatus());
 
                     double subtotal = 0;
+                    List<OrderItem> orderItems = new ArrayList<>();
                     for (Cart c : artisanCarts) {
+
+                         Product product = c.getProduct();
+
+                         if (product.getStock() != null && c.getQuantity() > product.getStock()) {
+                              throw new ProductException("Stock not available for product: " + product.getName(),
+                                        ProductErrorType.OUT_OF_STOCK);
+                         }
+
+                         OrderItem item = new OrderItem();
+                         item.setArtisanOrder(artisanOrder);
+                         item.setProduct(product);
+                         item.setQuantity(c.getQuantity());
+
                          subtotal += c.getProduct().getPrice() * c.getQuantity();
+                         item.setItemTotal(subtotal);
+
+                         orderItems.add(item);
+
+                         // reduce stock
+                         product.setStock(product.getStock() - c.getQuantity());
+
                     }
                     artisanOrder.setSubtotal(BigDecimal.valueOf(subtotal));
-
+                    artisanOrder.setOrder(order);
+                    artisanOrder.setItems(orderItems);
                     // Process payment through payment service layer
                     // paymentService.processPayment(artisanOrder, paymentType, subtotal, artisanId,
                     // user.getUserId(),
                     // order.getId());
 
                     artisanOrders.add(artisanOrder);
+
                }
 
                // fake payment perform
@@ -194,50 +250,27 @@ public class OrderServiceImpl implements OrderService {
      }
 
      @Override
-     public List<OrderHistoryDTO> getOrdersByUser(String jwt) {
+     public Page<OrderHistoryDTO> getOrdersByUser(Pageable pageable) {
 
           try {
-               UserResponseDTO userDtlsDto = userService.UserByToken(jwt);
-               User user = abstractMapperService.toEntity(userDtlsDto, User.class);
+               User user = authService.getCurrentUser();
 
                if (user == null) {
-                    throw new OrderException("User not found", OrderErrorType.ORDER_NOT_FOUND);
+
+                    throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
+
                }
 
                // 1. Fetch all orders of this user
-               List<Order> orders = orderRepository.findByUser_UserId(user.getUserId());
+               Page<Order> orders = orderRepository.findByUser_UserId(user.getUserId(), pageable);
 
-               List<OrderHistoryDTO> response = new ArrayList<>();
-
-               // 2. For each order, build DTO
-               for (Order order : orders) {
-
-                    // Fetch artisan orders for this order
-                    List<ArtisanOrder> artisanOrders = artisanOrderRepository
-                              .findArtisanOrdersByOrder_Id(order.getId());
-
-                    // Enrich artisan info (optional if already mapped by JPA)
-                    for (ArtisanOrder ao : artisanOrders) {
-                         if (ao.getArtisan() != null && ao.getArtisan().getId() != null) {
-                              Artisan artisan = artisanRepository.findArtisanById(ao.getArtisan().getId());
-                              if (artisan != null) {
-                                   ao.setArtisan(artisan);
-                              }
-                         }
-                    }
-
-                    // 3. Map to DTO
+               return orders.map(order -> {
                     OrderHistoryDTO dto = new OrderHistoryDTO();
                     dto.setOrderId(order.getId());
-                    // dto.setOrderDate(order.getCreatedAt());
                     dto.setTotalAmount(order.getTotalAmount());
                     dto.setStatus(order.getOrderStatus());
-
-                    // 4. Add to final list
-                    response.add(dto);
-               }
-
-               return response;
+                    return dto;
+               });
 
           } catch (OrderException e) {
                throw e;
@@ -248,50 +281,29 @@ public class OrderServiceImpl implements OrderService {
      }
 
      @Override
-     public List<OrderHistoryDTO> getOrdersByArtisan(String jwt) {
+     public Page<OrderHistoryDTO> getOrdersByArtisan(Pageable pageable) {
 
           try {
-               UserResponseDTO userDtlsDto = userService.UserByToken(jwt);
-               User user = abstractMapperService.toEntity(userDtlsDto, User.class);
 
+               User user = authService.getCurrentUser();
                if (user == null) {
-                    throw new OrderException("User not found", OrderErrorType.ORDER_NOT_FOUND);
+                    throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
                }
 
-               // 1. Fetch all orders of this artisan
-               List<Order> orders = orderRepository.findByArtisanOrders_Id(user.getUserId());
+               Page<ArtisanOrder> artisanOrderPage = artisanOrderRepository.findByArtisan_Id(user.getUserId(),
+                         pageable);
 
-               List<OrderHistoryDTO> response = new ArrayList<>();
+               return artisanOrderPage.map(
+                         artisanOrder -> {
+                              Order order = artisanOrder.getOrder();
 
-               // 2. For each order, build DTO
-               for (Order order : orders) {
+                              OrderHistoryDTO dto = new OrderHistoryDTO();
+                              dto.setOrderId(order.getId());
+                              dto.setTotalAmount(order.getTotalAmount());
+                              dto.setStatus(order.getOrderStatus());
 
-                    // Fetch artisan orders for this order
-                    List<ArtisanOrder> artisanOrders = artisanOrderRepository
-                              .findArtisanOrdersByOrder_Id(order.getId());
-
-                    // Enrich artisan info (optional if already mapped by JPA)
-                    for (ArtisanOrder ao : artisanOrders) {
-                         if (ao.getArtisan() != null && ao.getArtisan().getId() != null) {
-                              Artisan artisan = artisanRepository.findArtisanById(ao.getArtisan().getId());
-                              if (artisan != null) {
-                                   ao.setArtisan(artisan);
-                              }
-                         }
-                    }
-
-                    // 3. Map to DTO
-                    OrderHistoryDTO dto = new OrderHistoryDTO();
-                    dto.setOrderId(order.getId());
-                    // dto.setOrderDate(order.getCreatedAt());
-                    dto.setTotalAmount(order.getTotalAmount());
-                    dto.setStatus(order.getOrderStatus());
-
-                    // 4. Add to final list
-                    response.add(dto);
-               }
-
-               return response;
+                              return dto;
+                         });
 
           } catch (OrderException e) {
                throw e;
@@ -303,8 +315,13 @@ public class OrderServiceImpl implements OrderService {
      }
 
      @Override
-     public String updatOrderStatus(String jwt, Integer artisanOrderId, String st) {
+     public String updatOrderStatus(Long artisanOrderId, String st) {
           try {
+
+               User user = authService.getCurrentUser();
+               if (user == null) {
+                    throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
+               }
                ArtisanOrder artisanOrder = artisanOrderRepository
                          .findById(Long.valueOf(artisanOrderId))
                          .orElseThrow(
@@ -330,16 +347,43 @@ public class OrderServiceImpl implements OrderService {
      }
 
      @Override
-     public String cancelOrder(String orderId) {
-          Optional<Order> order = orderRepository.findById(Long.valueOf(orderId));
+     public String cancelOrder(Long orderId) throws BadRequestException {
 
-          if (order.isPresent()) {
-               order.get().setOrderStatus(OrderStatus.CANCELLED);
-               orderRepository.save(order.get());
-               return "Order cancelled successfully";
+          User user = authService.getCurrentUser();
+          if (user == null) {
+               throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
           }
 
-          throw new OrderException("Order not found", OrderErrorType.ORDER_NOT_FOUND);
+          Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new OrderException("Order is not found", OrderErrorType.ORDER_NOT_FOUND));
+
+          if (!order.getUser().getUserId().equals(user.getUserId())) {
+               throw new BadRequestException("Access denied");
+          }
+
+          // Cancel allowed only before shipped/delivered
+          if (order.getOrderStatus() == OrderStatus.SHIPPED ||
+                    order.getOrderStatus() == OrderStatus.DELIVERED) {
+               throw new BadRequestException("Order cannot be cancelled at this stage");
+          }
+
+          // Restore stock for each product in all artisan orders
+          List<ArtisanOrder> artisanOrders = orderRepository.findArtisanOrdersByOrderId(orderId);
+
+          for (ArtisanOrder a : artisanOrders) {
+               List<OrderItem> items = artisanOrderRepository.findByArtisanOrderId(a.getId());
+               for (OrderItem item : items) {
+                    Product product = item.getProduct();
+                    product.setStock(product.getStock() + item.getQuantity());
+                    productRepository.save(product);
+               }
+          }
+
+          // Cancel the order
+          order.setOrderStatus(OrderStatus.CANCELLED);
+          orderRepository.save(order);
+
+          return "Order cancelled successfully";
      }
 
      @Override
@@ -356,6 +400,41 @@ public class OrderServiceImpl implements OrderService {
                totalRevenue += o.getTotalAmount().longValue();
           }
           return totalRevenue;
+     }
+
+     @Override
+     public OrderResponseDTO getOrderById(Long orderId) {
+          Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new OrderException("Order is not found", OrderErrorType.ORDER_NOT_FOUND));
+
+          return abstractMapperService.toDto(order, OrderResponseDTO.class);
+     }
+
+     @Override
+     public String updateAllOrderStatus(Long orderId, String status) {
+
+          User user = authService.getCurrentUser();
+          if (user == null) {
+               throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
+          }
+
+          Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new OrderException("Order is not found", OrderErrorType.ORDER_NOT_FOUND));
+
+          if (order.getPaymentStatus() != null &&
+                    order.getPaymentStatus().equals(com.example.demo.constants.PaymentStatus.FAILED)) {
+               throw new OrderException("Cannot update status for failed payment orders",
+                         OrderErrorType.ORDER_UPDATE_FAILED);
+          }
+
+          order.setOrderStatus(OrderStatus.valueOf(status));
+
+          order = orderRepository.save(order);
+
+          if (order != null)
+               return "order is updated";
+
+          return "order is not updated";
      }
 
 }

@@ -5,10 +5,10 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.demo.constants.Role;
-import com.example.demo.dto.OrderDto;
 import com.example.demo.model.Address;
 import com.example.demo.model.Cart;
 import com.example.demo.model.User;
+import com.example.demo.response.Order.OrderResponseDTO;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     public User findByUserId(long userId);
 
-    public List<OrderDto> findOrdersByUserId(Long userId);
+    public List<OrderResponseDTO> findOrdersByUserId(Long userId);
 
     public List<User> findByrole(Role role);
 

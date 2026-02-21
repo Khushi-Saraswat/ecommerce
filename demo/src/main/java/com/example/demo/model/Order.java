@@ -36,7 +36,7 @@ public class Order {
 
     @NotNull(message = "Total amount cannot be null")
     @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")
-    private BigDecimal TotalAmount;
+    private BigDecimal totalAmount;
 
     @NotNull(message = "Order status cannot be null")
     @Enumerated(EnumType.STRING)

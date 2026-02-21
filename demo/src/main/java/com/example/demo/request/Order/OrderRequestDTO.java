@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class OrderRequestDTO {
-    private Long addressId;
+    private Integer addressId;
     private String paymentType;
 }

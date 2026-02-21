@@ -2,9 +2,9 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import com.example.demo.dto.OrderDto;
 import com.example.demo.model.User;
 import com.example.demo.request.User.UserRequestDTO;
+import com.example.demo.response.Order.OrderResponseDTO;
 import com.example.demo.response.Order.OrderStatusResponse;
 import com.example.demo.response.User.UserResponseDTO;
 
@@ -16,7 +16,7 @@ public interface UserService {
 
     // public Boolean updateAccountStatus(Integer id, Boolean status);
 
-    public List<OrderDto> getOrdersByUserId(Long userId);
+    public List<OrderResponseDTO> getOrdersByUserId(Long userId);
 
     // public void increaseFailedAttempt(User user);
 

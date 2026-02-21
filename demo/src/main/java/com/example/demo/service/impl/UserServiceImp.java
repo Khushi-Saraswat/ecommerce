@@ -10,7 +10,6 @@ import org.springframework.util.ObjectUtils;
 import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.config.JwtService;
 import com.example.demo.constants.errorTypes.OrderErrorType;
-import com.example.demo.dto.OrderDto;
 import com.example.demo.exception.Order.OrderException;
 import com.example.demo.model.Order;
 import com.example.demo.model.User;
@@ -18,6 +17,7 @@ import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.request.User.UserRequestDTO;
+import com.example.demo.response.Order.OrderResponseDTO;
 import com.example.demo.response.Order.OrderStatusResponse;
 import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.service.methods.UserService;
@@ -159,9 +159,9 @@ public class UserServiceImp implements UserService {
    }
 
    @Override
-   public List<OrderDto> getOrdersByUserId(Long userId) {
-      List<OrderDto> orders = userRepository.findOrdersByUserId(userId);
-      return orders;
+   public List<OrderResponseDTO> getOrdersByUserId(Long userId) {
+      return userRepository.findOrdersByUserId(userId);
+
    }
 
    @Override

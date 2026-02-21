@@ -2,14 +2,19 @@ package com.example.demo.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.demo.model.ArtisanOrder;
+import com.example.demo.model.OrderItem;
 
 public interface ArtisanOrderRepository extends JpaRepository<ArtisanOrder, Long> {
 
     // @Query("SELECT ao FROM ArtisanOrder where ao.order.id = :orderId")
-    List<ArtisanOrder> findArtisanOrdersByOrder_Id(Long orderId);
+    Page<ArtisanOrder> findArtisanOrdersByOrder_Id(Long orderId, Pageable pageable);
 
-    List<ArtisanOrder> findByArtisan_Id(Long orderId);
+    Page<ArtisanOrder> findByArtisan_Id(Long userId, Pageable pageable);
+
+    List<OrderItem> findByArtisanOrderId(Long artisanOrderId);
 }

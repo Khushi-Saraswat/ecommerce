@@ -31,6 +31,7 @@ import com.example.demo.response.category.CategoryResponseDTO;
 import com.example.demo.service.methods.AdminService;
 import com.example.demo.service.methods.CategoryRequestService;
 import com.example.demo.service.methods.CategoryService;
+import com.example.demo.service.methods.OrderService;
 import com.example.demo.service.methods.ProductService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,6 +55,9 @@ public class AdminController {
 
   @Autowired
   private ProductService productService;
+
+  @Autowired
+  private OrderService orderService;
 
   // <----- artisan management-------->
   @GetMapping("/artisans")
@@ -103,6 +107,19 @@ public class AdminController {
 
     return ResponseEntity.ok(adminService.getAllOrders(jwt));
 
+  }
+
+  @GetMapping("/artisan/orders/{id}/status")
+  public ResponseEntity<?> OrdersUpdated(@RequestParam("id") Long artisanOrderId,
+      @RequestParam String status) {
+
+    return ResponseEntity.ok(orderService.updatOrderStatus(artisanOrderId, status));
+  }
+
+  @GetMapping("/all/orders/{id}/status")
+  public ResponseEntity<?> AllOrdersUpdated(@RequestParam("id") Long orderId, @RequestParam String status) {
+
+    return ResponseEntity.ok(orderService.updateAllOrderStatus(orderId, status));
   }
 
   // dashboard management

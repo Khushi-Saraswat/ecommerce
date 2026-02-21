@@ -2,10 +2,12 @@ package com.example.demo.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.example.demo.constants.ArtisanOrderStatus;
 import com.example.demo.constants.PaymentStatus;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -14,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -48,5 +51,8 @@ public class ArtisanOrder {
     private LocalDateTime updatedAt;
 
     private String razorpayOrderId;
+
+    @OneToMany(mappedBy = "artisanOrder", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items;
 
 }
