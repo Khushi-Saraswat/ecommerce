@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,30 +26,30 @@ public class AddressController {
   private AddressService addressService;
 
   @PostMapping(value = "/addAddress", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<?> addAddress(@RequestHeader("Authorization") String jwt,
+  public ResponseEntity<?> addAddress(
       @RequestBody AddressDto addressDto) {
 
-    AddressResponse addresponse = addressService.saveAddress(jwt, addressDto);
+    AddressResponse addresponse = addressService.saveAddress(addressDto);
     return ResponseEntity.ok(addresponse);
   }
 
   @GetMapping("/getAddress")
-  public ResponseEntity<?> getAddress(@RequestHeader("Authorization") String jwt) {
-    List<AddressDto> addressDtos = addressService.getAddresses(jwt);
+  public ResponseEntity<?> getAddress() {
+    List<AddressDto> addressDtos = addressService.getAddresses();
     return ResponseEntity.ok(addressDtos);
 
   }
 
   @PutMapping(value = "/updateAddress", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<?> updateAddress(@RequestParam Integer addressId, @RequestHeader("Authorization") String jwt,
+  public ResponseEntity<?> updateAddress(@RequestParam Integer addressId,
       @RequestBody AddressDto addressDto) {
-    String message = addressService.updateAddress(addressId, jwt, addressDto);
+    String message = addressService.updateAddress(addressId, addressDto);
     return ResponseEntity.ok(message);
   }
 
   @DeleteMapping("/delAddress")
-  public ResponseEntity<?> deleteAddress(@RequestHeader("Authorization") String jwt) {
-    Boolean f = addressService.deleteAddress(jwt);
+  public ResponseEntity<?> deleteAddress() {
+    Boolean f = addressService.deleteAddress();
     if (f)
       return ResponseEntity.ok("address is deleted successfully !!");
 

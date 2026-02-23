@@ -36,9 +36,7 @@ import com.example.demo.util.CommonUtil;
 
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -50,9 +48,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private UserInfoService userInfoService;
 
     @Autowired
     private AuthenticationManager authenticationManager;

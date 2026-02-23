@@ -24,7 +24,6 @@ import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.response.Order.OrderResponseDTO;
 import com.example.demo.response.Order.OrderStatusResponse;
 import com.example.demo.response.User.UserResponseDTO;
-import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.UserService;
 
 @Service
@@ -43,7 +42,7 @@ public class UserServiceImp implements UserService {
    private OrderRepository orderRepository;
 
    @Autowired
-   private AuthService authService;
+   private SecurityUtils securityUtils;
 
    @Autowired
    private ProductRepository productRepository;
@@ -137,7 +136,7 @@ public class UserServiceImp implements UserService {
    @Override
    public UserResponseDTO updateUserProfile(UserRequestDTO userDtlsDto) {
 
-      User user = authService.getCurrentUser();
+      User user = securityUtils.getCurrentUserName();
 
       if (user == null) {
          throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);

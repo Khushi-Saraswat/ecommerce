@@ -14,15 +14,14 @@ import com.example.demo.model.Address;
 import com.example.demo.model.User;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.response.Address.AddressResponse;
-import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.service.methods.AddressService;
-import com.example.demo.service.methods.UserService;
+import com.example.demo.service.methods.AuthService;
 
 @Service
 public class AddressServiceImpl implements AddressService {
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
 
     @Autowired
     private AbstractMapperService abstractMapperService;
@@ -31,9 +30,9 @@ public class AddressServiceImpl implements AddressService {
     private AddressRepository addressRepository;
 
     @Override
-    public Boolean deleteAddress(String jwt) {
+    public Boolean deleteAddress() {
         try {
-            UserResponseDTO user = userService.UserByToken(jwt);
+            User user = authService.getCurrentUser();
             Address address = addressRepository
                     .findByUser(abstractMapperService.toEntity(user, User.class));
             if (address != null) {
@@ -50,9 +49,9 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public List<AddressDto> getAddresses(String jwt) {
+    public List<AddressDto> getAddresses() {
         try {
-            UserResponseDTO user = userService.UserByToken(jwt);
+            User user = authService.getCurrentUser();
             User user2 = abstractMapperService.toEntity(user, User.class);
             List<Address> address = addressRepository.findAddressByUserId(user2.getUserId());
 
@@ -88,14 +87,14 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public AddressResponse saveAddress(String jwt, AddressDto addressDto) {
+    public AddressResponse saveAddress(AddressDto addressDto) {
 
         if (addressDto == null) {
             throw new AddressException("Address data cannot be empty", AddressErrorType.ADDRESS_NOT_SAVED);
         }
 
         try {
-            UserResponseDTO user = userService.UserByToken(jwt);
+            User user = authService.getCurrentUser();
             Address address = abstractMapperService.toEntity(addressDto, Address.class);
             address.setUser(abstractMapperService.toEntity(user, User.class));
             Address address2 = addressRepository.save(address);
@@ -157,7 +156,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public String updateAddress(Integer addressId, String jwt, AddressDto addressDto) {
+    public String updateAddress(Integer addressId, AddressDto addressDto) {
 
         try {
             if (addressId == null || addressId <= 0) {
@@ -168,7 +167,7 @@ public class AddressServiceImpl implements AddressService {
                 throw new AddressException("Address data cannot be empty", AddressErrorType.ADDRESS_NOT_UPDATED);
             }
 
-            UserResponseDTO user = userService.UserByToken(jwt);
+            User user = authService.getCurrentUser();
 
             Optional<Address> optionalAddress = addressRepository.findById(addressId);
 
@@ -182,7 +181,7 @@ public class AddressServiceImpl implements AddressService {
             Address existingAddress = optionalAddress.get();
 
             // 2. Check ownership
-            if (!existingAddress.getUser().getUserId().equals(user.getId())) {
+            if (!existingAddress.getUser().getUserId().equals(user.getUserId())) {
                 throw new AddressException("User is not authorized to update this address",
                         AddressErrorType.USER_NOT_AUTHORIZED);
             }

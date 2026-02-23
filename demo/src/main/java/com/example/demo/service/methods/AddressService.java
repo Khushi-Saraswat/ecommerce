@@ -8,19 +8,19 @@ import com.example.demo.response.Address.AddressResponse;
 public interface AddressService {
 
     // Save a new address
-    AddressResponse saveAddress(String jwt, AddressDto addressDto);
+    AddressResponse saveAddress(AddressDto addressDto);
 
     // Get all addresses for a user
-    List<AddressDto> getAddresses(String jwt);
+    List<AddressDto> getAddresses();
 
     // Get default address for a user
     AddressDto getDefaultAddressByUserId(Long userId);
 
     // Update an address
-    String updateAddress(Integer addressid, String jwt, AddressDto addressDto);
+    String updateAddress(Integer addressid, AddressDto addressDto);
 
     // Delete an address
-    Boolean deleteAddress(String jwt);
+    Boolean deleteAddress();
 
     // Set an address as default
     Boolean setDefaultAddress(Long userId, Long addressId);
