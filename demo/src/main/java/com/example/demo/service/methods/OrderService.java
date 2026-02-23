@@ -4,6 +4,7 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.example.demo.constants.OrderStatus;
 import com.example.demo.request.Order.OrderRequestDTO;
 import com.example.demo.response.Order.OrderHistoryDTO;
 import com.example.demo.response.Order.OrderResponseDTO;
@@ -14,9 +15,10 @@ public interface OrderService {
 
     // public List<OrderHistoryDTO> getOrdersByUser(String jwt);
 
-    // by artisan - status-shipped.delivered
+    // by admin - status-shipped.delivered
     public String updatOrderStatus(Long artisanId, String status);
 
+    OrderResponseDTO updateOrderStatusByArtisan(Long orderId, OrderStatus status);
     // public List<Order> getAllOrders();
 
     // public Order getOrdersByOrderId(Long orderId);

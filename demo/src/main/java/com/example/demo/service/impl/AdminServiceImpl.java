@@ -16,6 +16,7 @@ import com.example.demo.model.Order;
 import com.example.demo.model.User;
 import com.example.demo.repository.ArtisanRepository;
 import com.example.demo.repository.OrderRepository;
+import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.response.Artisan.ArtisanResponseDTO;
 import com.example.demo.response.Order.OrderResponseDTO;
@@ -46,6 +47,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     @Override
     public String approveArtisan(Long artisanId) {

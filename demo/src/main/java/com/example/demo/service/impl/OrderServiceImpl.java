@@ -16,14 +16,17 @@ import org.springframework.stereotype.Service;
 import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.constants.ArtisanOrderStatus;
 import com.example.demo.constants.OrderStatus;
+import com.example.demo.constants.Role;
 import com.example.demo.constants.errorTypes.AuthErrorType;
 import com.example.demo.constants.errorTypes.CartErrorType;
 import com.example.demo.constants.errorTypes.OrderErrorType;
 import com.example.demo.constants.errorTypes.ProductErrorType;
+import com.example.demo.constants.errorTypes.UserErrorType;
 import com.example.demo.exception.Auth.AuthException;
 import com.example.demo.exception.Cart.CartException;
 import com.example.demo.exception.Order.OrderException;
 import com.example.demo.exception.Product.ProductException;
+import com.example.demo.exception.User.UserException;
 import com.example.demo.model.Address;
 import com.example.demo.model.Artisan;
 import com.example.demo.model.ArtisanOrder;
@@ -36,6 +39,7 @@ import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.ArtisanOrderRepository;
 import com.example.demo.repository.ArtisanRepository;
 import com.example.demo.repository.CartRepository;
+import com.example.demo.repository.OrderItemRepository;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
@@ -88,6 +92,9 @@ public class OrderServiceImpl implements OrderService {
 
      @Autowired
      private AuthService authService;
+
+     @Autowired
+     private OrderItemRepository orderItemrepo;
 
      // place orders
 
@@ -368,10 +375,10 @@ public class OrderServiceImpl implements OrderService {
           }
 
           // Restore stock for each product in all artisan orders
-          List<ArtisanOrder> artisanOrders = orderRepository.findArtisanOrdersByOrderId(orderId);
+          List<ArtisanOrder> artisanOrders = artisanOrderRepository.findArtisanOrdersByOrder_Id(orderId);
 
           for (ArtisanOrder a : artisanOrders) {
-               List<OrderItem> items = artisanOrderRepository.findByArtisanOrderId(a.getId());
+               List<OrderItem> items = orderItemrepo.findByArtisanOrder_Order_Id(a.getId());
                for (OrderItem item : items) {
                     Product product = item.getProduct();
                     product.setStock(product.getStock() + item.getQuantity());
@@ -435,6 +442,41 @@ public class OrderServiceImpl implements OrderService {
                return "order is updated";
 
           return "order is not updated";
+     }
+
+     @Override
+     public OrderResponseDTO updateOrderStatusByArtisan(Long orderId, OrderStatus status) {
+
+          User user = authService.getCurrentUser();
+
+          if (user == null || user.getRole() != Role.ARTISAN) {
+               throw new UserException("Only artisan can update order",
+                         UserErrorType.UNAUTHORIZED);
+          }
+
+          Artisan artisan = artisanRepository
+                    .findByUser_UserId(user.getUserId())
+                    .orElseThrow(() -> new UserException(
+                              "Artisan not found",
+                              UserErrorType.NOT_FOUND));
+
+          Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new OrderException(
+                              "Order not found",
+                              OrderErrorType.ORDER_NOT_FOUND));
+
+          // Prevent invalid transitions
+          if (order.getOrderStatus() == OrderStatus.DELIVERED) {
+               throw new OrderException("Delivered order cannot be modified",
+                         OrderErrorType.INVALID_ORDER_STATUS);
+          }
+
+          order.setOrderStatus(status);
+
+          Order saved = orderRepository.save(order);
+
+          return abstractMapperService.toDto(saved, OrderResponseDTO.class);
+
      }
 
 }

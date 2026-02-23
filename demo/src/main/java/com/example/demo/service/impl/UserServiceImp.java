@@ -9,8 +9,12 @@ import org.springframework.util.ObjectUtils;
 
 import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.config.JwtService;
+import com.example.demo.constants.errorTypes.AuthErrorType;
 import com.example.demo.constants.errorTypes.OrderErrorType;
+import com.example.demo.constants.errorTypes.UserErrorType;
+import com.example.demo.exception.Auth.AuthException;
 import com.example.demo.exception.Order.OrderException;
+import com.example.demo.exception.User.UserException;
 import com.example.demo.model.Order;
 import com.example.demo.model.User;
 import com.example.demo.repository.OrderRepository;
@@ -20,6 +24,7 @@ import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.response.Order.OrderResponseDTO;
 import com.example.demo.response.Order.OrderStatusResponse;
 import com.example.demo.response.User.UserResponseDTO;
+import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.UserService;
 
 @Service
@@ -36,6 +41,9 @@ public class UserServiceImp implements UserService {
 
    @Autowired
    private OrderRepository orderRepository;
+
+   @Autowired
+   private AuthService authService;
 
    @Autowired
    private ProductRepository productRepository;
@@ -127,17 +135,21 @@ public class UserServiceImp implements UserService {
    }
 
    @Override
-   public UserResponseDTO updateUserProfile(Long id, UserRequestDTO userDtlsDto) {
+   public UserResponseDTO updateUserProfile(UserRequestDTO userDtlsDto) {
+
+      User user = authService.getCurrentUser();
+
+      if (user == null) {
+         throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
+      }
+
       User saveUser = null;
-      User user = (User) abstractMapperService
-            .toEntity(userDtlsDto, User.class);
-      User dbuser = userRepository.findById(id).get();
 
       // allow only username and mobile number to update
-      if (!ObjectUtils.isEmpty(dbuser)) {
-         dbuser.setName(user.getName());
-         dbuser.setMobileNumber(user.getMobileNumber());
-         saveUser = userRepository.save(dbuser);
+      if (!ObjectUtils.isEmpty(user)) {
+         user.setName(user.getName());
+         user.setMobileNumber(user.getMobileNumber());
+         saveUser = userRepository.save(user);
 
       }
 
@@ -177,10 +189,13 @@ public class UserServiceImp implements UserService {
    }
 
    @Override
-   public UserResponseDTO getProfile(String jwt) {
+   public UserResponseDTO getProfile(Long id) {
 
-      return UserByToken(jwt);
+      User user = userRepository.findById(id)
+            .orElseThrow(() -> new UserException("User not found", UserErrorType.NOT_FOUND));
 
+      return abstractMapperService
+            .toDto(user, UserResponseDTO.class);
    }
 
    @Override
@@ -189,8 +204,8 @@ public class UserServiceImp implements UserService {
    }
 
    @Override
-   public OrderStatusResponse trackOrder(String orderId) {
-      Optional<Order> order = orderRepository.findById(Long.valueOf(orderId));
+   public OrderStatusResponse trackOrder(Long orderId) {
+      Optional<Order> order = orderRepository.findById(orderId);
 
       if (order.isPresent()) {
          OrderStatusResponse response = new OrderStatusResponse();

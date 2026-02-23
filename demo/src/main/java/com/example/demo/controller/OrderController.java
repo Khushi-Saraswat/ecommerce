@@ -6,13 +6,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.constants.OrderStatus;
 import com.example.demo.request.Order.OrderRequestDTO;
+import com.example.demo.response.Order.OrderResponseDTO;
 import com.example.demo.service.methods.OrderService;
 
 //order lifecycle, transactional stock deduction, invoices.
@@ -75,6 +79,14 @@ public class OrderController {
 
           return ResponseEntity.ok(orderService.getOrderById(orderId));
 
+     }
+
+     @PutMapping("/{orderId}/status")
+     public OrderResponseDTO updateStatus(
+               @PathVariable Long orderId,
+               @RequestParam OrderStatus status) {
+
+          return orderService.updateOrderStatusByArtisan(orderId, status);
      }
 
 }

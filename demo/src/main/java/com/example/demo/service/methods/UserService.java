@@ -34,15 +34,15 @@ public interface UserService {
 
     public User updateUser(User user);
 
-    public UserResponseDTO updateUserProfile(Long id, UserRequestDTO user);
+    public UserResponseDTO updateUserProfile(UserRequestDTO user);
 
     public UserResponseDTO UserByToken(String token);
 
-    public UserResponseDTO getProfile(String jwt);
+    public UserResponseDTO getProfile(Long id);
 
     public UserResponseDTO Profile();
 
-    public OrderStatusResponse trackOrder(String orderId);
+    public OrderStatusResponse trackOrder(Long orderId);
 
     // public List<> getProductsByCategory(Long categoryId);
 

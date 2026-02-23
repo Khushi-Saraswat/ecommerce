@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.demo.model.ArtisanOrder;
 import com.example.demo.model.Order;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -17,7 +16,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findByUser_UserId(Long userId, Pageable pageable);
 
     List<Order> findByArtisanOrders_Id(Long artisanId);
-
-    List<ArtisanOrder> findArtisanOrdersByOrderId(Long orderId);
 
 }

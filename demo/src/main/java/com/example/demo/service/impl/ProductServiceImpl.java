@@ -382,4 +382,46 @@ public class ProductServiceImpl implements ProductService {
                 p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
     }
 
+    @Override
+    public DeleteProductResponseDTO toggleProductStatusByAdmin(Integer productId, Boolean active) {
+        User user = authService.getCurrentUser();
+        if (user == null || user.getRole() != Role.ADMIN) {
+            throw new UserException("Only admin can update status", UserErrorType.UNAUTHORIZED);
+        }
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductException(
+                        "Product not found",
+                        ProductErrorType.PRODUCT_NOT_FOUND));
+
+        product.setIsActive(active);
+        productRepository.save(product);
+
+        DeleteProductResponseDTO response = new DeleteProductResponseDTO();
+        response.setSuccess(true);
+        response.setProductId(productId);
+        response.setMessage(active ? "Product activated by admin"
+                : "Product deactivated by admin");
+
+        return response;
+
+    }
+
+    @Override
+    public ProductResponseDTO getProductById(Integer productId) {
+
+        User user = authService.getCurrentUser();
+        if (user == null || user.getRole() != Role.ADMIN) {
+            throw new UserException("Only admin can access this", UserErrorType.UNAUTHORIZED);
+        }
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductException(
+                        "Product not found",
+                        ProductErrorType.PRODUCT_NOT_FOUND));
+
+        return abstractMapperService.toDto(product, ProductResponseDTO.class);
+
+    }
+
 }

@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.dto.FeedbackDto;
 import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.response.Product.ProductResponseDTO;
+import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.response.category.CategoryResponseDTO;
 import com.example.demo.service.methods.CategoryService;
 import com.example.demo.service.methods.FeedbackService;
@@ -32,116 +32,144 @@ import com.example.demo.service.methods.UserService;
 public class UserController {
 
     @Autowired
-    private FeedbackService feedbackService;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
-    private ProductService productService;
+    private FeedbackService feedbackService;
 
     @Autowired
     private CategoryService categoryService;
 
-    // endpoint to get user profile details
+    @Autowired
+    private ProductService productService;
 
+    // ===============================
+    // 🔹 USER PROFILE
+    // ===============================
+
+    // Get logged-in user profile
     @PreAuthorize("hasAnyRole('USER','ARTISAN')")
     @GetMapping("/profile")
-    public ResponseEntity<String> profile() {
-        // UserResponseDTO>
-
-        return ResponseEntity.ok("hi");
-        // userService.UserByToken());
-
+    public ResponseEntity<UserResponseDTO> getProfile(@RequestParam Long id) {
+        return ResponseEntity.ok(userService.getProfile(id));
     }
 
-    // endpoint to update user profile details
-
-    @PutMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestParam Long userId,
-
+    // Update profile (logged-in user)
+    @PreAuthorize("hasAnyRole('USER','ARTISAN')")
+    @PutMapping("/profile")
+    public ResponseEntity<UserResponseDTO> updateProfile(
             @RequestBody UserRequestDTO userRequestDTO) {
 
-        return ResponseEntity.ok(userService.updateUserProfile(userId, userRequestDTO));
+        return ResponseEntity.ok(userService.updateUserProfile(userRequestDTO));
     }
 
-    // endpoint for order tracking
-    @GetMapping("/order/tracking/{orderId}")
-    public ResponseEntity<?> trackOrder(@PathVariable String orderId) {
+    // ===============================
+    // 🔹 ORDER MANAGEMENT (USER)
+    // ===============================
 
+    // Get all orders of logged-in user
+    /*
+     * @PreAuthorize("hasRole('USER')")
+     * 
+     * @GetMapping("/orders")
+     * public ResponseEntity<?> getMyOrders() {
+     * return ResponseEntity.ok(userService.);
+     * }
+     */
+
+    // Track specific order
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<?> trackOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(userService.trackOrder(orderId));
-
     }
 
-    @PostMapping("feedback/add")
-    public ResponseEntity<String> saveFeed(@RequestBody FeedbackDto feedbackDto) {
-        FeedbackDto feedback = feedbackService.saveFeedBack(feedbackDto);
+    // Cancel order
+    /*
+     * @PreAuthorize("hasRole('USER')")
+     * 
+     * @PutMapping("/orders/{orderId}/cancel")
+     * public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
+     * return ResponseEntity.ok(userService.cancelOrder(orderId));
+     * }
+     */
 
-        if (feedback != null) {
-            return ResponseEntity.ok("Feedback is successfully saved");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Feedback could not be saved");
-        }
+    // ===============================
+    // 🔹 FEEDBACK
+    // ===============================
 
+    // Add feedback
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/feedback")
+    public ResponseEntity<FeedbackDto> addFeedback(
+            @RequestBody FeedbackDto feedbackDto) {
+
+        return ResponseEntity.ok(feedbackService.saveFeedBack(feedbackDto));
     }
 
-    @GetMapping("feedback/product/{productId}")
-    public ResponseEntity<List<FeedbackDto>> getFeedbackForProduct(@PathVariable Integer ProductId) {
+    // Get feedback for product
+    @GetMapping("/feedback/product/{productId}")
+    public ResponseEntity<List<FeedbackDto>> getFeedbackForProduct(
+            @PathVariable Integer productId) {
 
-        List<FeedbackDto> feedback = feedbackService.getFeedbackByProductId(ProductId);
-
-        return ResponseEntity.ok(feedback);
+        return ResponseEntity.ok(
+                feedbackService.getFeedbackByProductId(productId));
     }
 
-    // <-------- category mgmt------------>
+    // ===============================
+    // 🔹 CATEGORY APIs
+    // ===============================
 
-    @GetMapping
+    @GetMapping("/categories")
     public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
-
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
-    // GET /api/categories/{categoryId}
+    @GetMapping("/categories/{categoryId}")
+    public ResponseEntity<CategoryResponseDTO> getCategoryById(
+            @PathVariable Long categoryId) {
 
-    @GetMapping("/{categoryId}")
-    public ResponseEntity<CategoryResponseDTO> getCategoryById(@PathVariable Long categoryId) {
-        return ResponseEntity.ok(categoryService.getCategoryById(categoryId));
+        return ResponseEntity.ok(
+                categoryService.getCategoryById(categoryId));
     }
 
-    // GET /api/categories/slug/{slug}
+    @GetMapping("/categories/slug/{slug}")
+    public ResponseEntity<CategoryResponseDTO> getCategoryBySlug(
+            @PathVariable String slug) {
 
-    @GetMapping("/slug/{slug}")
-    public ResponseEntity<CategoryResponseDTO> getCategoryBySlug(@PathVariable String slug) {
-        return ResponseEntity.ok(categoryService.getCategoryBySlug(slug));
+        return ResponseEntity.ok(
+                categoryService.getCategoryBySlug(slug));
     }
 
-    // GET /api/categories/active
-
-    @GetMapping("/active")
+    @GetMapping("/categories/active")
     public ResponseEntity<List<CategoryResponseDTO>> getActiveCategories() {
         return ResponseEntity.ok(categoryService.getActiveCategories());
     }
 
-    // GET /api/categories/search?keyword=...
-    @GetMapping("/searchCategories")
-    public ResponseEntity<List<CategoryResponseDTO>> searchCategories(@RequestParam String keyword,
+    @GetMapping("/categories/search")
+    public ResponseEntity<List<CategoryResponseDTO>> searchCategories(
+            @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
+
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(categoryService.searchCategories(keyword, pageable));
+        return ResponseEntity.ok(
+                categoryService.searchCategories(keyword, pageable));
     }
 
-    // product management .....
+    // ===============================
+    // 🔹 PRODUCT APIs
+    // ===============================
 
-    @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Integer productId) {
+    @GetMapping("/products/{productId}")
+    public ResponseEntity<ProductResponseDTO> getProductById(
+            @PathVariable Integer productId) {
 
-        return ResponseEntity.ok(productService.getActiveProductById(productId));
-
+        return ResponseEntity.ok(
+                productService.getActiveProductById(productId));
     }
 
-    @GetMapping("/searchProsuct")
+    @GetMapping("/products/search")
     public ResponseEntity<Page<ProductResponseDTO>> searchProducts(
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
@@ -149,56 +177,29 @@ public class UserController {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        return ResponseEntity.ok(productService.searchProducts(q, pageable));
-
+        return ResponseEntity.ok(
+                productService.searchProducts(q, pageable));
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<Page<ProductResponseDTO>> getProductsByCategory(@PathVariable String categoryId,
+    @GetMapping("/products/category/{categoryId}")
+    public ResponseEntity<Page<ProductResponseDTO>> getProductsByCategory(
+            @PathVariable String categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
+
+        return ResponseEntity.ok(
+                productService.getProductsByCategory(categoryId, pageable));
     }
 
-    @GetMapping("/all/{productId}")
-    public ResponseEntity<Page<ProductResponseDTO>> getAllProduct(
+    @GetMapping("/products")
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
-            @RequestParam String category
+            @RequestParam(required = false) String category) {
 
-    ) {
-        return ResponseEntity.ok(productService.getAllActiveProductPagination(page, size, category));
+        return ResponseEntity.ok(
+                productService.getAllActiveProductPagination(page, size, category));
     }
-
 }
-
-// flow of spring security jwt
-/*
- * Here’s the **most short + clear** version:
- ** 
- * Login phase:**
- * 
- * User sends username/password.
- * `AuthenticationManager` + `UserDetailsService` fetch user and verify password
- * using `PasswordEncoder`.
- * If correct → `JwtService` creates JWT and returns it.
- ** 
- * Secured request phase:**
- * 
- * User sends JWT in `Authorization` header.
- * `JwtAuthFilter` intercepts, extracts token, gets username from token,
- * validates token.
- * Loads user again using `UserDetailsService`.
- * Sets authenticated user in `SecurityContext`.
- ** 
- * Roles summary:**
- * 
- * **SecurityFilter / JwtAuthFilter:** Catches every request, reads/validates
- * JWT, sets auth context.
- * **JwtService:** Creates/validates/parses tokens.
- * **UserDetailsService:** Fetches user from DB.
- * **PasswordEncoder:** Checks raw vs hashed password.
- * **SecurityContext:** Stores who is logged in for that request.
- */

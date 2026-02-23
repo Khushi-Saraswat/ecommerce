@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.request.category.CategoryRequestDTO;
+import com.example.demo.response.Product.DeleteProductResponseDTO;
 import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.category.CategoryRequestResponseDTO;
 import com.example.demo.response.category.CategoryResponseDTO;
@@ -101,6 +102,7 @@ public class AdminController {
 
   }
 
+  // orders management--
   // get all orders
   @GetMapping("/users/orders")
   public ResponseEntity<?> getAllOrders(@RequestHeader("Authorization") String jwt) {
@@ -191,30 +193,6 @@ public class AdminController {
 
   // product management........
 
-  // this method is responsible for saving the product of a particular category-by
-  // artian
-
-  /*
-   * @GetMapping("/getArtisanProduct")
-   * public ResponseEntity<?> GetArtisanProduct(
-   * 
-   * @RequestHeader("Authorization") String jwt)
-   * throws IOException {
-   * 
-   * return ResponseEntity.ok(productService.getByArtisanId(jwt));
-   * 
-   * }
-   * 
-   * // stock is updated-by admin
-   * 
-   * @PatchMapping("/StockUpdate/stock")
-   * public ResponseEntity<String> UpdateStock(@RequestParam Integer
-   * ProductId, @RequestParam Integer stock) {
-   * String message = productService.IncreaseStock(ProductId, stock);
-   * return ResponseEntity.ok(message);
-   * }
-   */
-
   public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "12") int size,
@@ -227,6 +205,23 @@ public class AdminController {
     Pageable pageable = PageRequest.of(page, size, sort);
     Page<ProductResponseDTO> products = productService.getAllProducts(pageable);
     return ResponseEntity.ok(products);
+  }
+
+  @GetMapping("/{id}")
+  public ProductResponseDTO getById(@PathVariable Integer id) {
+    return productService.getProductById(id);
+  }
+
+  @PutMapping("/{id}/status")
+  public DeleteProductResponseDTO updateStatus(
+      @PathVariable Integer id,
+      @RequestParam Boolean active) {
+    return productService.toggleProductStatusByAdmin(id, active);
+  }
+
+  @DeleteMapping("/{id}/hard-delete")
+  public DeleteProductResponseDTO hardDelete(@PathVariable Integer id) {
+    return productService.DeactivateProduct(id);
   }
 
 }
