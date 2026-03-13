@@ -50,42 +50,39 @@ A user can:
 
 The overall user journey in the system:
 User Registration
-│
+
 
 
 
 Browse Products
-│
+
 
 
 
 Add Product to Cart
-│
 
 
 
 Checkout
-│
+
 
 
 
 Create Order
-│
+
 
 
 
 Split Order by Artisan
-│
+
 
 
 
 Create Order Items
-│
 
 
 
 Process Payment
-│
 
 
 
