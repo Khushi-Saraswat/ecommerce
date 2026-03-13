@@ -192,11 +192,9 @@ This allows:
 
 Payments are linked to orders.
 User
-│
-▼
+
 Order
-│
-▼
+
 Payment
 
 ### Payment stores
@@ -212,11 +210,9 @@ Payment
 
 Users can store **multiple delivery addresses**.
 User
-│
-▼
+
 Address
-│
-▼
+
 Order
 
 Orders use **one selected address for delivery**.
