@@ -1,159 +1,218 @@
-🌟 CraftConnect – Local Artisan Marketplace Backend
+# 🧵 Artisan Marketplace Backend
 
-Spring Boot | MySQL | Elasticsearch | JWT Security
+A **multi-vendor e-commerce backend system** built using **Spring Boot, JPA, and PostgreSQL** where multiple artisans (sellers) can sell products and customers can purchase products from different sellers in a single order.
 
-Trendify is a complete e-commerce backend system designed with clean architecture, secure authentication, advanced search, filtering, sorting, and admin management features.
+---
 
-🏗 System Architecture & Entity Relationships
+# ✨ Features
 
-👤 User
+- Multi-vendor product selling  
+- Order splitting per artisan  
+- Product reviews and wishlist  
+- Secure authentication with JWT  
+- Payment processing  
+- Cart and checkout system  
 
-Represents all platform users (Customer, Artisan, Admin).
+---
 
-Responsibilities:
+# 🏗 System Architecture Overview
 
-Authentication & JWT security
+The application follows a **multi-vendor marketplace architecture** where a user can act as both a **customer and an artisan (seller)**.
 
-Role-based authorization
+## Core Modules
 
-Placing orders, writing reviews, managing cart
+- User Management  
+- Artisan Management  
+- Product Management  
+- Cart System  
+- Order Processing  
+- Payment Handling  
+- Review and Wishlist System  
 
-Relationships:
+---
 
-One User → One Artisan (if approved seller)
+# 👤 Core Actor
 
-One User → Many Orders
+The **User** is the central entity of the system.
 
-One User → Many Reviews
+A user can:
 
-One User → One Refresh Token
+- Browse products  
+- Add products to cart  
+- Place orders  
+- Review products  
+- Maintain wishlist  
+- Become an artisan (seller)  
 
-🧵 Artisan
+---
 
-Seller profile linked to a User.
+# 🔁 System Flow
 
-Responsibilities:
+The overall user journey in the system:
+User Registration
 
-KYC verification
 
-Product management
 
-Order fulfillment
 
-Relationships:
+Browse Products
 
-One Artisan → One User (OneToOne)
 
-One Artisan → Many Products
 
-One Artisan → Many ArtisanOrders
 
-📦 Product
+Add Product to Cart
 
-Stores product catalog details.
 
-Responsibilities:
 
-Pricing, stock, category
+Checkout
 
-Image gallery & attributes
 
-Customer reviews
 
-Relationships:
 
-Many Products → One Artisan
+Create Order
 
-One Product → Many Images
 
-One Product → Many Attributes
 
-One Product → Many Reviews
 
-One Product → Many Cart Items
+Split Order by Artisan
 
-One Product → Many PriceHistory entries
 
-JPA Config:
 
-Cascade ALL for images & attributes
 
-Orphan removal to delete unused records
+Create Order Items
 
-🛒 Cart
 
-Temporary shopping basket before checkout.
 
-Relationships:
+Process Payment
 
-Many Cart Items → One User
 
-Many Cart Items → One Product
 
-Many Cart Items → One Artisan
+Order Fulfillment
 
-🧾 Order
+---
 
-Customer purchase transaction.
+# 🧩 Entity Relationship Flow
 
-Relationships:
+The system is designed around **relational entities connected through JPA relationships**.
 
-Many Orders → One User
+---
 
-One Order → Many ArtisanOrders
+# 1️⃣ User Relationships
 
-🔀 ArtisanOrder (Order Split Layer)
+A **User** can perform multiple actions in the system.
 
-Splits a single order into multiple seller-wise orders.
 
-Purpose:
+| Entity | Description |
+|------|------|
+| Address | Stores multiple delivery addresses for the user |
+| Cart | Temporary storage before checkout |
+| Wishlist | Stores saved products |
+| Order | Stores user purchases |
+| Review | Product feedback |
+| Payment | Payment details for orders |
+| RefreshToken | Used for JWT authentication |
 
-Each artisan tracks only their own items & delivery status.
+---
 
-Relationships:
+# 2️⃣ Artisan (Seller) Flow
 
-Many ArtisanOrders → One Order
+A user can become an **Artisan (Seller)** to sell products.
 
-Many ArtisanOrders → One Artisan
 
-⭐ Review
+| Entity | Description |
+|------|------|
+| Artisan | Seller profile |
+| Product | Items sold by artisan |
+| ProductImage | Images of the product |
+| PriceHistory | Tracks price changes |
+| CategoryRequest | Artisan requests new category |
 
-Product feedback by users.
+---
 
-Relationships:
+# 3️⃣ Product Relationships
 
-Many Reviews → One Product
+Products are the **core marketplace entity**.
 
-Many Reviews → One User
 
-💬 Feedback
+| Entity | Description |
+|------|------|
+| ProductImage | Stores product images |
+| PriceHistory | Tracks price changes |
+| Review | User reviews |
+| OrderItem | Product inside an order |
+| Cart | Product added to cart |
+| Wishlist | Saved product |
 
-General platform feedback.
+---
 
-Relationships:
+# 🛒 Cart Flow
 
-Many Feedback → One User
+The **Cart** stores products temporarily before checkout.
 
-Many Feedback → One Product (optional)
+## Example Cart Entry
 
-💰 PriceHistory
+| user_id | product_id | quantity |
+|-------|-------|--------|
+| 10 | 23 | 2 |
 
-Tracks product price changes.
+Cart items are converted into an **Order during checkout**.
 
-Relationships:
+---
 
-Many PriceHistory → One Product
+# 📦 Order Processing Flow
 
-🔐 RefreshToken
+The system supports **multi-vendor orders**.
 
-Secure JWT token refresh handling.
+## Example
 
-Relationships:
+A user buys:
 
-One RefreshToken → One User
+Product A → Artisan 1
+Product B → Artisan 2
 
+The system creates:
+Order
+├── ArtisanOrder (Artisan 1)
+│ └── OrderItem
+│
+└── ArtisanOrder (Artisan 2)
+└── OrderItem
 
 
+### Why this design?
 
+This allows:
 
+- Independent seller order management  
+- Separate shipping  
+- Separate seller tracking  
 
+---
+
+# 💳 Payment Flow
+
+Payments are linked to orders.
+User
+
+Order
+
+Payment
+
+### Payment stores
+
+- Payment method  
+- Transaction ID  
+- Gateway response  
+- Payment status  
+
+---
+
+# 📍 Address Flow
+
+Users can store **multiple delivery addresses**.
+User
+
+Address
+
+Order
+
+Orders use **one selected address for delivery**.
