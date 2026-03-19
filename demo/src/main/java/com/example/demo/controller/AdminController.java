@@ -162,6 +162,7 @@ public class AdminController {
     return ResponseEntity.ok(categoryService.deleteCategory(id));
   }
 
+  @PreAuthorize("hasRole('ADMIN','ARTISAN')")
   @GetMapping("/allCategory")
   public ResponseEntity<Page<CategoryResponseDTO>> getAllCategory(
       @RequestParam(defaultValue = "0") int page,

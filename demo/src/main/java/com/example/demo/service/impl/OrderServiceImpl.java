@@ -96,6 +96,9 @@ public class OrderServiceImpl implements OrderService {
      @Autowired
      private OrderItemRepository orderItemrepo;
 
+     @Autowired
+     private PaymentService paymentService;
+
      // place orders
 
      @Override
@@ -171,6 +174,7 @@ public class OrderServiceImpl implements OrderService {
                          razorpayOrder = razorpayClient.orders.create(orderRequest);
                          order.setRazorpayOrderId(razorpayOrder.get("id"));
                          order.setPaymentStatus(razorpayOrder.get("status"));
+
                     } catch (Exception e) {
                          throw new OrderException("Failed to create Razorpay order: " + e.getMessage(),
                                    OrderErrorType.PAYMENT_PROCESSING_FAILED);
@@ -236,6 +240,10 @@ public class OrderServiceImpl implements OrderService {
 
                // Step 5: Save Order (cascade will save artisan orders)
                Order orders = orderRepository.save(order);
+
+               // Process Payment(dummy implementation)
+
+               // paymentService.processPayment(orders, orderRequestDTO.getPaymentType());
 
                // Step 6: Clear Cart
                cartRepository.deleteAll(cart);

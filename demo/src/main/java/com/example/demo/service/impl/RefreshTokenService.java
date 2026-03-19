@@ -13,12 +13,12 @@ import com.example.demo.repository.UserRepository;
 @Service
 public class RefreshTokenService {
 
-    @Value("${jwt.refreshExpirationMs}")
-    private Long refreshTokenDurationMs;
-
     private final RefreshTokenRepo refreshTokenRepo;
 
     private final UserRepository userRepository;
+
+    @Value("${refresh.token_expiry}")
+    private Long refreshTokenDurationMs;
 
     public RefreshTokenService(RefreshTokenRepo refreshTokenRepo, UserRepository userRepository) {
 
@@ -27,12 +27,27 @@ public class RefreshTokenService {
     }
 
     public RefreshToken createRefreshToken(Long userId) {
-        // java17
-        var token = new RefreshToken();
-        token.setUser(userRepository.findById(userId).get());
-        token.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
-        token.setToken(UUID.randomUUID().toString());
-        return refreshTokenRepo.save(token);
+
+        RefreshToken existingToken = refreshTokenRepo.findByUser_UserId(userId);
+
+        if (existingToken != null) {
+            // 🔁 Update existing refresh token
+            existingToken.setExpiryDate(
+                    Instant.now().plusMillis(refreshTokenDurationMs));
+            existingToken.setToken(UUID.randomUUID().toString());
+
+            return refreshTokenRepo.save(existingToken);
+        }
+
+        // 🆕 Create new refresh token if not exists
+        RefreshToken newToken = new RefreshToken();
+        newToken.setUser(userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found")));
+        newToken.setExpiryDate(
+                Instant.now().plusMillis(refreshTokenDurationMs));
+        newToken.setToken(UUID.randomUUID().toString());
+
+        return refreshTokenRepo.save(newToken);
     }
 
     public boolean isTokenExpired(RefreshToken token) {

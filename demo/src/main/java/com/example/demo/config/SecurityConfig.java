@@ -125,13 +125,13 @@ public class SecurityConfig {
                         req -> req
                                 // permit both controller mappings: /api/auth/** and /auth/**
                                 .requestMatchers(
-                                        "/api/auth/**",
-                                        "/api/auth/forgot-password",
-                                        "/api/auth/refresh",
-                                        "/api/auth/reset-password",
+                                        "/api/auth**",
+                                        // "/api/auth/forgot-password",
+                                        // "/api/auth/refresh",
+                                        // "/api/auth/reset-password",
                                         "/api/categories/**",
                                         "/api/products/**",
-                                        "/api/artisans/**",
+
                                         "/api/admin/**",
                                         "/api/cart/**",
                                         "/api/address/**",
@@ -142,10 +142,12 @@ public class SecurityConfig {
                                         "/configuration/ui",
                                         "/configuration/security", "/swagger-ui/**", "/webjars/**", "/swagger-ui.html",
                                         "/api/auth/**",
-                                        "/api/test/**", "/authenticate"
+                                        "/api/test/**", "/authenticate",
+                                        "/api/category/**"
 
                                 )
                                 .permitAll()
+                                // .requestMatchers("/api/artisans/**").hasAuthority("ARTISAN")
                                 .anyRequest().authenticated())
                 // Stateless session-for jwt implementation
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -153,8 +155,9 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
 
                 // Add JWT filter before Spring Security's default filter
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
         return http.build();
 
     }
@@ -163,7 +166,11 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:8080"));
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:8080",
+                "http://localhost:5173/"
+
+        ));
         configuration.setAllowedMethods(List.of("GET", "POST"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 

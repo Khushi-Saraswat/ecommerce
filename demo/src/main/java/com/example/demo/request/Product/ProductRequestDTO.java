@@ -9,9 +9,7 @@ public class ProductRequestDTO {
     private Double price;
     private Double mrp;
     private Boolean isActive;
-    // private CategoryRequestDTO categoryRequestDTO;
-
-    private Long categoryId;
+    private String categoryName;
     private Integer stock;
 
 }

@@ -1,8 +1,10 @@
 package com.example.demo.constants;
 
 public enum PaymentStatus {
-    CREATED,
+    INITIATED,
     SUCCESS,
     FAILED,
-    PENDING
+    PENDING,
+    REFUNDED,
+    PROCESSING
 }

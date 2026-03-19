@@ -19,11 +19,9 @@ import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.constants.KycStatus;
 import com.example.demo.constants.Role;
 import com.example.demo.constants.errorTypes.AuthErrorType;
-import com.example.demo.constants.errorTypes.CategoryError;
 import com.example.demo.constants.errorTypes.ProductErrorType;
 import com.example.demo.constants.errorTypes.UserErrorType;
 import com.example.demo.exception.Auth.AuthException;
-import com.example.demo.exception.Category.CategoryException;
 import com.example.demo.exception.Product.ProductException;
 import com.example.demo.exception.User.UserException;
 import com.example.demo.model.Artisan;
@@ -90,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductSaveResponse saveProducts(ProductRequestDTO productDto, List<MultipartFile> files)
             throws IOException {
 
+        System.out.println("saveProducts:" + productDto);
         // Authenticate user
         User user = authService.getCurrentUser();
         System.out.println(user + "in product service");
@@ -98,7 +97,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         // Category validation
-        Optional<Category> optionalCategory = categoryRepository.findById(productDto.getCategoryId());
+        Optional<Category> optionalCategory = categoryRepository.findByName(productDto.getCategoryName());
         if (optionalCategory.isEmpty()) {
             ProductSaveResponse responseDTO = new ProductSaveResponse();
             responseDTO.setSuccess(false);
@@ -123,7 +122,7 @@ public class ProductServiceImpl implements ProductService {
         System.out.println("Product id before save: " + productEntity.getId());
 
         productEntity.setId(null);
-        productEntity.setCategoryId(productDto.getCategoryId());
+
         productEntity.setCreatedAt(LocalDateTime.now());
 
         productEntity.setArtisan(artisan);
@@ -134,6 +133,7 @@ public class ProductServiceImpl implements ProductService {
                 .toLowerCase()
                 .replaceAll("[^a-z0-9]+", "-");
         productEntity.setSlug(slug);
+        productEntity.setCategory(optionalCategory.get());
 
         // Images upload
         List<ProductImage> images = new ArrayList<>();
@@ -193,6 +193,7 @@ public class ProductServiceImpl implements ProductService {
             throw new AuthException("jwt token is missing", AuthErrorType.TOKEN_MISSING);
         }
 
+        System.out.println("product" + "" + dto);
         // Fetch artisan
         Artisan artisan = artisanRepository
                 .findByUser_UserId(user.getUserId())
@@ -217,14 +218,15 @@ public class ProductServiceImpl implements ProductService {
         }
 
         // Category update
-        if (dto.getCategoryId() != null) {
-            categoryRepository.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new CategoryException(
-                            "Category not found. Please request admin using /api/category-requests/create",
-                            CategoryError.CATEGORY_NOT_FOUND));
+        // if (dto.getCategoryId() != null) {
+        // categoryRepository.findById(dto.getCategoryId())
+        // .orElseThrow(() -> new CategoryException(
+        // "Category not found. Please request admin using
+        // /api/category-requests/create",
+        // CategoryError.CATEGORY_NOT_FOUND));
 
-            existingProduct.setCategoryId(dto.getCategoryId());
-        }
+        // existingProduct.setCategoryId(dto.getCategoryId());
+        // }
 
         // Price history
         Double oldPrice = existingProduct.getPrice();
@@ -369,9 +371,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<ProductResponseDTO> getByArtisanId(Integer id, Pageable pageable) {
+    public Page<ProductResponseDTO> getByArtisanId(Pageable pageable) {
 
-        return productRepository.findByartId(id, pageable).map(
+        User user = authService.getCurrentUser();
+
+        return productRepository.findByartId(user.getUserId(), pageable).map(
                 p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
     }
 

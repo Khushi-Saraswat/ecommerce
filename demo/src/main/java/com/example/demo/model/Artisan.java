@@ -30,7 +30,7 @@ public class Artisan {
 
     @NotNull(message = "User cannot be null")
     @OneToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
 
     @NotBlank(message = "Brand name cannot be blank")

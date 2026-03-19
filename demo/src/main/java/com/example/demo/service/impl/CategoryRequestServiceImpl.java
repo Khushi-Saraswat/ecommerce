@@ -12,7 +12,6 @@ import com.example.demo.constants.RequestStatus;
 import com.example.demo.constants.errorTypes.CategoryError;
 import com.example.demo.exception.Category.CategoryException;
 import com.example.demo.model.CategoryRequest;
-import com.example.demo.model.User;
 import com.example.demo.repository.CategoryRequestRepository;
 import com.example.demo.request.category.CategoryNameRequest;
 import com.example.demo.response.category.CategoryRequestResponseDTO;
@@ -63,24 +62,39 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
 
     @Override
     public CategoryRequestResponseDTO createRequest(CategoryNameRequest dto) {
-        User user = authservice.getCurrentUser();
 
-        // prevent duplicates (pending)
-        boolean alreadyPending = categoryRequestRepository
-                .existsByNameIgnoreCaseAndStatus(
-                        dto.getRequestedCategoryName(),
-                        RequestStatus.PENDING);
+        System.out.println(dto + "categoryrequestdto");
 
-        if (alreadyPending) {
-            throw new RuntimeException("This category request is already pending");
+        String categoryName = dto.getRequestedCategoryName()
+                .trim()
+                .toLowerCase();
+
+        System.out.println(categoryName + "categoryName");
+        CategoryRequest categoryRequest2 = categoryRequestRepository.findByName(categoryName);
+
+        System.out.println(categoryRequest2 + "" + "alreadyPending means exist");
+
+        if (categoryRequest2 != null) {
+            throw new CategoryException(
+                    "This category request is already pending",
+                    CategoryError.CATEGORY_REQUESTS_ALREADY_EXISTS);
         }
 
         CategoryRequest categoryRequest = abstractMapperService.toEntity(dto, CategoryRequest.class);
 
-        CategoryRequest category = categoryRequestRepository.save(categoryRequest);
+        categoryRequest.setName(categoryName);
+        categoryRequest.setStatus(RequestStatus.PENDING);
+        categoryRequest.setCreatedAt(LocalDateTime.now());
+        categoryRequest.setUpdatedAt(LocalDateTime.now());
 
-        return abstractMapperService.toDto(category, CategoryRequestResponseDTO.class);
+        CategoryRequest savedCategory = categoryRequestRepository.save(categoryRequest);
 
+        CategoryRequestResponseDTO response = abstractMapperService.toDto(savedCategory,
+                CategoryRequestResponseDTO.class);
+
+        response.setMessage("Category request submitted successfully");
+
+        return response;
     }
 
     @Override
@@ -107,9 +121,9 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
         categoryRequest.setStatus(RequestStatus.REJECTED);
 
         // optional: store reason in note
-        if (reason != null && !reason.isBlank()) {
-            categoryRequest.setNote("Rejected Reason: " + reason);
-        }
+        // if (reason != null && !reason.isBlank()) {
+        // categoryRequest.setNote("Rejected Reason: " + reason);
+        // }
 
         categoryRequest.setUpdatedAt(LocalDateTime.now());
         categoryRequestRepository.save(categoryRequest);
@@ -117,14 +131,16 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
         return "Request rejected successfully";
     }
 
-    @Override
-    public List<CategoryRequestResponseDTO> myRequests() {
-        User user = authservice.getCurrentUser();
+    // @Override
+    // public List<CategoryRequestResponseDTO> myRequests() {
+    // User user = authservice.getCurrentUser();
 
-        return categoryRequestRepository.findAll().stream()
-                .filter(cat -> cat.getUser().getUserId().equals(user.getUserId())) // only current user's requests
-                .map(cat -> abstractMapperService.toDto(cat, CategoryRequestResponseDTO.class))
-                .collect(Collectors.toList());
-    }
+    // return categoryRequestRepository.findAll().stream()
+    // .filter(cat -> cat.usee.equals(user.getUserId())) // only current user's
+    // requests
+    // .map(cat -> abstractMapperService.toDto(cat,
+    // CategoryRequestResponseDTO.class))
+    // .collect(Collectors.toList());
+    // }
 
 }

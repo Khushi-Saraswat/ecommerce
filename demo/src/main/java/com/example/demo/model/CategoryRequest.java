@@ -34,8 +34,6 @@ public class CategoryRequest {
 
     private String name;
 
-    private String note; // optional
-
     @Enumerated(EnumType.STRING)
     private RequestStatus status; // PENDING, APPROVED, REJECTED
 
@@ -46,5 +44,5 @@ public class CategoryRequest {
     // who requested
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private Artisan artisan;
 }

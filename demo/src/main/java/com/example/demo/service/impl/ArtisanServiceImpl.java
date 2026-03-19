@@ -1,21 +1,22 @@
 package com.example.demo.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.Common.AbstractMapperService;
 import com.example.demo.constants.KycStatus;
-import com.example.demo.constants.Role;
-import com.example.demo.constants.errorTypes.AuthErrorType;
 import com.example.demo.constants.errorTypes.UserErrorType;
-import com.example.demo.exception.Auth.AuthException;
 import com.example.demo.exception.User.UserException;
 import com.example.demo.model.Artisan;
 import com.example.demo.model.User;
 import com.example.demo.repository.ArtisanRepository;
 import com.example.demo.request.Artisan.ArtisanRequestDTO;
+import com.example.demo.response.Artisan.ArtisanDetailsDto;
+import com.example.demo.response.Artisan.ArtisanKYCStatus;
 import com.example.demo.response.Artisan.ArtisanResponseDTO;
 import com.example.demo.response.Artisan.ArtisanSaveResponse;
 import com.example.demo.service.methods.AartisanService;
@@ -39,6 +40,9 @@ public class ArtisanServiceImpl implements AartisanService {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private ModelMapper mapper;
+
     @Override
     public ArtisanSaveResponse SaveArtisanDetails(ArtisanRequestDTO artisanrequestDTO) {
 
@@ -49,30 +53,9 @@ public class ArtisanServiceImpl implements AartisanService {
 
         }
 
-        // Authentication authentication =
-        // SecurityContextHolder.getContext().getAuthentication();
-        // Authenticate user
-        // User user = userService.getUserByJwt(jwt);
-        // if (user == null) {
-        // throw new AuthException("invalid or missing token",
-        // AuthErrorType.TOKEN_INVALID);
-        // }
-
-        // Ensure role
-        /*
-         * if (user.getRole() == null || !user.getRole().equals(Role.ARTISAN)) {
-         * 
-         * throw new
-         * UserException("User is not permitted to create an artisan profile. Only ARTISAN role is allowed."
-         * ,
-         * UserErrorType.UNAUTHORIZED);
-         * 
-         * }
-         */
-
         User user = authService.getCurrentUser();
 
-        System.out.println(user + "******************");
+        System.out.println(user + "****************** in save profile..");
 
         System.out.println(artisanRepository.findByUser_UserId(user.getUserId()).isPresent() + "id");
         // Prevent duplicate artisan for same user
@@ -84,8 +67,12 @@ public class ArtisanServiceImpl implements AartisanService {
 
         // Build entity explicitly
 
-        Artisan artisan = abstractMapperService.toEntity(artisanrequestDTO, Artisan.class);
-        System.out.println(artisan + "******************");
+        // Artisan artisan = abstractMapperService.toEntity(artisanrequestDTO,
+        // Artisan.class);
+        // System.out.println(artisan + "******************");
+
+        Artisan artisan = mapper.map(artisanrequestDTO, Artisan.class);
+        System.out.println(artisan + "get artisan response");
         artisan.setUser(user);
         artisan.setKycStatus(KycStatus.PENDING);
 
@@ -97,6 +84,8 @@ public class ArtisanServiceImpl implements AartisanService {
             a.setCreatedAt(LocalDateTime.now());
 
         } catch (Exception ex) {
+
+            ex.printStackTrace();
             throw new UserException(
                     "Failed to save artisan profile", UserErrorType.REGISTRATION_FAILED);
         }
@@ -107,47 +96,101 @@ public class ArtisanServiceImpl implements AartisanService {
 
     @Transactional
     @Override
-    public ArtisanResponseDTO getArtisanDetails(String jwt) {
+    public ArtisanResponseDTO getArtisanDetails() {
 
-        User user = userService.getUserByJwt(jwt);
-        Artisan artisan = artisanRepository.findById(user.getUserId()).orElse(null);
-        System.out.println(artisan + "******************");
-        return abstractMapperService.toDto(artisan, ArtisanResponseDTO.class);
+        User user = authService.getCurrentUser();
+        System.out.println(user + " ************ artisan user");
+
+        Artisan artisan = artisanRepository
+                .findByUser_UserId(user.getUserId())
+                .orElseThrow(() -> new UserException(
+                        "Artisan profile not found",
+                        UserErrorType.PROFILE_INCOMPLETE));
+
+        System.out.println(artisan + " ************ artisan entity");
+
+        ArtisanResponseDTO artisanResponseDTO = abstractMapperService.toDto(artisan, ArtisanResponseDTO.class);
+
+        System.out.println(artisanResponseDTO + " get artisan response");
+
+        return artisanResponseDTO;
+    }
+
+    @Transactional
+    @Override
+    public ArtisanResponseDTO UpdateArtisanDetails(ArtisanRequestDTO artisanRequestDTO) {
+        System.out.println(artisanRequestDTO + " artisanRequestDto in update");
+
+        // 1. Authenticate user
+        User user = authService.getCurrentUser();
+        System.out.println(user + " user in update");
+
+        // 2. Fetch artisan
+        Artisan oldArtisan = artisanRepository
+                .findByUser_UserId(user.getUserId())
+                .orElseThrow(() -> new UserException(
+                        "Artisan profile not found. Please complete your artisan registration first.",
+                        UserErrorType.PROFILE_INCOMPLETE));
+
+        System.out.println(oldArtisan + " oldArtisan");
+
+        // 3. Update fields
+        oldArtisan.setBrandName(artisanRequestDTO.getBrandName());
+        oldArtisan.setArtisianType(artisanRequestDTO.getArtisianType().trim());
+        oldArtisan.setBio(artisanRequestDTO.getBio());
+        oldArtisan.setCity(artisanRequestDTO.getCity());
+        oldArtisan.setState(artisanRequestDTO.getState());
+        oldArtisan.setPincode(artisanRequestDTO.getPincode());
+
+        // 4. Save
+        Artisan savedArtisan = artisanRepository.save(oldArtisan);
+
+        // 5. Return DTO
+        return abstractMapperService.toDto(savedArtisan, ArtisanResponseDTO.class);
 
     }
 
     @Override
-    public ArtisanResponseDTO UpdateArtisanDetails(ArtisanRequestDTO artisanRequestDTO, String jwt) {
-        // 1. Authenticate user
-        User user = userService.getUserByJwt(jwt);
-        if (user == null) {
-            throw new AuthException("token is invalid or missing", AuthErrorType.TOKEN_INVALID);
-        }
+    public ArtisanDetailsDto ArtisanProfileExist() {
 
-        // 2. Role check
-        if (user.getRole() != Role.ARTISAN) {
+        ArtisanDetailsDto response = new ArtisanDetailsDto();
+        User user = authService.getCurrentUser();
 
-            throw new AuthException("only artisan can update profile", AuthErrorType.UNAUTHORIZED_ACCESS);
-        }
+        Optional<Artisan> artisanOptional = artisanRepository.findByUser_UserId(user.getUserId());
 
-        // 3. Fetch existing artisan from DB (source of truth)
-        Artisan oldArtisan = artisanRepository.findById(user.getUserId()).orElse(null);
-        if (oldArtisan != null) { // Update fields from the request DTO
-            oldArtisan.setBrandName(artisanRequestDTO.getBrandName());
-            oldArtisan.setArtisianType(artisanRequestDTO.getArtisianType().trim());
-            oldArtisan.setBio(artisanRequestDTO.getBio());
-            oldArtisan.setCity(artisanRequestDTO.getCity());
-            oldArtisan.setState(artisanRequestDTO.getState());
-            oldArtisan.setPincode(artisanRequestDTO.getPincode()); // Save the updated artisan
-            artisanRepository.save(oldArtisan);
+        if (artisanOptional.isEmpty()) {
 
-            return abstractMapperService.toDto(oldArtisan, ArtisanResponseDTO.class);
+            response.setSetProfileExists(false);
+            return response;
 
         }
 
-        throw new UserException(
-                "Artisan profile not found. Please complete your artisan registration first.",
-                UserErrorType.PROFILE_INCOMPLETE);
+        response.setSetProfileExists(true);
+        return response;
+
+    }
+
+    @Transactional
+    @Override
+    public ArtisanKYCStatus ArtisanKYCStatus() {
+
+        ArtisanKYCStatus status = new ArtisanKYCStatus();
+        User user = authService.getCurrentUser();
+        System.out.println("user :" + "" + user);
+
+        Optional<Artisan> artisanOptional = artisanRepository.findByUser_UserId(user.getUserId());
+
+        System.out.println("artisanOptional" + "" + artisanOptional);
+        if (!artisanOptional.isEmpty()) {
+
+            status.setKycStatus(artisanOptional.get().getKycStatus());
+            System.out.println(status + "" + "status");
+            return status;
+
+        }
+
+        System.out.println(status + "" + "status");
+        return status;
 
     }
 }

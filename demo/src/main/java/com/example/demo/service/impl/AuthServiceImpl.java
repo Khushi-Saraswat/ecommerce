@@ -70,6 +70,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenPair login(AuthRequest authRequest) {
 
+        System.out.println("login" + "" + authRequest);
+
         if (authRequest == null || authRequest.getUsername() == null || authRequest.getPassword() == null) {
             throw new AuthException("Empty details", AuthErrorType.EMPTY_CREDENTIALS);
         }
@@ -132,9 +134,8 @@ public class AuthServiceImpl implements AuthService {
 
             user.setRole(Role.ARTISAN);
 
-        } else {
-            user.setRole(Role.ADMIN);
         }
+
         System.out.println(" after user roles" + user.getRole());
 
         // Encode password (important to always encode before saving)
@@ -157,6 +158,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Extract refresh token from request body
         String requestToken = payload.get("refreshToken");
+        System.out.print(requestToken + "" + "refreshToken");
 
         // Validate that refresh token is present
         if (requestToken == null || requestToken.trim().isEmpty()) {

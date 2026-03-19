@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -25,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.request.Artisan.ArtisanRequestDTO;
 import com.example.demo.request.Product.ProductRequestDTO;
 import com.example.demo.request.category.CategoryNameRequest;
+import com.example.demo.response.Artisan.ArtisanDetailsDto;
+import com.example.demo.response.Artisan.ArtisanKYCStatus;
 import com.example.demo.response.Others.UpdateProduct;
 import com.example.demo.response.Product.DeleteProductResponseDTO;
 import com.example.demo.response.Product.ProductResponseDTO;
@@ -55,21 +56,21 @@ public class ArtisanController {
     @PostMapping("/apply")
     public ResponseEntity<?> SaveArtisan(@RequestBody ArtisanRequestDTO artisanRequestDTO) {
 
+        System.out.println(artisanRequestDTO + "" + artisanRequestDTO + "artisanRequestDto");
         return ResponseEntity.ok(aartisanService.SaveArtisanDetails(artisanRequestDTO));
 
     }
 
     @GetMapping("/getArtisan")
-    public ResponseEntity<?> getArtisanDetails(@RequestHeader("Authorization") String jwt) {
+    public ResponseEntity<?> getArtisanDetails() {
 
-        return ResponseEntity.ok(aartisanService.getArtisanDetails(jwt));
+        return ResponseEntity.ok(aartisanService.getArtisanDetails());
     }
 
     @PostMapping("/updateArtisan")
-    public ResponseEntity<?> UpdateArtisanDetails(@RequestBody ArtisanRequestDTO artisanRequestDTO,
-            @RequestHeader("Authorization") String jwt) {
+    public ResponseEntity<?> UpdateArtisanDetails(@RequestBody ArtisanRequestDTO artisanRequestDTO) {
 
-        return ResponseEntity.ok(aartisanService.UpdateArtisanDetails(artisanRequestDTO, jwt));
+        return ResponseEntity.ok(aartisanService.UpdateArtisanDetails(artisanRequestDTO));
 
     }
 
@@ -78,14 +79,15 @@ public class ArtisanController {
     // POST /api/category-requests/create
     @PostMapping("/create")
     public ResponseEntity<CategoryRequestResponseDTO> createRequest(@RequestBody CategoryNameRequest dto) {
+
         return ResponseEntity.ok(categoryRequestService.createRequest(dto));
     }
 
     // GET /api/category-requests/my
-    @GetMapping("/my")
-    public ResponseEntity<List<CategoryRequestResponseDTO>> myRequests() {
-        return ResponseEntity.ok(categoryRequestService.myRequests());
-    }
+    // @GetMapping("/my")
+    // public ResponseEntity<List<CategoryRequestResponseDTO>> myRequests() {
+    // return ResponseEntity.ok(categoryRequestService.myRequests());
+    // }
 
     // product management
 
@@ -140,13 +142,25 @@ public class ArtisanController {
     }
 
     @GetMapping("/artisanId/product")
-    public ResponseEntity<Page<ProductResponseDTO>> getProduct(@PathVariable Integer artisanId,
-            @RequestParam String keyword,
+    public ResponseEntity<Page<ProductResponseDTO>> getProduct(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(productService.getByArtisanId(artisanId, pageable));
+        return ResponseEntity.ok(productService.getByArtisanId(pageable));
+    }
+
+    @GetMapping("/details")
+    public ResponseEntity<ArtisanDetailsDto> getArtisanProfileExist() {
+
+        return ResponseEntity.ok(aartisanService.ArtisanProfileExist());
+
+    }
+
+    @GetMapping("/kycStatus")
+    public ResponseEntity<ArtisanKYCStatus> getArtisanKycStatus() {
+
+        return ResponseEntity.ok(aartisanService.ArtisanKYCStatus());
 
     }
 

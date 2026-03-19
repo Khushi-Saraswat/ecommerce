@@ -31,7 +31,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
      // return Pageable product when pagination is given along with category
      Page<Product> findByCategory(Pageable pageable, String category);
 
-     Page<Product> findByartId(int id, Pageable pageable);
+     Page<Product> findByartId(Long id, Pageable pageable);
 
      @Query("Select p.artisan from Product p where p.id = :productId")
      Artisan findArtisanByProductId(@Param("productId") Integer productId);

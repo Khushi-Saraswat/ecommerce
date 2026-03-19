@@ -10,9 +10,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
@@ -28,6 +30,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Data
+@Table(name = "Product", indexes = {
+        @Index(name = "idx_product_slug", columnList = "slug"),
+        @Index(name = "idx_product_category", columnList = "category_id"),
+        @Index(name = "idx_product_artisan", columnList = "artisan_id"),
+        @Index(name = "idx_product_category_active", columnList = "category_id,is_active"),
+        @Index(name = "idx_product_price", columnList = "price")
+// jada columns use honge
+// composite index.
+
+})
 public class Product {
 
     @Id

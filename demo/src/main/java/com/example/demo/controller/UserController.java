@@ -21,7 +21,6 @@ import com.example.demo.dto.FeedbackDto;
 import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.User.UserResponseDTO;
-import com.example.demo.response.category.CategoryResponseDTO;
 import com.example.demo.service.methods.CategoryService;
 import com.example.demo.service.methods.FeedbackService;
 import com.example.demo.service.methods.ProductService;
@@ -114,47 +113,6 @@ public class UserController {
 
         return ResponseEntity.ok(
                 feedbackService.getFeedbackByProductId(productId));
-    }
-
-    // ===============================
-    // 🔹 CATEGORY APIs
-    // ===============================
-
-    @GetMapping("/categories")
-    public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
-        return ResponseEntity.ok(categoryService.getAllCategories());
-    }
-
-    @GetMapping("/categories/{categoryId}")
-    public ResponseEntity<CategoryResponseDTO> getCategoryById(
-            @PathVariable Long categoryId) {
-
-        return ResponseEntity.ok(
-                categoryService.getCategoryById(categoryId));
-    }
-
-    @GetMapping("/categories/slug/{slug}")
-    public ResponseEntity<CategoryResponseDTO> getCategoryBySlug(
-            @PathVariable String slug) {
-
-        return ResponseEntity.ok(
-                categoryService.getCategoryBySlug(slug));
-    }
-
-    @GetMapping("/categories/active")
-    public ResponseEntity<List<CategoryResponseDTO>> getActiveCategories() {
-        return ResponseEntity.ok(categoryService.getActiveCategories());
-    }
-
-    @GetMapping("/categories/search")
-    public ResponseEntity<List<CategoryResponseDTO>> searchCategories(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                categoryService.searchCategories(keyword, pageable));
     }
 
     // ===============================

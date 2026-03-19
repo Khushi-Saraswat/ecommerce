@@ -24,6 +24,8 @@ public class JwtService {
 
     private final UserInfoService userInfoService;
 
+    private final long ACCESS_TOKEN_EXPIRY = 900000; // 15 minutes
+
     // Plain text secret (NOT Base64)
     public static final String SECRET = "5367566859703373367639792F423F452848284D6251655468576D5A71347437";
 
@@ -36,20 +38,26 @@ public class JwtService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", userInfoService.loadUserByUsername(email).getAuthorities());
         System.out.println("claims in jwtservice" + claims);
-        return createToken(claims, email);
+        return createToken(claims, email, ACCESS_TOKEN_EXPIRY);
     }
 
     // Create JWT token (valid for 30 minutes)
-    private String createToken(Map<String, Object> claims, String email) {
+    private String createToken(Map<String, Object> claims, String email, long expiry) {
 
         return Jwts.builder()
                 .claims(claims)
                 .subject(email)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
+                .expiration(new Date(System.currentTimeMillis() + expiry))
                 .signWith(getSignKey())
                 .compact();
     }
+
+    // public String generateRefreshToken(UserDetails userDetails) {
+
+    // return createToken(new HashMap<>(), userDetails.getUsername(),
+    // refreshTokenDurationMs);
+    // }
 
     // CORRECT signing key
     private SecretKey getSignKey() {

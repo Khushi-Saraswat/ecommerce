@@ -37,7 +37,7 @@ public interface ProductService {
 
      Page<ProductResponseDTO> getAllActiveProductPagination(Integer pageNo, Integer PageSize, String category);
 
-     Page<ProductResponseDTO> getByArtisanId(Integer id, Pageable pageable);
+     Page<ProductResponseDTO> getByArtisanId(Pageable pageable);
 
      Page<ProductResponseDTO> getProductsByCategory(String categoryId, Pageable pageable);
 

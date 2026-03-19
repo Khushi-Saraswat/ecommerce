@@ -11,7 +11,18 @@ public interface CategoryRequestRepository extends JpaRepository<CategoryRequest
 
     List<CategoryRequest> findByStatus(RequestStatus status);
 
-    boolean existsByNameIgnoreCaseAndStatus(String name, RequestStatus status);
+    boolean existsByStatus(RequestStatus status);
+
+    // boolean existsByNameIgnoreCaseAndStatus(String categoryName, RequestStatus
+    // status);
 
     boolean existsByNameIgnoreCase(String categoryName);
+
+    CategoryRequest findByName(String categoryName);
+
+    boolean existsByNameIgnoreCaseAndStatusAndArtisan_Id(
+            String name,
+            RequestStatus status,
+            Long artisanId);
+
 }

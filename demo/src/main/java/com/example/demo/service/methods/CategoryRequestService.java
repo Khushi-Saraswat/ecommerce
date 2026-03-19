@@ -9,7 +9,7 @@ public interface CategoryRequestService {
     // USER/ARTISAN
     CategoryRequestResponseDTO createRequest(CategoryNameRequest dto);
 
-    List<CategoryRequestResponseDTO> myRequests();
+    // List<CategoryRequestResponseDTO> myRequests();
 
     // ADMIN
     List<CategoryRequestResponseDTO> getPendingRequests();

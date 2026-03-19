@@ -1,18 +1,12 @@
 package com.example.demo.response.category;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class CategoryRequestResponseDTO {
-    private Long id;
-    private String requestedCategoryName;
-    private String note;
-    private String status;
-
-    private Long userId;
-    private String userName;
-
-    private String createdAt;
+    private String message;
 }
