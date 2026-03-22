@@ -130,13 +130,15 @@ public class UserController {
     @GetMapping("/products/search")
     public ResponseEntity<Page<ProductResponseDTO>> searchProducts(
             @RequestParam String q,
+            @RequestParam Double price,
+            @RequestParam Double mrp,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
         return ResponseEntity.ok(
-                productService.searchProducts(q, pageable));
+                productService.searchProducts(q, pageable, price, mrp));
     }
 
     @GetMapping("/products/category/{categoryId}")

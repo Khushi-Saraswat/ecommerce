@@ -33,7 +33,8 @@ public interface ProductService {
 
      ProductResponseDTO getActiveProductBySlug(String slug);
 
-     Page<ProductResponseDTO> searchProducts(String query, Pageable pageable);
+     Page<ProductResponseDTO> searchProducts(String query, Pageable pageable, Double price,
+               Double mrp);
 
      Page<ProductResponseDTO> getAllActiveProductPagination(Integer pageNo, Integer PageSize, String category);
 

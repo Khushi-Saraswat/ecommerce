@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.Common.AbstractMapperService;
+import com.example.demo.Specification.JpaSpecification;
 import com.example.demo.constants.KycStatus;
 import com.example.demo.constants.Role;
 import com.example.demo.constants.errorTypes.AuthErrorType;
@@ -354,11 +355,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<ProductResponseDTO> searchProducts(String query, Pageable pageable) {
+    public Page<ProductResponseDTO> searchProducts(String query, Pageable pageable, Double price,
+            Double mrp) {
 
-        return productRepository.findProductsBySearchText(query, pageable)
+        Page<ProductResponseDTO> page = productRepository.findAll(JpaSpecification.build(query, price, mrp), pageable)
                 .map(
                         p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
+
+        System.out.println(page + "page in search");
+
+        return page;
     }
 
     @Override
