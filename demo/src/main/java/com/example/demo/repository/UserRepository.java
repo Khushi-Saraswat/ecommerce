@@ -28,6 +28,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     public Address findAddressByUserId(long userId);
 
-    public List<Cart> findCartsByUserId(long userId);
-
 }

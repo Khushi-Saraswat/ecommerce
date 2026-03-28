@@ -110,7 +110,8 @@ public class OrderServiceImpl implements OrderService {
                     throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
                }
 
-               List<Cart> cart = userRepository.findCartsByUserId(user.getUserId());
+               List<Cart> cart = cartRepository.findCartsByUserId(user.getUserId());
+               System.out.println(cart+"cart items in order service");
                if (cart == null || cart.isEmpty()) {
                     throw new CartException("Cart is empty", CartErrorType.CART_EMPTY);
                }
@@ -129,6 +130,7 @@ public class OrderServiceImpl implements OrderService {
                Address address = addressRepository.findById(Integer.valueOf(orderRequestDTO.getAddressId()))
                          .orElseThrow(() -> new OrderException("Address not found", OrderErrorType.ADDRESS_NOT_FOUND));
 
+               System.out.println("Address in order service: id=" + address.getId() + ", city=" + address.getCity());
                // Step 2: Create Parent Order
                Order order = new Order();
                order.setUser(user);

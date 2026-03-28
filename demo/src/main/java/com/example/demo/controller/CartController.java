@@ -16,7 +16,7 @@ import com.example.demo.request.Cart.CartItemRequestDTO;
 import com.example.demo.request.Cart.UpdateCartRequest;
 import com.example.demo.service.methods.CartService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 
 @RestController
@@ -53,7 +53,7 @@ public class CartController {
 
   // Delete specific product from cart
   @PutMapping("/update/{productId}")
-  public ResponseEntity<String> UpdateCart(@RequestBody UpdateCartRequest updateCartRequest)
+  public ResponseEntity<String> UpdateCart(@Valid @RequestBody UpdateCartRequest updateCartRequest)
       throws BadRequestException {
 
     return ResponseEntity.ok(cartService.updateQuantity(updateCartRequest));
