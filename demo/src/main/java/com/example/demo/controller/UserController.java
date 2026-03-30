@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import java.util.List;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,17 +18,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.dto.FeedbackDto;
+import com.example.demo.request.FeedBack.FeedbackDto;
+import com.example.demo.request.Order.OrderRequestDTO;
 import com.example.demo.request.User.UserRequestDTO;
 import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.service.methods.CategoryService;
 import com.example.demo.service.methods.FeedbackService;
+import com.example.demo.service.methods.OrderService;
 import com.example.demo.service.methods.ProductService;
 import com.example.demo.service.methods.UserService;
 
 @RestController
 @RequestMapping("/api/user")
+@PreAuthorize("hasAnyRole('USER')")
 public class UserController {
 
     @Autowired
@@ -42,19 +46,21 @@ public class UserController {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private OrderService orderService;
     // ===============================
     // 🔹 USER PROFILE
     // ===============================
 
     // Get logged-in user profile
-    @PreAuthorize("hasAnyRole('USER','ARTISAN')")
+    
     @GetMapping("/profile")
     public ResponseEntity<UserResponseDTO> getProfile(@RequestParam Long id) {
         return ResponseEntity.ok(userService.getProfile(id));
     }
 
     // Update profile (logged-in user)
-    @PreAuthorize("hasAnyRole('USER','ARTISAN')")
+    
     @PutMapping("/profile")
     public ResponseEntity<UserResponseDTO> updateProfile(
             @RequestBody UserRequestDTO userRequestDTO) {
@@ -77,7 +83,7 @@ public class UserController {
      */
 
     // Track specific order
-    @PreAuthorize("hasRole('USER')")
+    
     @GetMapping("/orders/{orderId}")
     public ResponseEntity<?> trackOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(userService.trackOrder(orderId));
@@ -98,14 +104,17 @@ public class UserController {
     // ===============================
 
     // Add feedback
+
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/feedback")
     public ResponseEntity<FeedbackDto> addFeedback(
-            @RequestBody FeedbackDto feedbackDto) {
+            @RequestBody FeedbackDto feedbackDto
+        ) {
 
         return ResponseEntity.ok(feedbackService.saveFeedBack(feedbackDto));
     }
 
+    @PreAuthorize("hasRole('USER')")
     // Get feedback for product
     @GetMapping("/feedback/product/{productId}")
     public ResponseEntity<List<FeedbackDto>> getFeedbackForProduct(
@@ -162,4 +171,37 @@ public class UserController {
         return ResponseEntity.ok(
                 productService.getAllActiveProductPagination(page, size, category));
     }
+
+    // orders
+      // place order
+     @PostMapping("/")
+     public ResponseEntity<?> placeOrder(@RequestBody OrderRequestDTO orderRequestDto) {
+
+          return ResponseEntity.ok(orderService.saveOrder(orderRequestDto));
+     }
+
+     // Customer Order History
+     @GetMapping("/history")
+     public ResponseEntity<?> getOrderHistory(
+               @RequestParam(defaultValue = "0") int page,
+               @RequestParam(defaultValue = "10") int size) {
+
+          return ResponseEntity
+                    .ok(orderService.getOrdersByUser(PageRequest.of(page, size)));
+     }
+
+
+    @GetMapping("/{orderId}/pay")
+     public ResponseEntity<?> cancelOrder(@RequestParam Long orderId) throws BadRequestException {
+          return ResponseEntity.ok(orderService.cancelOrder(orderId));
+     }
+
+     @GetMapping("/users/orders")
+     public ResponseEntity<?> getOrderById(@RequestParam Long orderId) {
+
+          return ResponseEntity.ok(orderService.getOrderById(orderId));
+
+     }
+
+
 }

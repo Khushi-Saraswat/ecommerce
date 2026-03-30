@@ -17,4 +17,5 @@ public class UserRequestDTO {
     private String state;
     private String role;
 
+
 }

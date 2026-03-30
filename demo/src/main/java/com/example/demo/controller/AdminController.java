@@ -87,9 +87,9 @@ public class AdminController {
   // <----- user management -------->
   // get all user -(customer admin artisan)
   @GetMapping("/all")
-  public ResponseEntity<?> getAllUsers(@RequestHeader("Authorization") String jwt) {
+  public ResponseEntity<?> getAllUsers() {
 
-    return ResponseEntity.ok(adminService.getAllUsers(jwt));
+    return ResponseEntity.ok(adminService.getAllUsers());
 
   }
 
@@ -156,7 +156,6 @@ public class AdminController {
     return ResponseEntity.ok(categoryService.updateCategory(id, request, file));
   }
 
-  // ✅ Delete Category
   @DeleteMapping("/categories/{id}")
   public ResponseEntity<String> deleteCategory(@PathVariable Long id) throws BadRequestException, Exception {
     return ResponseEntity.ok(categoryService.deleteCategory(id));

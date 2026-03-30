@@ -11,6 +11,8 @@ public class UserResponseDTO extends BaseResponseDTO {
     private String name;
     private String username;
     private String mobileNumber;
+    private String city;
+    private String state;
     private Role role;
 
 }

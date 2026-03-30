@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.el.stream.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -70,11 +71,11 @@ public class CategoryRequestServiceImpl implements CategoryRequestService {
                 .toLowerCase();
 
         System.out.println(categoryName + "categoryName");
-        CategoryRequest categoryRequest2 = categoryRequestRepository.findByName(categoryName);
+        List<CategoryRequest> existingRequests = categoryRequestRepository.findByName(categoryName);
 
-        System.out.println(categoryRequest2 + "" + "alreadyPending means exist");
+        System.out.println(existingRequests + "" + "alreadyPending means exist");
 
-        if (categoryRequest2 != null) {
+        if (!existingRequests.isEmpty()) {
             throw new CategoryException(
                     "This category request is already pending",
                     CategoryError.CATEGORY_REQUESTS_ALREADY_EXISTS);

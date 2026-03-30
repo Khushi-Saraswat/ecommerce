@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.request.FeedBack;
 
 import java.time.LocalDateTime;
 
@@ -10,9 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FeedbackDto {
+    private Integer productId;
     private String fullName;
     private String email;
     private String category;
     private String message;
     private LocalDateTime date;
+
+
 }

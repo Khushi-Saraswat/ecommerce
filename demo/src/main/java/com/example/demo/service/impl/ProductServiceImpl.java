@@ -97,14 +97,19 @@ public class ProductServiceImpl implements ProductService {
             throw new AuthException("jwt token is missing", AuthErrorType.TOKEN_MISSING);
         }
 
-        // Category validation
-        Optional<Category> optionalCategory = categoryRepository.findByName(productDto.getCategoryName());
-        if (optionalCategory.isEmpty()) {
+        // Category validation - handle multiple categories with same name
+        List<Category> categories = categoryRepository.findByName(productDto.getCategoryName());
+        if (categories.isEmpty()) {
             ProductSaveResponse responseDTO = new ProductSaveResponse();
             responseDTO.setSuccess(false);
             responseDTO.setConfigurationMessage("Category not found. Please request admin to add category");
             return responseDTO;
         }
+        // Get first active category or first one available
+        Category category = categories.stream()
+                .filter(cat -> cat.getIsActive() != null && cat.getIsActive())
+                .findFirst()
+                .orElse(categories.get(0));
 
         System.out.println(user + "artisan in product");
         // Resolve artisan of logged-in user
@@ -134,7 +139,7 @@ public class ProductServiceImpl implements ProductService {
                 .toLowerCase()
                 .replaceAll("[^a-z0-9]+", "-");
         productEntity.setSlug(slug);
-        productEntity.setCategory(optionalCategory.get());
+        productEntity.setCategory(category);
 
         // Images upload
         List<ProductImage> images = new ArrayList<>();

@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -18,7 +19,7 @@ public interface CategoryRequestRepository extends JpaRepository<CategoryRequest
 
     boolean existsByNameIgnoreCase(String categoryName);
 
-    CategoryRequest findByName(String categoryName);
+    List<CategoryRequest> findByName(String categoryName);
 
     boolean existsByNameIgnoreCaseAndStatusAndArtisan_Id(
             String name,

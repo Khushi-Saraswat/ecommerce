@@ -51,6 +51,8 @@ import com.example.demo.service.methods.OrderService;
 import com.example.demo.service.methods.UserService;
 import com.razorpay.RazorpayClient;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -89,6 +91,9 @@ public class OrderServiceImpl implements OrderService {
 
      @Value("${razorpay.key_secret}")
      private String razorpayKeySecret;
+
+
+     
 
      @Autowired
      private AuthService authService;
@@ -214,9 +219,11 @@ public class OrderServiceImpl implements OrderService {
                          item.setArtisanOrder(artisanOrder);
                          item.setProduct(product);
                          item.setQuantity(c.getQuantity());
+                         item.setPrice(product.getPrice());
 
-                         subtotal += c.getProduct().getPrice() * c.getQuantity();
-                         item.setItemTotal(subtotal);
+                         double itemTotal = product.getPrice() * c.getQuantity();
+                         subtotal += itemTotal;
+                         item.setItemTotal(itemTotal);
 
                          orderItems.add(item);
 
@@ -241,7 +248,22 @@ public class OrderServiceImpl implements OrderService {
                order.setArtisanOrders(artisanOrders);
 
                // Step 5: Save Order (cascade will save artisan orders)
+               System.out.println("[DEBUG] Before save: artisanOrders.size=" + artisanOrders.size());
                Order orders = orderRepository.save(order);
+
+               // verify artisan orders saved for this parent order
+               List<ArtisanOrder> savedArtisanOrders = artisanOrderRepository.findArtisanOrdersByOrder_Id(orders.getId());
+               System.out.println("[DEBUG] After save: savedArtisanOrders.size=" + (savedArtisanOrders == null ? 0 : savedArtisanOrders.size()));
+
+               if (savedArtisanOrders == null || savedArtisanOrders.size() != artisanOrders.size()) {
+                    throw new OrderException("Failed to persist all artisan orders: expected=" + artisanOrders.size() + ", actual=" + (savedArtisanOrders == null ? 0 : savedArtisanOrders.size()),
+                              OrderErrorType.ORDER_CREATION_FAILED);
+               }
+
+               boolean anyNotPersisted = savedArtisanOrders.stream().anyMatch(ao -> ao.getId() == null);
+               if (anyNotPersisted) {
+                    throw new OrderException("Artisan order save validation failed: some saved artisan order IDs are null", OrderErrorType.ORDER_CREATION_FAILED);
+               }
 
                // Process Payment(dummy implementation)
 
@@ -419,11 +441,12 @@ public class OrderServiceImpl implements OrderService {
           return totalRevenue;
      }
 
+     @Transactional
      @Override
      public OrderResponseDTO getOrderById(Long orderId) {
           Order order = orderRepository.findById(orderId)
                     .orElseThrow(() -> new OrderException("Order is not found", OrderErrorType.ORDER_NOT_FOUND));
-
+          System.out.println("Fetched order: id=" + order.getId() + ", totalAmount=" + order.getTotalAmount() + ", status=" + order.getOrderStatus());
           return abstractMapperService.toDto(order, OrderResponseDTO.class);
      }
 

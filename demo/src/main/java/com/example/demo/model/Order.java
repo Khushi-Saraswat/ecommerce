@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.example.demo.constants.OrderStatus;
 import com.example.demo.constants.PaymentStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -47,7 +48,8 @@ public class Order {
 
     private String paymentType;
 
-    @OneToMany(mappedBy = "order")
+    @JsonIgnore
+    @OneToMany(mappedBy = "order", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
     private List<ArtisanOrder> artisanOrders;
 
     @ManyToOne

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -46,6 +47,9 @@ public class UserServiceImp implements UserService {
 
    @Autowired
    private ProductRepository productRepository;
+
+   @Autowired
+   private PasswordEncoder passwordEncoder;
 
    @Override
    public User getUserByEmail(String email) {
@@ -142,15 +146,42 @@ public class UserServiceImp implements UserService {
          throw new AuthException("jwt token is invalid !!", AuthErrorType.TOKEN_INVALID);
       }
 
-      User saveUser = null;
-
-      // allow only username and mobile number to update
-      if (!ObjectUtils.isEmpty(user)) {
-         user.setName(user.getName());
-         user.setMobileNumber(user.getMobileNumber());
-         saveUser = userRepository.save(user);
-
+      if (ObjectUtils.isEmpty(userDtlsDto)) {
+         return abstractMapperService.toDto(user, UserResponseDTO.class);
       }
+
+      if (!ObjectUtils.isEmpty(userDtlsDto.getName())) {
+         user.setName(userDtlsDto.getName().trim());
+      }
+
+      if (!ObjectUtils.isEmpty(userDtlsDto.getUsername())) {
+         String updatedUsername = userDtlsDto.getUsername().trim();
+         User existingUser = userRepository.findByusername(updatedUsername);
+
+         if (existingUser != null && !existingUser.getUserId().equals(user.getUserId())) {
+            throw new UserException("Email already exists", UserErrorType.EMAIL_ALREADY_EXISTS);
+         }
+
+         user.setUsername(updatedUsername);
+      }
+
+      if (!ObjectUtils.isEmpty(userDtlsDto.getPassword())) {
+         user.setPassword(passwordEncoder.encode(userDtlsDto.getPassword().trim()));
+      }
+
+      if (!ObjectUtils.isEmpty(userDtlsDto.getMobileNumber())) {
+         user.setMobileNumber(userDtlsDto.getMobileNumber().trim());
+      }
+
+      if (!ObjectUtils.isEmpty(userDtlsDto.getCity())) {
+         user.setCity(userDtlsDto.getCity().trim());
+      }
+
+      if (!ObjectUtils.isEmpty(userDtlsDto.getState())) {
+         user.setState(userDtlsDto.getState().trim());
+      }
+
+      User saveUser = userRepository.save(user);
 
       return abstractMapperService
             .toDto(saveUser, UserResponseDTO.class);

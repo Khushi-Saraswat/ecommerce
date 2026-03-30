@@ -128,9 +128,12 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<UserResponseDTO> getAllUsers(String jwt) {
+    public List<UserResponseDTO> getAllUsers() {
 
-        User user = userService.getUserByJwt(jwt);
+        User user = authService.getCurrentUser();
+        if (user == null) {
+            throw new AuthException("invalid or missing authorization token", AuthErrorType.TOKEN_INVALID);
+        }
 
         if (user == null) {
             throw new AuthException("invalid or missing authorization token", AuthErrorType.TOKEN_INVALID);

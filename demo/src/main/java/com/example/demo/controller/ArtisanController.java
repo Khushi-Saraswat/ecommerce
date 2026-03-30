@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,11 +23,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.demo.constants.OrderStatus;
 import com.example.demo.request.Artisan.ArtisanRequestDTO;
 import com.example.demo.request.Product.ProductRequestDTO;
 import com.example.demo.request.category.CategoryNameRequest;
 import com.example.demo.response.Artisan.ArtisanDetailsDto;
 import com.example.demo.response.Artisan.ArtisanKYCStatus;
+import com.example.demo.response.Order.OrderResponseDTO;
 import com.example.demo.response.Others.UpdateProduct;
 import com.example.demo.response.Product.DeleteProductResponseDTO;
 import com.example.demo.response.Product.ProductResponseDTO;
@@ -33,6 +37,7 @@ import com.example.demo.response.Product.ProductSaveResponse;
 import com.example.demo.response.category.CategoryRequestResponseDTO;
 import com.example.demo.service.methods.AartisanService;
 import com.example.demo.service.methods.CategoryRequestService;
+import com.example.demo.service.methods.OrderService;
 import com.example.demo.service.methods.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -49,6 +54,9 @@ public class ArtisanController {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    private OrderService orderService;
 
     @Autowired
     private ProductService productService;
@@ -163,5 +171,26 @@ public class ArtisanController {
         return ResponseEntity.ok(aartisanService.ArtisanKYCStatus());
 
     }
+
+         // Artisan Dashboard
+     @GetMapping("/artisans/orders")
+     public ResponseEntity<?> getArtisanOrders(
+               @RequestParam(defaultValue = "0") int page,
+               @RequestParam(defaultValue = "10") int size) {
+
+          return ResponseEntity
+                    .ok(orderService.getOrdersByArtisan(PageRequest.of(page, size, Sort.by("createdAt").descending())));
+     }
+
+
+    
+     @PutMapping("/{orderId}/status")
+     public OrderResponseDTO updateStatus(
+               @PathVariable Long orderId,
+               @RequestParam OrderStatus status) {
+
+          return orderService.updateOrderStatusByArtisan(orderId, status);
+     }
+
 
 }

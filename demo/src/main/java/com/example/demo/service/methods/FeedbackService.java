@@ -2,7 +2,7 @@ package com.example.demo.service.methods;
 
 import java.util.List;
 
-import com.example.demo.dto.FeedbackDto;
+import com.example.demo.request.FeedBack.FeedbackDto;
 
 public interface FeedbackService {
 

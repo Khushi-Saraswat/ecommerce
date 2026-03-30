@@ -15,7 +15,7 @@ public interface AdminService {
 
     String rejectArtisan(Long artisanId);
 
-    List<UserResponseDTO> getAllUsers(String jwt);
+    List<UserResponseDTO> getAllUsers();
 
     String blockUser(Long userId, String jwt);
 
