@@ -11,18 +11,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.model.User;
 import com.example.demo.request.Review.ReviewRequestDTO;
 import com.example.demo.response.Review.ReviewResponseDTO;
+import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.ReviewService;
 
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/wishlist")
+@RequestMapping("/api/reviews")
 public class ReviewController {
 
     @Autowired
     private ReviewService reviewService;
+
+    @Autowired
+    private AuthService authService;
 
     // 🔹 Get all reviews by Product ID
     @GetMapping("/product/{productId}")
@@ -38,6 +43,11 @@ public class ReviewController {
     @PostMapping
     public ResponseEntity<ReviewResponseDTO> saveReview(
             @Valid @RequestBody ReviewRequestDTO request) {
+
+        User currentUser = authService.getCurrentUser();
+        if (currentUser != null) {
+            request.setUserId(currentUser.getUserId());
+        }
 
         ReviewResponseDTO response = reviewService.saveReview(request);
 

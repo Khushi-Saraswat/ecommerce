@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -62,9 +61,9 @@ public class AdminController {
 
   // <----- artisan management-------->
   @GetMapping("/artisans")
-  public ResponseEntity<?> GetArtisan(@RequestHeader("Authorization") String jwt) {
+  public ResponseEntity<?> GetArtisan() {
 
-    return ResponseEntity.ok(adminService.getAllArtisans(jwt));
+    return ResponseEntity.ok(adminService.getAllArtisans());
 
   }
 
@@ -86,7 +85,7 @@ public class AdminController {
 
   // <----- user management -------->
   // get all user -(customer admin artisan)
-  @GetMapping("/all")
+  @GetMapping("/users")
   public ResponseEntity<?> getAllUsers() {
 
     return ResponseEntity.ok(adminService.getAllUsers());
@@ -95,40 +94,34 @@ public class AdminController {
 
   // block users
   @PatchMapping("/users/{id}/block")
-  public ResponseEntity<?> blockUser(@PathVariable("id") Long userId,
-      @RequestHeader("Authorization") String jwt) {
+  public ResponseEntity<?> blockUser(@PathVariable("id") Long userId
+      ) {
 
-    return ResponseEntity.ok(adminService.blockUser(userId, jwt));
+    return ResponseEntity.ok(adminService.blockUser(userId));
 
   }
 
   // orders management--
   // get all orders
-  @GetMapping("/users/orders")
-  public ResponseEntity<?> getAllOrders(@RequestHeader("Authorization") String jwt) {
+  @GetMapping("/orders")
+  public ResponseEntity<?> getAllOrders() {
 
-    return ResponseEntity.ok(adminService.getAllOrders(jwt));
+    return ResponseEntity.ok(adminService.getAllOrders());
 
   }
 
-  @GetMapping("/artisan/orders/{id}/status")
-  public ResponseEntity<?> OrdersUpdated(@RequestParam("id") Long artisanOrderId,
+  @PutMapping("/orders/{id}/status")
+  public ResponseEntity<?> UpdateOrderStatus(@PathVariable("id") Long orderId,
       @RequestParam String status) {
 
-    return ResponseEntity.ok(orderService.updatOrderStatus(artisanOrderId, status));
-  }
-
-  @GetMapping("/all/orders/{id}/status")
-  public ResponseEntity<?> AllOrdersUpdated(@RequestParam("id") Long orderId, @RequestParam String status) {
-
-    return ResponseEntity.ok(orderService.updateAllOrderStatus(orderId, status));
+    return ResponseEntity.ok(orderService.updatOrderStatus(orderId, status));
   }
 
   // dashboard management
 
   @GetMapping("/daily-metrics")
-  public ResponseEntity<?> getDailyMetrics(@RequestHeader("Authorization") String jwt) {
-    return ResponseEntity.ok(adminService.getDailyMetrics(jwt));
+  public ResponseEntity<?> getDailyMetrics() {
+    return ResponseEntity.ok(adminService.getDailyMetrics());
   }
 
   // category management
@@ -162,7 +155,7 @@ public class AdminController {
   }
 
   @PreAuthorize("hasRole('ADMIN','ARTISAN')")
-  @GetMapping("/allCategory")
+  @GetMapping("/categories")
   public ResponseEntity<Page<CategoryResponseDTO>> getAllCategory(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "12") int size) {
@@ -172,19 +165,19 @@ public class AdminController {
   }
 
   // category request management
-  @GetMapping("/pending")
+  @GetMapping("/category-requests/pending")
   public ResponseEntity<List<CategoryRequestResponseDTO>> getPendingRequests() {
     return ResponseEntity.ok(categoryRequestService.getPendingRequests());
   }
 
   // PUT /api/admin/category-requests/{requestId}/approve
-  @PutMapping("/{requestId}/approve")
+  @PutMapping("/category-requests/{requestId}/approve")
   public ResponseEntity<String> approveRequest(@PathVariable Long requestId) {
     return ResponseEntity.ok(categoryRequestService.approveRequest(requestId));
   }
 
   // PUT /api/admin/category-requests/{requestId}/reject?reason=...
-  @PutMapping("/{requestId}/reject")
+  @PutMapping("/category-requests/{requestId}/reject")
   public ResponseEntity<String> rejectRequest(
       @PathVariable Long requestId,
       @RequestParam(required = false) String reason) {
@@ -192,7 +185,7 @@ public class AdminController {
   }
 
   // product management........
-
+  @GetMapping("/products")
   public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "12") int size,
@@ -207,19 +200,19 @@ public class AdminController {
     return ResponseEntity.ok(products);
   }
 
-  @GetMapping("/{id}")
+  @GetMapping("/products/{id}")
   public ProductResponseDTO getById(@PathVariable Integer id) {
     return productService.getProductById(id);
   }
 
-  @PutMapping("/{id}/status")
+  @PutMapping("/products/{id}/status")
   public DeleteProductResponseDTO updateStatus(
       @PathVariable Integer id,
       @RequestParam Boolean active) {
     return productService.toggleProductStatusByAdmin(id, active);
   }
 
-  @DeleteMapping("/{id}/hard-delete")
+  @DeleteMapping("/products/{id}")
   public DeleteProductResponseDTO hardDelete(@PathVariable Integer id) {
     return productService.DeactivateProduct(id);
   }

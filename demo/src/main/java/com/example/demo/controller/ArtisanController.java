@@ -69,13 +69,13 @@ public class ArtisanController {
 
     }
 
-    @GetMapping("/getArtisan")
+    @GetMapping("/profile")
     public ResponseEntity<?> getArtisanDetails() {
 
         return ResponseEntity.ok(aartisanService.getArtisanDetails());
     }
 
-    @PostMapping("/updateArtisan")
+    @PutMapping("/profile")
     public ResponseEntity<?> UpdateArtisanDetails(@RequestBody ArtisanRequestDTO artisanRequestDTO) {
 
         return ResponseEntity.ok(aartisanService.UpdateArtisanDetails(artisanRequestDTO));
@@ -99,7 +99,7 @@ public class ArtisanController {
 
     // product management
 
-    @PostMapping(value = "/saveProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductSaveResponse> saveProduct(
 
             @RequestPart("product") String product,
@@ -127,12 +127,12 @@ public class ArtisanController {
 
     }
 
-    // product is updated -by artian
+    // product is updated -by artisan
 
-    @PostMapping(value = "/UpdateProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/products/{ProductId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UpdateProduct> UpdateProduct(@RequestPart("product") String product,
 
-            @RequestParam Integer ProductId,
+            @PathVariable Integer ProductId,
 
             @RequestPart("images") List<MultipartFile> files)
             throws IOException, Exception {
@@ -144,12 +144,12 @@ public class ArtisanController {
     }
 
     // delete their own product => soft delete
-    @DeleteMapping("/delete/{productId}")
+    @DeleteMapping("/products/{productId}")
     public ResponseEntity<DeleteProductResponseDTO> deleteProduct(@PathVariable Integer productId) {
         return ResponseEntity.ok(productService.DeactivateProduct(productId));
     }
 
-    @GetMapping("/artisanId/product")
+    @GetMapping("/products")
     public ResponseEntity<Page<ProductResponseDTO>> getProduct(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
@@ -158,14 +158,14 @@ public class ArtisanController {
         return ResponseEntity.ok(productService.getByArtisanId(pageable));
     }
 
-    @GetMapping("/details")
+    @GetMapping("/profile/details")
     public ResponseEntity<ArtisanDetailsDto> getArtisanProfileExist() {
 
         return ResponseEntity.ok(aartisanService.ArtisanProfileExist());
 
     }
 
-    @GetMapping("/kycStatus")
+    @GetMapping("/kyc-status")
     public ResponseEntity<ArtisanKYCStatus> getArtisanKycStatus() {
 
         return ResponseEntity.ok(aartisanService.ArtisanKYCStatus());
@@ -191,6 +191,9 @@ public class ArtisanController {
 
           return orderService.updateOrderStatusByArtisan(orderId, status);
      }
+
+
+     
 
 
 }

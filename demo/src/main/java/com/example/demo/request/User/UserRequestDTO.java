@@ -13,8 +13,6 @@ public class UserRequestDTO {
     private String username;
     private String password;
     private String mobileNumber;
-    private String city;
-    private String state;
     private String role;
 
 

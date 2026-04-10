@@ -73,8 +73,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<ArtisanResponseDTO> getAllArtisans(String jwt) {
-        User user = userService.getUserByJwt(jwt);
+    public List<ArtisanResponseDTO> getAllArtisans() {
+        User user = authService.getCurrentUser();
         if (user == null) {
 
             throw new AuthException("invalid or missing authorization token", AuthErrorType.TOKEN_INVALID);
@@ -157,8 +157,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public String blockUser(Long userId, String jwt) {
-        User adminUser = userService.getUserByJwt(jwt);
+    public String blockUser(Long userId) {
+        User adminUser = authService.getCurrentUser();
         if (adminUser == null) {
             throw new AuthException("invalid or missing authorization token", AuthErrorType.TOKEN_INVALID);
         }
@@ -173,8 +173,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<OrderResponseDTO> getAllOrders(String jwt) {
-        User user = userService.getUserByJwt(jwt);
+    public List<OrderResponseDTO> getAllOrders() {
+        User user = authService.getCurrentUser();
         if (user == null) {
             throw new AuthException("invalid or missing authorization token", AuthErrorType.TOKEN_INVALID);
         }
@@ -195,8 +195,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public DailyMetrics getDailyMetrics(String jwt) {
-        User user = userService.getUserByJwt(jwt);
+    public DailyMetrics getDailyMetrics() {
+        User user = authService.getCurrentUser();
         if (user == null) {
             throw new AuthException("invalid or missing authorization token", AuthErrorType.TOKEN_INVALID);
         }

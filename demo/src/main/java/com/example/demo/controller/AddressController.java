@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,13 +20,14 @@ import com.example.demo.response.Address.AddressResponse;
 import com.example.demo.service.methods.AddressService;
 
 @RestController
-@RequestMapping("/api/address")
+@RequestMapping("/api/addresses")
+@PreAuthorize("hasRole('CUSTOMER')")
 public class AddressController {
 
   @Autowired
   private AddressService addressService;
 
-  @PostMapping(value = "/addAddress", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<?> addAddress(
       @RequestBody AddressDTO addressDTO) {
 
@@ -33,21 +35,21 @@ public class AddressController {
     return ResponseEntity.ok(addresponse);
   }
 
-  @GetMapping("/getAddress")
+  @GetMapping
   public ResponseEntity<?> getAddress() {
     List<AddressDTO> addressDtos = addressService.getAddresses();
     return ResponseEntity.ok(addressDtos);
 
   }
 
-  @PutMapping(value = "/updateAddress", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "/{addressId}", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<?> updateAddress(@RequestParam Integer addressId,
       @RequestBody AddressDTO addressDTO) {
     String message = addressService.updateAddress(addressId, addressDTO);
     return ResponseEntity.ok(message);
   }
 
-  @DeleteMapping("/delAddress")
+  @DeleteMapping("/{addressId}")
   public ResponseEntity<?> deleteAddress(@RequestParam Integer addressId) {
     Boolean f = addressService.deleteAddress(addressId);
     if (f)

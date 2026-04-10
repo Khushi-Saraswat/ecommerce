@@ -173,14 +173,6 @@ public class UserServiceImp implements UserService {
          user.setMobileNumber(userDtlsDto.getMobileNumber().trim());
       }
 
-      if (!ObjectUtils.isEmpty(userDtlsDto.getCity())) {
-         user.setCity(userDtlsDto.getCity().trim());
-      }
-
-      if (!ObjectUtils.isEmpty(userDtlsDto.getState())) {
-         user.setState(userDtlsDto.getState().trim());
-      }
-
       User saveUser = userRepository.save(user);
 
       return abstractMapperService

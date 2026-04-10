@@ -9,7 +9,7 @@ import com.example.demo.response.User.UserResponseDTO;
 
 public interface AdminService {
 
-    List<ArtisanResponseDTO> getAllArtisans(String jwt);
+    List<ArtisanResponseDTO> getAllArtisans();
 
     String approveArtisan(Long artisanId);
 
@@ -17,10 +17,10 @@ public interface AdminService {
 
     List<UserResponseDTO> getAllUsers();
 
-    String blockUser(Long userId, String jwt);
+    String blockUser(Long userId);
 
-    List<OrderResponseDTO> getAllOrders(String jwt);
+    List<OrderResponseDTO> getAllOrders();
 
-    DailyMetrics getDailyMetrics(String jwt);
+    DailyMetrics getDailyMetrics();
 
 }

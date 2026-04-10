@@ -22,6 +22,8 @@ public class GlobalExceptionHandler {
             status = HttpStatus.BAD_REQUEST;
         if (ex.getErrorCode().startsWith("ADMIN"))
             status = HttpStatus.FORBIDDEN;
+        if (ex.getErrorCode().startsWith("REVIEW"))
+            status = HttpStatus.BAD_REQUEST;
 
         ErrorResponse response = new ErrorResponse(
                 ex.getMessage(),

@@ -16,7 +16,7 @@ import com.example.demo.response.category.CategoryResponseDTO;
 import com.example.demo.service.methods.CategoryService;
 
 @RestController
-@RequestMapping("/api/category")
+@RequestMapping("/api/categories")
 public class CategoryController {
 
     // ===============================

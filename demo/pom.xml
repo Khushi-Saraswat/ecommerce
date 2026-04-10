@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>3.5.8</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -31,6 +31,28 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 			<version>3.5.3</version>
 		</dependency>
+
+		<!-- Redis Starter -->
+        <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-redis</artifactId>
+        <version>3.5.9</version>
+        </dependency>
+
+       <!-- Caching Starter -->
+        <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-cache</artifactId>
+        <version>3.5.9</version>
+        </dependency>
+        
+		
+		  <!-- Jedis Client -->
+          <dependency>
+        <groupId>redis.clients</groupId>
+        <artifactId>jedis</artifactId>
+        <!-- Version 6.6.0 is managed by Spring Boot 3.5.9 -->
+         </dependency>
 
 
 		

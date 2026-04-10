@@ -30,7 +30,7 @@ import com.example.demo.service.methods.ProductService;
 import com.example.demo.service.methods.UserService;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @PreAuthorize("hasAnyRole('USER')")
 public class UserController {
 

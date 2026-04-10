@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/cart")
+@RequestMapping("/api/carts")
 @PreAuthorize("hasAuthority('USER')")
 public class CartController {
 
@@ -28,7 +28,7 @@ public class CartController {
   private CartService cartService;
 
   // Add product to cart - pass productId and quantity
-  @PostMapping("/addCart")
+  @PostMapping
   public ResponseEntity<?> addToCart(
       @Valid @RequestBody CartItemRequestDTO cartItemRequestDTO) {
 
@@ -37,7 +37,7 @@ public class CartController {
   }
 
   // Get all cart items for user
-  @GetMapping("/getCart")
+  @GetMapping
   public ResponseEntity<?> getCart() {
 
     return ResponseEntity.ok(cartService.getCartByUsers());
@@ -45,7 +45,7 @@ public class CartController {
   }
 
   // Delete specific product from cart
-  @DeleteMapping("/deleteCart/{productId}")
+  @DeleteMapping("/{productId}")
   public ResponseEntity<?> DeleteCart(@PathVariable Integer productId) throws BadRequestException {
 
     return ResponseEntity.ok(cartService.deleteCart(productId));
