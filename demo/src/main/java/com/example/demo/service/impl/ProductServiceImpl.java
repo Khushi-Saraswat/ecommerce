@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -376,6 +376,13 @@ public class ProductServiceImpl implements ProductService {
     public Page<ProductResponseDTO> getAllActiveProductPagination(Integer pageNo, Integer PageSize, String category) {
 
         Pageable pageable = PageRequest.of(pageNo, PageSize);
+
+        // if cache hit then return from cache otherwise go to database and fetch data and return
+
+        
+       
+       
+        //cache is miss then call
 
         return productRepository.findByIsActiveTrue(pageable).map(
                 p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
