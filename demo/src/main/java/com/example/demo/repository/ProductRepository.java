@@ -30,7 +30,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                Pageable pageable);
 
      // return Pageable product when pagination is given along with category
-     Page<Product> findByCategory(Pageable pageable, String category);
+
+     Page<Product> findByCategory_Name(Pageable pageable, String category);
 
      Page<Product> findByartId(Long id, Pageable pageable);
 
@@ -38,6 +39,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
      Artisan findArtisanByProductId(@Param("productId") Integer productId);
 
      Optional<Product> findByIdAndIsActiveTrue(Integer id);
+
 
      Optional<Product> findBySlugAndIsActiveTrue(String slug);
 

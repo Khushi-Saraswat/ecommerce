@@ -1,5 +1,10 @@
 package com.example.demo.config;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -8,61 +13,62 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
-
-
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 @EnableCaching
 public class RedisConfig {
-    
-           
-       @Value("${spring.data.redis.host}")
-       private String redisHost;
-       @Value("${spring.data.redis.port:6379}")
-       private int redisPort;
-        @Value("${spring.data.redis.password:}")
-       private String redisPassord;
 
+    @Value("${spring.data.redis.host}")
+    private String redisHost;
+    @Value("${spring.data.redis.port:6379}")
+    private int redisPort;
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
 
-       //configure RedisConnectionFactory bean to establish connection with Redis server using JedisConnectionFactory
-       @Bean
-       public RedisConnectionFactory redisConnectionException(){
-
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
         redisConfig.setHostName(redisHost);
         redisConfig.setPort(redisPort);
-        if (!redisPassord.isEmpty() && redisPassord != null) {
-            redisConfig.setPassword(redisPassord);
+        if (redisPassword != null && !redisPassword.isEmpty()) {
+            redisConfig.setPassword(redisPassword);
         }
         return new JedisConnectionFactory(redisConfig);
-      
-       }
+    }
 
-
-       //redisTemplate bean can be defined here if needed for Redis operations
-       @Bean
-       public RedisTemplate<String,Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        // Define RedisTemplate bean if needed for Redis operations
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-        //connection factory is set to the redisTemplate to enable Redis operations
         template.setConnectionFactory(redisConnectionFactory);
-        //configure serializers for keys and values if necessary
-        template.setKeySerializer(RedisSerializer.string());
-        template.setValueSerializer(RedisSerializer.json());
-        template.setHashKeySerializer(RedisSerializer.string());
 
-        //configure value serializer for hash values if necessary
-        template.setHashValueSerializer(RedisSerializer.json());
+        // 1. Create and configure ObjectMapper
+        ObjectMapper mapper = new ObjectMapper();
+        
+        // Handle Java 8 Date/Time (like LocalDateTime)
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        
+        // Allows Jackson to see private fields in PageImpl
+        mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        
+        // Critical: Saves type info in JSON so it can deserialize PageImpl correctly
+        mapper.activateDefaultTyping(
+            mapper.getPolymorphicTypeValidator(), 
+            ObjectMapper.DefaultTyping.NON_FINAL
+        );
+
+        // 2. Use GenericJackson2JsonRedisSerializer with our custom mapper
+        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(mapper);
+
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(jsonSerializer);
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(jsonSerializer);
 
         template.afterPropertiesSet();
-
         return template;
-        
-       }
-
-
-
-
-
+    }
 }

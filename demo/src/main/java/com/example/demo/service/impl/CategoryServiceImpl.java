@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
     private CloudinaryService cloudinaryService;
 
     // ✅ Get All Active Categories
+    @Cacheable("categories")
     @Override
     public List<CategoryResponseDTO> getAllCategories() {
         return categoryRepository.findByIsActiveTrue()
@@ -49,6 +52,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     // ✅ Create Category (with Cloudinary Image)
+    @CacheEvict(
+     value = {"categories","activeCategories","categorySlug"},
+    allEntries = true
+    )
     @Override
     public String createCategory(CategoryRequestDTO request, MultipartFile file) {
 
@@ -84,6 +91,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     // ✅ Update Category (with Cloudinary Image Replace)
+    @CacheEvict(
+    value = {"categories","activeCategories","categorySlug"},
+     allEntries = true
+    )
     @Override
     public String updateCategory(Long categoryId, CategoryRequestDTO request, MultipartFile file)
             throws NumberFormatException, Exception {
@@ -133,6 +144,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     // ✅ Soft Delete Category + Cloudinary Delete
+    @CacheEvict(
+     value = {"categories","activeCategories","categorySlug"},
+     allEntries = true
+     )
     @Override
     public String deleteCategory(Long categoryId) throws BadRequestException, Exception {
 
@@ -169,6 +184,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     // ✅ Get Category by Slug
+    @Cacheable(value = "categorySlug", key = "#slug")
     @Override
     public CategoryResponseDTO getCategoryBySlug(String slug) {
         Category category = categoryRepository.findBySlug(slug)
@@ -178,6 +194,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     // ✅ Get Active Categories
+    @Cacheable("activeCategories")
     @Override
     public List<CategoryResponseDTO> getActiveCategories() {
         return categoryRepository.findByIsActiveTrue()
@@ -207,6 +224,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(c -> abstractMapperService.toDto(c, CategoryResponseDTO.class))
                 .toList();
     }
+
 
     @Override
     public Page<CategoryResponseDTO> getAllCategory(Pageable pageable) {

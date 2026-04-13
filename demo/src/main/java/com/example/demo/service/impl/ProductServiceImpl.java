@@ -5,9 +5,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import org.hibernate.validator.internal.util.logging.LoggerFactory;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,18 +27,8 @@ import com.example.demo.constants.errorTypes.UserErrorType;
 import com.example.demo.exception.Auth.AuthException;
 import com.example.demo.exception.Product.ProductException;
 import com.example.demo.exception.User.UserException;
-import com.example.demo.model.Artisan;
-import com.example.demo.model.Category;
-import com.example.demo.model.PriceHistory;
-import com.example.demo.model.Product;
-import com.example.demo.model.ProductImage;
-import com.example.demo.model.User;
-import com.example.demo.repository.ArtisanRepository;
-import com.example.demo.repository.CategoryRepository;
-import com.example.demo.repository.PriceHistoryRepo;
-import com.example.demo.repository.ProductImageRepository;
-import com.example.demo.repository.ProductRepository;
-import com.example.demo.repository.UserRepository;
+import com.example.demo.model.*;
+import com.example.demo.repository.*;
 import com.example.demo.request.Product.ProductRequestDTO;
 import com.example.demo.response.Others.UpdateProduct;
 import com.example.demo.response.Product.DeleteProductResponseDTO;
@@ -44,6 +36,9 @@ import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.Product.ProductSaveResponse;
 import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.ProductService;
+import com.example.demo.service.impl.CacheService.ProductCacheService; // Added import
+
+import lombok.RequiredArgsConstructor; // Added for cleaner injection
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -78,6 +73,11 @@ public class ProductServiceImpl implements ProductService {
     private ProductImageRepository productImageRepository;
 
     @Autowired
+    private ProductCacheService productCacheService;
+
+    //  private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
+
+    @Autowired
     public ProductServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -85,6 +85,15 @@ public class ProductServiceImpl implements ProductService {
     // ==========================================================
     // SAVE PRODUCT
     // ==========================================================
+    @CacheEvict(
+          value = {
+          "activeProduct",
+           "productSlug",
+          "categoryProducts",
+           "searchProducts"
+          },
+        allEntries = true
+    )
     @Override
     public ProductSaveResponse saveProducts(ProductRequestDTO productDto, List<MultipartFile> files)
             throws IOException {
@@ -177,17 +186,15 @@ public class ProductServiceImpl implements ProductService {
         return responseDTO;
     }
 
-    // ==========================================================
-    // GET ALL PRODUCTS (List)
-    // ==========================================================
-
-    // ==========================================================
-    // GET ALL PRODUCTS (Pagination)
-    // ==========================================================
-
-    // ==========================================================
-    // UPDATE PRODUCT
-    // ==========================================================
+    @CacheEvict(
+      value = {
+      "activeProduct",
+      "productSlug",
+       "categoryProducts",
+       "searchProducts"
+     },
+    allEntries = true
+     )
     @Transactional
     @Override
     public UpdateProduct updateProduct(ProductRequestDTO dto, Integer productId, List<MultipartFile> files)
@@ -284,6 +291,15 @@ public class ProductServiceImpl implements ProductService {
         return abstractMapperService.toDto(saved, UpdateProduct.class);
     }
 
+    @CacheEvict(
+     value = {
+    "activeProduct",
+    "productSlug",
+    "categoryProducts",
+     "searchProducts"
+     },
+    allEntries = true
+    )
     @Override
     public DeleteProductResponseDTO DeactivateProduct(int productId) {
 
@@ -344,14 +360,23 @@ public class ProductServiceImpl implements ProductService {
         return productResponse;
     }
 
+
+    
+
+    @Transactional
     @Override
     public ProductResponseDTO getActiveProductById(Integer productId) {
 
+        System.out.println("db call hua hai");
+
         Product product = productRepository.findByIdAndIsActiveTrue(productId)
                 .orElseThrow(() -> new ProductException("Product not found", ProductErrorType.PRODUCT_NOT_FOUND));
+        
+        System.out.println(product.getName()+"product");
         return abstractMapperService.toDto(product, ProductResponseDTO.class);
     }
 
+    @Cacheable(value = "productSlug", key = "#slug")
     @Override
     public ProductResponseDTO getActiveProductBySlug(String slug) {
         Product product = productRepository.findBySlugAndIsActiveTrue(slug)
@@ -359,6 +384,10 @@ public class ProductServiceImpl implements ProductService {
         return abstractMapperService.toDto(product, ProductResponseDTO.class);
     }
 
+    @Cacheable(
+     value = "searchProducts",
+    key = "#query + '-' + #price + '-' + #mrp + '-' + #pageable.pageNumber"
+    )
     @Override
     public Page<ProductResponseDTO> searchProducts(String query, Pageable pageable, Double price,
             Double mrp) {
@@ -371,21 +400,40 @@ public class ProductServiceImpl implements ProductService {
 
         return page;
     }
-
+      
     @Override
     public Page<ProductResponseDTO> getAllActiveProductPagination(Integer pageNo, Integer PageSize, String category) {
 
         Pageable pageable = PageRequest.of(pageNo, PageSize);
 
         // if cache hit then return from cache otherwise go to database and fetch data and return
-
         
-       
+        Page<ProductResponseDTO> productResponse=productCacheService.getResponse(pageNo,PageSize,category);
+        
+       if(productResponse != null){
+       // log.debug("cache hit for pageNo={},PageSize={},category={}",pageNo,PageSize,category);
+       // return;
+       System.out.println("cache hit");
+       return productResponse;
+       }
        
         //cache is miss then call
 
-        return productRepository.findByIsActiveTrue(pageable).map(
-                p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
+        System.out.println("cache miss,querying database");
+
+        Page<ProductResponseDTO> product=productRepository.findByIsActiveTrue(pageable).map(
+            p->abstractMapperService.toDto(p,ProductResponseDTO.class)
+        );
+
+        System.out.println("caching product response");
+
+        Page<ProductResponseDTO> products =
+        productRepository.findByIsActiveTrue(pageable)
+        .map(p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
+
+        productCacheService.cacheProductResponse(products,pageNo,PageSize,category);
+
+        return product;
     }
 
     @Override
@@ -397,10 +445,15 @@ public class ProductServiceImpl implements ProductService {
                 p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
     }
 
+  //  @Cacheable(
+        // value = "categoryProducts",
+        // key = "#categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize"
+    // )
     @Override
     public Page<ProductResponseDTO> getProductsByCategory(String category, Pageable pageable) {
+        System.out.println("db call");
 
-        return productRepository.findByCategory(pageable, category).map(
+        return productRepository.findByCategory_Name(pageable, category).map(
                 p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
     }
 

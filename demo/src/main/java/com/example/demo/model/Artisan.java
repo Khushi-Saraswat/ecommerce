@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.demo.constants.KycStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -62,7 +65,7 @@ public class Artisan {
 
     private LocalDateTime localDateTime = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "artisan")
+    @OneToMany(mappedBy = "artisan", fetch = FetchType.LAZY)
     private List<Product> products;
 
     @OneToMany(mappedBy = "artisan")

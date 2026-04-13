@@ -29,6 +29,8 @@ import com.example.demo.service.methods.OrderService;
 import com.example.demo.service.methods.ProductService;
 import com.example.demo.service.methods.UserService;
 
+import jakarta.transaction.Transactional;
+
 @RestController
 @RequestMapping("/api/users")
 @PreAuthorize("hasAnyRole('USER')")
@@ -128,6 +130,7 @@ public class UserController {
     // 🔹 PRODUCT APIs
     // ===============================
 
+    
     @GetMapping("/products/{productId}")
     public ResponseEntity<ProductResponseDTO> getProductById(
             @PathVariable Integer productId) {
