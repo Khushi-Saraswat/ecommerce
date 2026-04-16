@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.hibernate.validator.internal.util.logging.LoggerFactory;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -36,9 +34,9 @@ import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.Product.ProductSaveResponse;
 import com.example.demo.service.methods.AuthService;
 import com.example.demo.service.methods.ProductService;
-import com.example.demo.service.impl.CacheService.ProductCacheService; // Added import
 
-import lombok.RequiredArgsConstructor; // Added for cleaner injection
+
+
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -72,8 +70,7 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductImageRepository productImageRepository;
 
-    @Autowired
-    private ProductCacheService productCacheService;
+
 
     //  private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 
@@ -82,18 +79,10 @@ public class ProductServiceImpl implements ProductService {
         this.userRepository = userRepository;
     }
 
-    // ==========================================================
-    // SAVE PRODUCT
-    // ==========================================================
-    @CacheEvict(
-          value = {
-          "activeProduct",
-           "productSlug",
-          "categoryProducts",
-           "searchProducts"
-          },
-        allEntries = true
-    )
+     
+    
+    //Jab bhi naya product Save hoga ya Update hoga, hume purana cached data delete karna padega taaki users ko latest products dikhein.
+    @CacheEvict(value = {"productCache","product_search"} ,allEntries=true)
     @Override
     public ProductSaveResponse saveProducts(ProductRequestDTO productDto, List<MultipartFile> files)
             throws IOException {
@@ -186,15 +175,8 @@ public class ProductServiceImpl implements ProductService {
         return responseDTO;
     }
 
-    @CacheEvict(
-      value = {
-      "activeProduct",
-      "productSlug",
-       "categoryProducts",
-       "searchProducts"
-     },
-    allEntries = true
-     )
+    //Jab bhi naya product Save hoga ya Update hoga, hume purana cached data delete karna padega taaki users ko latest products dikhein.
+    @CacheEvict(value ={"productCache","product_search"},allEntries = true)
     @Transactional
     @Override
     public UpdateProduct updateProduct(ProductRequestDTO dto, Integer productId, List<MultipartFile> files)
@@ -291,16 +273,9 @@ public class ProductServiceImpl implements ProductService {
         return abstractMapperService.toDto(saved, UpdateProduct.class);
     }
 
-    @CacheEvict(
-     value = {
-    "activeProduct",
-    "productSlug",
-    "categoryProducts",
-     "searchProducts"
-     },
-    allEntries = true
-    )
+   
     @Override
+    @CacheEvict(value={"productCache","product_search"},allEntries = true)
     public DeleteProductResponseDTO DeactivateProduct(int productId) {
 
         User user = authService.getCurrentUser();
@@ -342,7 +317,7 @@ public class ProductServiceImpl implements ProductService {
 
             DeleteProductResponseDTO response = new DeleteProductResponseDTO();
             response.setSuccess(true);
-            response.setProductId(productId);
+            response.setProductId(productId);    //Jab bhi naya product Save hoga ya Update hoga, hume purana cached data delete karna padega taaki users ko latest products dikhein.
             response.setMessage("Product deleted successfully (soft delete)");
             return response;
         }
@@ -361,10 +336,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
-    
-
     @Transactional
     @Override
+    @Cacheable(value  = "productCache" , key="#productId")
     public ProductResponseDTO getActiveProductById(Integer productId) {
 
         System.out.println("db call hua hai");
@@ -376,7 +350,7 @@ public class ProductServiceImpl implements ProductService {
         return abstractMapperService.toDto(product, ProductResponseDTO.class);
     }
 
-    @Cacheable(value = "productSlug", key = "#slug")
+    
     @Override
     public ProductResponseDTO getActiveProductBySlug(String slug) {
         Product product = productRepository.findBySlugAndIsActiveTrue(slug)
@@ -384,11 +358,9 @@ public class ProductServiceImpl implements ProductService {
         return abstractMapperService.toDto(product, ProductResponseDTO.class);
     }
 
-    @Cacheable(
-     value = "searchProducts",
-    key = "#query + '-' + #price + '-' + #mrp + '-' + #pageable.pageNumber"
-    )
+   
     @Override
+    @Cacheable(value="product_search",key="#query + '-' + #pageable.pageNumber")
     public Page<ProductResponseDTO> searchProducts(String query, Pageable pageable, Double price,
             Double mrp) {
 
@@ -402,24 +374,13 @@ public class ProductServiceImpl implements ProductService {
     }
       
     @Override
+    @Cacheable(value = "productCache",key = "#category + '-' + #pageNo + '-' + #pageSize")
     public Page<ProductResponseDTO> getAllActiveProductPagination(Integer pageNo, Integer PageSize, String category) {
 
+
+        System.out.println(">>> Cache miss! Fetching from Db for Category" + category);
         Pageable pageable = PageRequest.of(pageNo, PageSize);
 
-        // if cache hit then return from cache otherwise go to database and fetch data and return
-        
-        Page<ProductResponseDTO> productResponse=productCacheService.getResponse(pageNo,PageSize,category);
-        
-       if(productResponse != null){
-       // log.debug("cache hit for pageNo={},PageSize={},category={}",pageNo,PageSize,category);
-       // return;
-       System.out.println("cache hit");
-       return productResponse;
-       }
-       
-        //cache is miss then call
-
-        System.out.println("cache miss,querying database");
 
         Page<ProductResponseDTO> product=productRepository.findByIsActiveTrue(pageable).map(
             p->abstractMapperService.toDto(p,ProductResponseDTO.class)
@@ -427,13 +388,8 @@ public class ProductServiceImpl implements ProductService {
 
         System.out.println("caching product response");
 
-        Page<ProductResponseDTO> products =
-        productRepository.findByIsActiveTrue(pageable)
-        .map(p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
 
-        productCacheService.cacheProductResponse(products,pageNo,PageSize,category);
-
-        return product;
+       return product;
     }
 
     @Override
@@ -500,3 +456,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
 }
+
+/*
+
+
+
+
+
+
+
+
+
+*/

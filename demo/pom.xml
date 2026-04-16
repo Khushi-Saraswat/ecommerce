@@ -48,12 +48,6 @@
         </dependency>
         
 		
-		  <!-- Jedis Client -->
-          <dependency>
-        <groupId>redis.clients</groupId>
-        <artifactId>jedis</artifactId>
-        <!-- Version 6.6.0 is managed by Spring Boot 3.5.9 -->
-         </dependency>
 
 
 		
@@ -204,10 +198,6 @@
 
 
 	
-		
-		
-
-
 	</dependencies>
 
 	<build>

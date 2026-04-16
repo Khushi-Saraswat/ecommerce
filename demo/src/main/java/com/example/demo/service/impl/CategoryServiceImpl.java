@@ -42,8 +42,8 @@ public class CategoryServiceImpl implements CategoryService {
     private CloudinaryService cloudinaryService;
 
     // ✅ Get All Active Categories
-    @Cacheable("categories")
     @Override
+    @Cacheable(value="categoryCache")
     public List<CategoryResponseDTO> getAllCategories() {
         return categoryRepository.findByIsActiveTrue()
                 .stream()
@@ -53,7 +53,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     // ✅ Create Category (with Cloudinary Image)
     @CacheEvict(
-     value = {"categories","activeCategories","categorySlug"},
+     value = {"categoryCache","activeCategories","categorySlug","category_search"},
     allEntries = true
     )
     @Override
@@ -92,7 +92,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     // ✅ Update Category (with Cloudinary Image Replace)
     @CacheEvict(
-    value = {"categories","activeCategories","categorySlug"},
+    value = {"categoryCache","activeCategories","categorySlug","category_search"},
      allEntries = true
     )
     @Override
@@ -145,7 +145,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     // ✅ Soft Delete Category + Cloudinary Delete
     @CacheEvict(
-     value = {"categories","activeCategories","categorySlug"},
+     value = {"categoryCache","activeCategories","categorySlug","category_search"},
      allEntries = true
      )
     @Override
@@ -204,7 +204,9 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     // ✅ Get Category by Id
+    
     @Override
+    @Cacheable(value="categoryCache",key="#id")
     public CategoryResponseDTO getCategoryById(Long categoryId) throws NumberFormatException {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryException("category is not found", CategoryError.CATEGORY_NOT_FOUND));
@@ -213,6 +215,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     // ✅ Search Categories
     @Override
+    @Cacheable(value="category_search",key="#keyword + '-' + #pageable.pageNumber")
     public List<CategoryResponseDTO> searchCategories(String keyword, Pageable pageable) {
 
         if (keyword == null || keyword.trim().isEmpty()) {

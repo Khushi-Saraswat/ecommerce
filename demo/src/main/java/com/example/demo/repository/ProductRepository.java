@@ -15,6 +15,21 @@ import com.example.demo.model.Product;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
 
+    
+    
+    
+    
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
      // return product for pagination if they are set to true..
      Page<Product> findByIsActiveTrue(Pageable pageable);
 
