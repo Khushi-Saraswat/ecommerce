@@ -28,7 +28,7 @@ public class CategoryController {
 
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
-        System.out.println(categoryService.getAllCategories() + "all categories");
+      //  System.out.println(categoryService.getAllCategories() + "all categories");
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 

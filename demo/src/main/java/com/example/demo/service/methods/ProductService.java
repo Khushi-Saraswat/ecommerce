@@ -18,8 +18,6 @@ public interface ProductService {
      ProductSaveResponse saveProducts(ProductRequestDTO product,
                List<MultipartFile> file) throws IOException;
 
-     // public List<ProductResponseDTO> getAllProducts();
-
      Page<ProductResponseDTO> getAllProducts(Pageable pageable);
 
      DeleteProductResponseDTO DeactivateProduct(int ProductId);
@@ -40,7 +38,7 @@ public interface ProductService {
 
      Page<ProductResponseDTO> getByArtisanId(Pageable pageable);
 
-     Page<ProductResponseDTO> getProductsByCategory(String categoryId, Pageable pageable);
+     Page<ProductResponseDTO> getProductsByCategory(String categoryName, Pageable pageable);
 
      DeleteProductResponseDTO toggleProductStatusByAdmin(Integer productId, Boolean active);
 

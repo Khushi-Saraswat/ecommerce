@@ -8,7 +8,7 @@ import {
   ClockIcon 
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { ordersAPI } from '../services/api';
+//import { ordersAPI } from '../services/api';
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);

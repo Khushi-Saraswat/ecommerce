@@ -4,30 +4,45 @@ import { ArrowRightIcon, TruckIcon, ShieldCheckIcon, CreditCardIcon } from '@her
 import ProductCard from '../components/product/ProductCard';
 import CategoryGrid from '../components/category/CategoryGrid';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { productsAPI, categoriesAPI } from '../services/api';
+import { productsAPI, categoriesAPI, userAPI } from '../services/api';
 
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [productsRes, categoriesRes] = await Promise.all([
-          productsAPI.getFeatured({ size: 8 }),
-          categoriesAPI.getRoot(),
-        ]);
-        setFeaturedProducts(productsRes.data.data.content || []);
-        setCategories(categoriesRes.data.data || []);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+
+   useEffect(() => {
+
+       const fetchData = async () => {
+       setIsLoading(true);
+
+       try {
+            const res = await userAPI.getAllCategories();
+
+            console.log("Category data received: ",res.data);
+
+            setCategories(res.data || [])
+
+            const res2 = await productsAPI.getAllProducts();
+
+            console.log("Product data received: ",res2.data);
+
+            setFeaturedProducts(res2.data || [])
+
+            
+       } catch (error) {;
+         
+         console.error('failed to fetch data:',error);
+        
+       }finally{
+           setIsLoading(false);
+       }
+       };
+
+       fetchData();
+  },[]);
+
 
   const features = [
     {
@@ -150,9 +165,9 @@ export default function Home() {
             </div>
           ) : featuredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              {
+                <ProductCard product={featuredProducts}/>
+              }
             </div>
           ) : (
             <p className="text-center text-gray-500 py-12">No featured products available</p>

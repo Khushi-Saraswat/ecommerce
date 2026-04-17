@@ -328,6 +328,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value="productCache")
     public Page<ProductResponseDTO> getAllProducts(Pageable pageable) {
         Page<ProductResponseDTO> productResponse = productRepository.findByIsActiveTrue(pageable).map(
                 product -> abstractMapperService.toDto(product, ProductResponseDTO.class));
@@ -406,11 +407,15 @@ public class ProductServiceImpl implements ProductService {
         // key = "#categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize"
     // )
     @Override
-    public Page<ProductResponseDTO> getProductsByCategory(String category, Pageable pageable) {
+    public Page<ProductResponseDTO> getProductsByCategory(String categoryName, Pageable pageable) {
         System.out.println("db call");
 
-        return productRepository.findByCategory_Name(pageable, category).map(
+        Page<ProductResponseDTO>product=productRepository.findByCategory_Name(pageable, categoryName).map(
                 p -> abstractMapperService.toDto(p, ProductResponseDTO.class));
+
+
+        System.out.println(product+"product by category");
+        return product;
     }
 
     @Override

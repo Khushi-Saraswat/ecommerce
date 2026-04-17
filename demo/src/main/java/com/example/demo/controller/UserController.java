@@ -4,9 +4,8 @@ import java.util.List;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.request.FeedBack.FeedbackDto;
 import com.example.demo.request.Order.OrderRequestDTO;
 import com.example.demo.request.User.UserRequestDTO;
-import com.example.demo.response.Product.ProductResponseDTO;
 import com.example.demo.response.User.UserResponseDTO;
 import com.example.demo.service.methods.CategoryService;
 import com.example.demo.service.methods.FeedbackService;
@@ -29,7 +27,7 @@ import com.example.demo.service.methods.OrderService;
 import com.example.demo.service.methods.ProductService;
 import com.example.demo.service.methods.UserService;
 
-import jakarta.transaction.Transactional;
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -45,8 +43,6 @@ public class UserController {
     @Autowired
     private CategoryService categoryService;
 
-    @Autowired
-    private ProductService productService;
 
     @Autowired
     private OrderService orderService;
@@ -126,55 +122,9 @@ public class UserController {
                 feedbackService.getFeedbackByProductId(productId));
     }
 
-    // ===============================
-    // 🔹 PRODUCT APIs
-    // ===============================
-
     
-    @GetMapping("/products/{productId}")
-    public ResponseEntity<ProductResponseDTO> getProductById(
-            @PathVariable Integer productId) {
-
-        return ResponseEntity.ok(
-                productService.getActiveProductById(productId));
-    }
-
-    @GetMapping("/products/search")
-    public ResponseEntity<Page<ProductResponseDTO>> searchProducts(
-            @RequestParam String q,
-            @RequestParam Double price,
-            @RequestParam Double mrp,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        return ResponseEntity.ok(
-                productService.searchProducts(q, pageable, price, mrp));
-    }
-
-    @GetMapping("/products/category/{categoryId}")
-    public ResponseEntity<Page<ProductResponseDTO>> getProductsByCategory(
-            @PathVariable String categoryId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        return ResponseEntity.ok(
-                productService.getProductsByCategory(categoryId, pageable));
-    }
-
-    @GetMapping("/products")
-    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size,
-            @RequestParam(required = false) String category) {
-
-        return ResponseEntity.ok(
-                productService.getAllActiveProductPagination(page, size, category));
-    }
-
+    
+    
     // orders
       // place order
      @PostMapping("/")

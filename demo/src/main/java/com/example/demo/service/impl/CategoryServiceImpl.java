@@ -41,14 +41,24 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private CloudinaryService cloudinaryService;
 
+    @Autowired
+    private CacheInspectionService cacheInspectionService;
+
     // ✅ Get All Active Categories
     @Override
     @Cacheable(value="categoryCache")
     public List<CategoryResponseDTO> getAllCategories() {
-        return categoryRepository.findByIsActiveTrue()
+        System.out.println("db hit---------");
+
+        List<CategoryResponseDTO>categoryResponseDTOs=categoryRepository.findByIsActiveTrue()
                 .stream()
                 .map(cat -> abstractMapperService.toDto(cat, CategoryResponseDTO.class))
                 .collect(Collectors.toList());
+
+        cacheInspectionService.printCacheContents("categoryCache");
+
+
+        return categoryResponseDTOs;
     }
 
     // ✅ Create Category (with Cloudinary Image)
@@ -197,6 +207,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Cacheable("activeCategories")
     @Override
     public List<CategoryResponseDTO> getActiveCategories() {
+        System.out.println("db hit------");
         return categoryRepository.findByIsActiveTrue()
                 .stream()
                 .map(c -> abstractMapperService.toDto(c, CategoryResponseDTO.class))

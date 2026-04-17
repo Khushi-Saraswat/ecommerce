@@ -1,5 +1,7 @@
 package com.example.demo.response.Product;
 
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductSaveResponse {
+public class ProductSaveResponse  implements Serializable{
 
     private int artisanId;
     private int productId;

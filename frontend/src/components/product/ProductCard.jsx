@@ -13,6 +13,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 
 export default function ProductCard({ product, showQuickView = true }) {
+  console.log(product+"product in card")
   const { addToCart, isLoading } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();

@@ -19,7 +19,11 @@ api.interceptors.request.use(
     const token = useAuthStore.getState().token;
 
     // Public routes
-    const publicRoutes = ["/register", "/login"];
+    const publicRoutes = ["/register", "/login",
+      "/category",  
+      "/products"   
+
+    ];
 
     const isPublicRoute = publicRoutes.some((route) =>
       config.url.includes(route)
@@ -76,6 +80,24 @@ export const productsAPI = {
   toggleActive: (id) => api.put(`/admin/products/${id}/toggle-active`),
   bulkDelete: (ids) => api.delete('/admin/products/bulk', { data: { ids } }),
   bulkUpdateStock: (updates) => api.put('/admin/products/bulk-stock', { updates }),
+
+    getProductById: (productId) =>
+    api.get(`/products/products/${productId}`),
+
+  // Backend is /api/products/products/search
+  searchProducts: (params) =>
+    api.get('/products/products/search', { params }),
+
+  // Backend is /api/products/products/category/{name}
+  getProductsByCategory: (categoryName, params) =>
+    api.get(`/products/products/category/${categoryName}`, { params }),
+
+  // Backend is /api/products/products
+  getAllProducts: (params) =>
+    api.get('/products/product'),
+
+
+
 };
 
 // Categories API
@@ -88,6 +110,11 @@ export const categoriesAPI = {
   create: (data) => api.post('/admin/categories', data),
   update: (id, data) => api.put(`/admin/categories/${id}`, data),
   delete: (id) => api.delete(`/admin/categories/${id}`),
+
+
+
+
+
 };
 
 
@@ -96,8 +123,9 @@ export const categoriesAPI = {
 export const userAPI = {
 
   // ================= PROFILE =================
+  // Consistent prefixing with /api/user
   getProfile: (id) =>
-    api.get('/user/profile', { params: { id } }),
+    api.get('/api/user/profile', { params: { id } }),
 
   updateProfile: (data) =>
     api.put('/api/user/profile', data),
@@ -114,34 +142,25 @@ export const userAPI = {
     api.get(`/api/user/feedback/product/${productId}`),
 
   // ================= CATEGORY =================
-  getAllCategories: () =>
-    api.get('/api/category/categories'),
+  // Standardized to /api/categories based on your Controller pattern
+  getAllCategories: () => 
+    api.get('/categories/categories'),
 
-  getCategoryById: (categoryId) =>
-    api.get(`/api/category/categories/${categoryId}`),
+  getActiveCategories: () => 
+    api.get('/categories/categories/active'),
 
-  getCategoryBySlug: (slug) =>
-    api.get(`/api/category/categories/slug/${slug}`),
+  getCategoryBySlug: (slug) => 
+    api.get(`/categories/categories/slug/${slug}`),
 
-  getActiveCategories: () =>
-    api.get('/api/category/categories/active'),
+  getCategoryById: (categoryId) => 
+    api.get(`/categories/categories/${categoryId}`),
 
-  searchCategories: (params) =>
-    api.get('/api/category/categories/search', { params }),
-
-  // ================= PRODUCTS =================
-  getProductById: (productId) =>
-    api.get(`/api/user/products/${productId}`),
-
-  searchProducts: (params) =>
-    api.get('/api/user/products/search', { params }),
-
-  getProductsByCategory: (categoryId, params) =>
-    api.get(`/api/user/products/category/${categoryId}`, { params }),
-
-  getAllProducts: (params) =>
-    api.get('/api/user/products', { params }),
+  searchCategories: (keyword, page = 0, size = 10) => 
+    api.get('/categories/categories/search', { 
+      params: { keyword, page, size } 
+    }),
 };
+
 
 
 // Wishlist API
