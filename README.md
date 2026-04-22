@@ -1,218 +1,375 @@
-# 🧵 Artisan Marketplace Backend
+# 🛍️ Multi-Vendor Artisan Marketplace — Backend
 
-A **multi-vendor e-commerce backend system** built using **Spring Boot, JPA, and PostgreSQL** where multiple artisans (sellers) can sell products and customers can purchase products from different sellers in a single order.
+A Spring Boot based backend for a **multi-vendor artisan marketplace** where artisans can sell products and users can purchase items from different sellers in a single order.
 
----
-
-# ✨ Features
-
-- Multi-vendor product selling  
-- Order splitting per artisan  
-- Product reviews and wishlist  
-- Secure authentication with JWT  
-- Payment processing  
-- Cart and checkout system  
+This project focuses on **clean entity design**, **order splitting**, **product catalog**, and **secure authentication**.
 
 ---
 
-# 🏗 System Architecture Overview
+# 🧩 Core Entities
 
-The application follows a **multi-vendor marketplace architecture** where a user can act as both a **customer and an artisan (seller)**.
+## 👤 User
 
-## Core Modules
+Represents application users (ADMIN / USER / ARTISAN)
 
-- User Management  
-- Artisan Management  
-- Product Management  
-- Cart System  
-- Order Processing  
-- Payment Handling  
-- Review and Wishlist System  
+**Fields**
 
----
+* userId
+* name
+* username (email)
+* password
+* mobileNumber
+* role
+* city
+* state
+* createdAt
+* isBlocked
 
-# 👤 Core Actor
+**Relations**
 
-The **User** is the central entity of the system.
-
-A user can:
-
-- Browse products  
-- Add products to cart  
-- Place orders  
-- Review products  
-- Maintain wishlist  
-- Become an artisan (seller)  
+* User → Orders
+* User → Cart
+* User → Reviews
+* User → Address
 
 ---
 
-# 🔁 System Flow
+## 🧑‍🎨 Artisan
 
-The overall user journey in the system:
-User Registration
+Represents sellers in marketplace.
 
+**Fields**
 
+* id
+* brandName
+* artisianType
+* bio
+* city
+* state
+* pincode
+* kycStatus
+* createdAt
 
+**Relations**
 
-Browse Products
-
-
-
-
-Add Product to Cart
-
-
-
-Checkout
-
-
-
-
-Create Order
-
-
-
-
-Split Order by Artisan
-
-
-
-
-Create Order Items
-
-
-
-Process Payment
-
-
-
-Order Fulfillment
+* Artisan → Products
+* Artisan → ArtisanOrders
+* Artisan → CategoryRequest
 
 ---
 
-# 🧩 Entity Relationship Flow
+## 📦 Product
 
-The system is designed around **relational entities connected through JPA relationships**.
+Represents items sold by artisans.
 
----
+**Fields**
 
-# 1️⃣ User Relationships
+* id
+* name
+* slug
+* description
+* price
+* mrp
+* stock
+* featured_product
+* isActive
+* createdAt
 
-A **User** can perform multiple actions in the system.
+**Relations**
 
-
-| Entity | Description |
-|------|------|
-| Address | Stores multiple delivery addresses for the user |
-| Cart | Temporary storage before checkout |
-| Wishlist | Stores saved products |
-| Order | Stores user purchases |
-| Review | Product feedback |
-| Payment | Payment details for orders |
-| RefreshToken | Used for JWT authentication |
-
----
-
-# 2️⃣ Artisan (Seller) Flow
-
-A user can become an **Artisan (Seller)** to sell products.
-
-
-| Entity | Description |
-|------|------|
-| Artisan | Seller profile |
-| Product | Items sold by artisan |
-| ProductImage | Images of the product |
-| PriceHistory | Tracks price changes |
-| CategoryRequest | Artisan requests new category |
+* Product → Artisan
+* Product → Category
+* Product → ProductImage
+* Product → Review
+* Product → Cart
 
 ---
 
-# 3️⃣ Product Relationships
+## 🖼 ProductImage
 
-Products are the **core marketplace entity**.
+Stores product images uploaded to Cloudinary.
 
+**Fields**
 
-| Entity | Description |
-|------|------|
-| ProductImage | Stores product images |
-| PriceHistory | Tracks price changes |
-| Review | User reviews |
-| OrderItem | Product inside an order |
-| Cart | Product added to cart |
-| Wishlist | Saved product |
+* id
+* imageUrl
+* imageName
+* imageType
 
----
+**Relations**
 
-# 🛒 Cart Flow
-
-The **Cart** stores products temporarily before checkout.
-
-## Example Cart Entry
-
-| user_id | product_id | quantity |
-|-------|-------|--------|
-| 10 | 23 | 2 |
-
-Cart items are converted into an **Order during checkout**.
+* ProductImage → Product
 
 ---
 
-# 📦 Order Processing Flow
+## 🗂 Category
 
-The system supports **multi-vendor orders**.
+Product category.
 
-## Example
+**Fields**
 
-A user buys:
+* id
+* name
+* description
+* slug
+* imageUrl
+* isActive
+* createdAt
 
-Product A → Artisan 1
-Product B → Artisan 2
+**Relations**
 
-The system creates:
-Order
-├── ArtisanOrder (Artisan 1)
-│ └── OrderItem
-│
-└── ArtisanOrder (Artisan 2)
-└── OrderItem
-
-
-### Why this design?
-
-This allows:
-
-- Independent seller order management  
-- Separate shipping  
-- Separate seller tracking  
+* Category → Products
 
 ---
 
-# 💳 Payment Flow
+## 🛒 Cart
 
-Payments are linked to orders.
-User
+Stores items before checkout.
 
-Order
+**Fields**
 
-Payment
+* id
+* quantity
+* totalPrice (Transient)
 
-### Payment stores
+**Relations**
 
-- Payment method  
-- Transaction ID  
-- Gateway response  
-- Payment status  
+* Cart → User
+* Cart → Product
+* Cart → Artisan
 
 ---
 
-# 📍 Address Flow
+## 📦 Order
 
-Users can store **multiple delivery addresses**.
-User
+Represents main order placed by user.
 
-Address
+**Fields**
 
-Order
+* id
+* totalAmount
+* orderStatus
+* paymentStatus
+* paymentType
+* razorpayOrderId
 
-Orders use **one selected address for delivery**.
+**Relations**
+
+* Order → User
+* Order → Address
+* Order → ArtisanOrder
+
+---
+
+## 🏪 ArtisanOrder
+
+Splits order per artisan.
+
+**Fields**
+
+* id
+* subtotal
+* status
+* paymentStatus
+* createdAt
+
+**Relations**
+
+* ArtisanOrder → Order
+* ArtisanOrder → Artisan
+* ArtisanOrder → OrderItem
+
+---
+
+## 📄 OrderItem
+
+Products inside artisan order.
+
+**Fields**
+
+* id
+* quantity
+* price
+* itemTotal
+
+**Relations**
+
+* OrderItem → ArtisanOrder
+* OrderItem → Product
+
+---
+
+## 💳 Payment
+
+Tracks payment details.
+
+**Fields**
+
+* id
+* amount
+* currency
+* method
+* status
+* transactionId
+* gatewayResponse
+
+**Relations**
+
+* Payment → Order
+* Payment → User
+
+---
+
+## ⭐ Review
+
+User product rating.
+
+**Fields**
+
+* id
+* rating
+* comment
+* createdAt
+
+**Relations**
+
+* Review → Product
+* Review → User
+
+---
+
+## 📍 Address
+
+Shipping address.
+
+**Fields**
+
+* id
+* addressName
+* addressLandMark
+* addressState
+* addressPhoneNumber
+* addressZipCode
+* city
+* defaultAddress
+
+**Relations**
+
+* Address → User
+* Address → Order
+
+---
+
+## 📝 Feedback
+
+User feedback for product.
+
+**Fields**
+
+* id
+* fullName
+* email
+* category
+* message
+* date
+
+**Relations**
+
+* Feedback → User
+* Feedback → Product
+
+---
+
+## 📊 CategoryRequest
+
+Artisan request for new category.
+
+**Fields**
+
+* id
+* name
+* status
+* createdAt
+
+**Relations**
+
+* CategoryRequest → Artisan
+
+---
+
+## 📈 PriceHistory
+
+Tracks product price changes.
+
+**Fields**
+
+* id
+* oldPrice
+* newPrice
+* changedAt
+* changedBy
+
+**Relations**
+
+* PriceHistory → Product
+
+---
+
+# 🔄 Order Flow
+
+User adds products to cart
+→ checkout
+→ Order created
+→ split into ArtisanOrder
+→ each artisan handles own order
+
+---
+
+# ⚙️ Key Features
+
+* Multi vendor marketplace
+* Product catalog
+* Order splitting per artisan
+* Cart management
+* Payment tracking
+* Review system
+* Category management
+* Address mapping
+* Feedback system
+* Cloudinary image upload
+* Pagination support
+* Product indexing
+* Caching (product & category)
+
+---
+
+# 🛠 Tech Stack
+
+* Java
+* Spring Boot
+* Spring Security
+* JWT
+* Spring Data JPA
+* Hibernate
+* PostgreSQL / MySQL
+* Cloudinary
+* Lombok
+
+---
+
+# 📁 Architecture
+
+Controller
+Service
+Repository
+Entity
+DTO
+Security
+Config
+
+---
+
+# 👩‍💻 Author
+
+Khushi Saraswat
+Spring Boot Backend Developer
